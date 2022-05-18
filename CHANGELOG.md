@@ -1,6 +1,9 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.12
+- Fix issue with Leak Sensor
+
 ### v0.5.11
 - Fix issue with Motion Sensor
 
