@@ -1,0 +1,31 @@
+{
+    "bridge": {
+        "name": "Homebridge B7FE",
+        "username": "0E:2E:BA:2A:78:D8",
+        "port": 56666,
+        "pin": "265-93-368",
+        "advertiser": "bonjour-hap",
+        "bind": [
+            "en0"
+        ]
+    },
+    "accessories": [],
+    "platforms": [
+        {
+            "name": "Config",
+            "port": 8581,
+            "auth": "form",
+            "theme": "auto",
+            "tempUnits": "f",
+            "lang": "auto",
+            "platform": "config"
+        },
+        {
+            "name": "Wyze",
+            "username": "allenfarmer1@gmail.com",
+            "password": "Honda!@5999",
+            "refreshInterval": 30000,
+            "platform": "WyzeSmartHome"
+        }
+    ]
+}
