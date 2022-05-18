@@ -8,3 +8,7 @@ node_modules/
 persist/
 package-lock.json
 config.json
+accessories/cachedAccessories
+accessories/.cachedAccessories.bak
+backups/
+accessories/.cachedAccessories.bak
