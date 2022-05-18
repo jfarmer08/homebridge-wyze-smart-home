@@ -10,3 +10,5 @@ package-lock.json
 config.json
 accessories/
 backups/
+accessories/cachedAccessories
+accessories/.cachedAccessories.bak
