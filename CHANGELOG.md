@@ -2,13 +2,16 @@
 ## Releases
 
 ### v0.5.12
+- Fix issue with Temperature Sensor
+
+### v0.5.12
 - Fix issue with Leak Sensor
 
 ### v0.5.11
 - Fix issue with Motion Sensor
 
 ### v0.5.10
-- Initial support for Wyze Tempperature Sensor
+- Initial support for Wyze Temperature Sensor
 - Initial support for Wyze Leak Sensor
 
 ### v0.5.9
