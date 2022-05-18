@@ -1,0 +1,34 @@
+{
+  "name": "homebridge-wyze-smart-home",
+  "version": "0.5.10",
+  "description": "Wyze Smart Home plugin for Homebridge",
+  "license": "MIT",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "yarn eslint */**/*.{js,ts,tsx} --quiet --fix",
+    "start": "homebridge -I -D -P . -U ."
+  },
+  "keywords": [
+    "homebridge-plugin"
+  ],
+  "homepage": "http://github.com/RMCob/homebridge-wyze-smart-home",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/RMCob/homebridge-wyze-smart-home.git"
+  },
+  "bugs": {
+    "url": "http://github.com/RMCob/homebridge-wyze-smart-home/issues"
+  },
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "colorsys": "^1.0.22",
+    "md5": "^2.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0"
+  }
+}

@@ -1,0 +1,10 @@
+
+.DS_Store
+.uix-dashboard.json
+.uix-secrets
+auth.json
+node_modules/.bin/
+node_modules/
+persist/
+package-lock.json
+config.json

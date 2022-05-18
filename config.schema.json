@@ -1,0 +1,47 @@
+{
+  "pluginAlias": "WyzeSmartHome",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Plugin Name",
+        "description": "This name will appear in your Homebridge log",
+        "type": "string",
+        "default": "Wyze",
+        "required": true
+      },
+      "username": {
+        "title": "Username (E-Mail Address)",
+        "description": "The e-mail address used for your Wyze account",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      "password": {
+        "title": "Password",
+        "description": "The password used for your Wyze account",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      "refreshInterval": {
+        "title": "Refresh Interval",
+        "description": "Specify the number of milliseconds to wait between updates, default is 60000 ms (60 seconds)",
+        "type": "integer",
+        "default": 60000,
+        "required": false
+      },
+      "mfaCode": {
+        "title": "One-time Password (for two-factor authentication)",
+        "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
+        "type": "string",
+        "default": "",
+        "required": false
+      }
+    }
+  },
+  "form": null,
+  "display": null
+}
