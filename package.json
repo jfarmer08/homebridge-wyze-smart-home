@@ -11,13 +11,13 @@
   "keywords": [
     "homebridge-plugin"
   ],
-  "homepage": "http://github.com/RMCob/homebridge-wyze-smart-home",
+  "homepage": "http://github.com/jfarmer08/homebridge-wyze-smart-home",
   "repository": {
     "type": "git",
-    "url": "git://github.com/RMCob/homebridge-wyze-smart-home.git"
+    "url": "git://github.com/jfarmer08/homebridge-wyze-smart-home.git"
   },
   "bugs": {
-    "url": "http://github.com/RMCob/homebridge-wyze-smart-home/issues"
+    "url": "http://github.com/jfarmer08/homebridge-wyze-smart-home/issues"
   },
   "engines": {
     "node": ">=0.12.0",
