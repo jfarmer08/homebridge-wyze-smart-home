@@ -5,6 +5,8 @@ This plugin adds support for Wyze Smart Home devices to [Homebridge](https://git
 
 This plugin is an actively maintained fork of misenhower's original [Wyze Homebridge Plugin](https://github.com/misenhower/homebridge-wyze-connected-home) project.
 
+<a href="https://www.buymeacoffee.com/jfarmer08" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-red.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" ></a>
+
 ## Supported Devices
 - Light Bulb
 - Light Strips
