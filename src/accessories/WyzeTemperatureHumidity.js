@@ -91,7 +91,15 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
     this.plugin.log.debug(`[TemperatureHumidity] Updating status of "${this.display_name}"`);
     this.getHumidityCharacteristic().updateValue(device.device_params.th_sensor_humidity);
     this.getTemperatureCharacteristic().updateValue((device.device_params.th_sensor_temperature-32.0)/1.8);
-    this.getBatteryCharacteristic().updateValue(device.device_params.voltage);
+    this.getBatteryCharacteristic().updateValue(this.getBatteryVoltage(device.device_params.voltage));
     this.getIsBatteryLowCharacteristic().updateValue(device.device_params.is_low_battery);
+  }
+
+  getBatteryVoltage(deviceVoltage){
+    if(deviceVoltage >= 100)
+    {
+      return 100
+    }
+    else{return deviceVoltage}
   }
 };
