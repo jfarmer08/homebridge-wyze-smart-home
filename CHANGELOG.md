@@ -1,8 +1,9 @@
 # homebridge-wyze-smart-home
 ## Releases
 
-### v0.5.14
+### v0.5.15
 - Bug Sensor can send a value greater then 100 for Battery Level
+
 ### v0.5.14
 - Initial Support for Battery level on Temperature Sensor
 - Initial Support for Battery level on v2 Contact Sensor
