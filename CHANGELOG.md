@@ -1,6 +1,11 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.13
+- Initial Support for Battery level on Temperature Sensor
+- Initial Support for Battery level on v2 Contact Sensor
+- Initial Support for Battery level on v2 Motion Sensor
+
 ### v0.5.12
 - Fix issue with Temperature Sensor
 
