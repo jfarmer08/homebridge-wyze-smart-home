@@ -14,9 +14,9 @@ This plugin adds support for Wyze Smart Home devices to [Homebridge](https://git
 - Outdoor Plug
 - V1 & V2 Contact Sensor
 - V1 & V2 Motion Sensor
-- Lock
 - Tempeature Sensor
 - Leak Sensor
+- Lock
 
 For more information about our version updates, please check our [change log](CHANGELOG.md).
 
