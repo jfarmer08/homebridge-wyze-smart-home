@@ -1,6 +1,9 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.16
+- Initial Support for Battery Level on Leak Sensor
+
 ### v0.5.15
 - Bug Sensor can send a value greater then 100 for Battery Level
 

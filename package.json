@@ -1,6 +1,6 @@
 {
   "name": "homebridge-wyze-smart-home",
-  "version": "0.5.15",
+  "version": "0.5.16",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
@@ -9,7 +9,7 @@
     "start": "homebridge -I -D -P . -U ."
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin","Wyze"
   ],
   "homepage": "http://github.com/jfarmer08/homebridge-wyze-smart-home",
   "repository": {
