@@ -3,6 +3,10 @@ const WyzeAccessory = require('./WyzeAccessory');
 
 const WYZE_API_POWER_PROPERTY = 'P3';
 
+const noResponse = new Error('No Response')
+noResponse.toString = () => {return
+noResponse.message}
+
 module.exports = class WyzePlug extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
@@ -11,7 +15,14 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   updateCharacteristics(device) {
-    this.getOnCharacteristic().updateValue(device.device_params.switch_state);
+    if(device.conn_state == 0)
+    {
+      this.getOnCharacteristic().updateValue(noResponse);
+    }
+    else
+    {
+      this.getOnCharacteristic().updateValue(device.device_params.switch_state);
+    }
   }
 
   getOutletService() {

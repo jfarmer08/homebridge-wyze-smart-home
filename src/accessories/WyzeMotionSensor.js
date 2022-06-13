@@ -7,6 +7,10 @@ const HOMEBRIDGE_BATTERY_SERVICE = Service.Battery;
 const HOMEBRIDGE_BATTERY_CHARACTERISTIC = Characteristic.BatteryLevel
 const HOMEBRIDGE_IS_BATTERY_LOW_CHARACTERISTIC = Characteristic.StatusLowBattery
 
+const noResponse = new Error('No Response')
+noResponse.toString = () => {return
+noResponse.message}
+
 module.exports = class WyzeMotionSensor extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
@@ -68,10 +72,17 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   updateCharacteristics(device) {
-    this.plugin.log.debug(`[MotionSensor] Updating status of "${this.display_name}"`);
-    this.getOnCharacteristic().updateValue(device.device_params.motion_state);
-    this.getBatteryCharacteristic().updateValue(this.getBatteryVoltage(device.device_params.voltage));
-    this.getIsBatteryLowCharacteristic().updateValue(device.device_params.is_low_battery);
+    if(device.conn_state == 0)
+    {
+      this.getOnCharacteristic().updateValue(noResponse);
+    }
+    else
+    {
+      this.plugin.log.debug(`[MotionSensor] Updating status of "${this.display_name}"`);
+      this.getOnCharacteristic().updateValue(device.device_params.motion_state);
+      this.getBatteryCharacteristic().updateValue(this.getBatteryVoltage(device.device_params.voltage));
+      this.getIsBatteryLowCharacteristic().updateValue(device.device_params.is_low_battery);
+    }
   }
 
   getBatteryVoltage(deviceVoltage){
