@@ -9,6 +9,10 @@ const HOMEBRIDGE_BATTERY_SERVICE = Service.Battery;
 const HOMEBRIDGE_BATTERY_CHARACTERISTIC = Characteristic.BatteryLevel
 const HOMEBRIDGE_IS_BATTERY_LOW_CHARACTERISTIC = Characteristic.StatusLowBattery
 
+const noResponse = new Error('No Response')
+noResponse.toString = () => {return
+noResponse.message}
+
 module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
@@ -88,11 +92,18 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   updateCharacteristics(device) {
-    this.plugin.log.debug(`[TemperatureHumidity] Updating status of "${this.display_name}"`);
-    this.getHumidityCharacteristic().updateValue(device.device_params.th_sensor_humidity);
-    this.getTemperatureCharacteristic().updateValue((device.device_params.th_sensor_temperature-32.0)/1.8);
-    this.getBatteryCharacteristic().updateValue(this.getBatteryVoltage(device.device_params.voltage));
-    this.getIsBatteryLowCharacteristic().updateValue(device.device_params.is_low_battery);
+    if(device.conn_state == 0)
+    {
+      this.getHumidityCharacteristic().updateValue(noResponse);
+    }
+    else
+    {
+      this.plugin.log.debug(`[TemperatureHumidity] Updating status of "${this.display_name}"`);
+      this.getHumidityCharacteristic().updateValue(device.device_params.th_sensor_humidity);
+      this.getTemperatureCharacteristic().updateValue((device.device_params.th_sensor_temperature-32.0)/1.8);
+      this.getBatteryCharacteristic().updateValue(this.getBatteryVoltage(device.device_params.voltage));
+      this.getIsBatteryLowCharacteristic().updateValue(device.device_params.is_low_battery);
+    }
   }
 
   getBatteryVoltage(deviceVoltage){

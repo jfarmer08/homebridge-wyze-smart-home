@@ -14,3 +14,9 @@ accessories/cachedAccessories
 accessories/.cachedAccessories.bak
 accessories/cachedAccessories
 accessories/.cachedAccessories.bak
+*.bak
+accessories/.cachedAccessories.bak
+accessories/cachedAccessories
+.vscode/tasks.json
+accessories/.cachedAccessories.bak
+accessories/cachedAccessories

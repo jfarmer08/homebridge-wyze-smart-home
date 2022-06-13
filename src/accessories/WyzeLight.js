@@ -10,6 +10,10 @@ const WYZE_COLOR_TEMP_MAX = 6500;
 const HOMEKIT_COLOR_TEMP_MIN = 500;
 const HOMEKIT_COLOR_TEMP_MAX = 140;
 
+const noResponse = new Error('No Response')
+noResponse.toString = () => {return
+noResponse.message}
+
 module.exports = class WyzeLight extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
@@ -20,18 +24,25 @@ module.exports = class WyzeLight extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
-    this.getCharacteristic(Characteristic.On).updateValue(device.device_params.switch_state);
+    if(device.conn_state == 0)
+    {
+      this.getCharacteristic(Characteristic.On).updateValue(noResponse);
+    }
+    else
+    {
+      this.getCharacteristic(Characteristic.On).updateValue(device.device_params.switch_state);
 
-    let propertyList = await this.getPropertyList();
-    for (let property of propertyList.data.property_list) {
-      switch (property.pid) {
-        case WYZE_API_BRIGHTNESS_PROPERTY:
-          this.updateBrightness(property.value);
-          break;
-
-        case WYZE_API_COLOR_TEMP_PROPERTY:
-          this.updateColorTemp(property.value);
-          break;
+      let propertyList = await this.getPropertyList();
+      for (let property of propertyList.data.property_list) {
+        switch (property.pid) {
+          case WYZE_API_BRIGHTNESS_PROPERTY:
+            this.updateBrightness(property.value);
+            break;
+  
+          case WYZE_API_COLOR_TEMP_PROPERTY:
+            this.updateColorTemp(property.value);
+            break;
+        }
       }
     }
   }
