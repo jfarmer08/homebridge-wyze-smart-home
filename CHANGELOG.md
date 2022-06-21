@@ -1,6 +1,9 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.19
+- Issue with Locks after adding Camera Support
+
 ### v0.5.18
 - Initial Support for Camera on/off switch
 - Code Clean up
