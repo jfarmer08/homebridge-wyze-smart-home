@@ -1,14 +1,18 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.18
+- Initial Support for Camera on/off switch
+- Code Clean up
+
 ### v0.5.17
 - Initial Support for noResponse when device is offline. 
-    ContactSensor v2
-    LeakSensor v2
-    Light Bulb
-    Mesh Light Bulb
-    Motion Sensor
-    Plug
+ - ContactSensor v2
+ - LeakSensor v2
+ - Light Bulb
+ - Mesh Light Bulb
+ - Motion Sensor
+ - Plug
 
 ### v0.5.16
 - Initial Support for Battery Level on Leak Sensor
