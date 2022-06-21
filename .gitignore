@@ -20,3 +20,6 @@ accessories/cachedAccessories
 .vscode/tasks.json
 accessories/.cachedAccessories.bak
 accessories/cachedAccessories
+*.bak
+accessories/.cachedAccessories.bak
+accessories/cachedAccessories
