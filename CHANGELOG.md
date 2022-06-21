@@ -1,6 +1,9 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.20
+- Broke Offline Support
+
 ### v0.5.19
 - Issue with Locks after adding Camera Support
 
