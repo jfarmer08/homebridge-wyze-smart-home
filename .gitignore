@@ -8,15 +8,4 @@ node_modules/
 persist/
 package-lock.json
 config.json
-accessories/
 backups/
-accessories/cachedAccessories
-accessories/.cachedAccessories.bak
-accessories/cachedAccessories
-accessories/.cachedAccessories.bak
-*.bak
-accessories/.cachedAccessories.bak
-accessories/cachedAccessories
-.vscode/tasks.json
-accessories/.cachedAccessories.bak
-accessories/cachedAccessories
