@@ -1,6 +1,5 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
-const WyzeConstants = require('../WyzeConstants')
 
 const HOMEBRIDGE_SERVICE = Service.LeakSensor
 const HOMEBRIDGE_CHARACTERISTIC = Characteristic.LeakDetected
@@ -72,7 +71,7 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   async updateCharacteristics (device) {
-    if (device.conn_state === WyzeConstants.WYZE_PROPERTY_DEVICE_ONLINE_VALUE_FALSE) {
+    if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
       this.plugin.log.debug(`[LeakSensor] Updating status of "${this.display_name}"`)

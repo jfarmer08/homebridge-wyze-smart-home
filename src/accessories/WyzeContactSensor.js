@@ -1,6 +1,5 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
-const WyzeConstants = require('../WyzeConstants')
 
 const HOMEBRIDGE_SERVICE = Service.ContactSensor
 const HOMEBRIDGE_CHARACTERISTIC = Characteristic.ContactSensorState
@@ -73,7 +72,7 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   updateCharacteristics (device) {
     this.plugin.log.debug(`[ContactSensor] Updating status of "${this.display_name}"`)
 
-    if (device.conn_state === WyzeConstants.WYZE_PROPERTY_DEVICE_ONLINE_VALUE_FALSE) {
+    if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
       this.getOnCharacteristic().updateValue(device.device_params.open_close_state)

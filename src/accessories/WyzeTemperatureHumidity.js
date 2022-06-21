@@ -1,6 +1,5 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
-const WyzeConstants = require('../WyzeConstants')
 
 const HOMEBRIDGE_HUMIDITY_SERVICE = Service.HumiditySensor
 const HOMEBRIDGE_HUMIDITY_CHARACTERISTIC = Characteristic.CurrentRelativeHumidity
@@ -92,7 +91,7 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   updateCharacteristics (device) {
-    if (device.conn_state === WyzeConstants.WYZE_PROPERTY_DEVICE_ONLINE_VALUE_FALSE) {
+    if (device.conn_state === 0) {
       this.getHumidityCharacteristic().updateValue(noResponse)
     } else {
       this.plugin.log.debug(`[TemperatureHumidity] Updating status of "${this.display_name}"`)

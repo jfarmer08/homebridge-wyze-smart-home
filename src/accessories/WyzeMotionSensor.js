@@ -1,6 +1,5 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
-const WyzeConstants = require('../WyzeConstants')
 
 const HOMEBRIDGE_SERVICE = Service.MotionSensor
 const HOMEBRIDGE_CHARACTERISTIC = Characteristic.MotionDetected
@@ -72,7 +71,7 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   updateCharacteristics (device) {
-    if (device.conn_state === WyzeConstants.WYZE_PROPERTY_DEVICE_ONLINE_VALUE_FALSE) {
+    if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
       this.plugin.log.debug(`[MotionSensor] Updating status of "${this.display_name}"`)
