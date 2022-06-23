@@ -47,9 +47,8 @@ module.exports = class WyzeLight extends WyzeAccessory {
   }
 
   updateColorTemp (value) {
-    const floatValue = this._rangeToFloat(value, WYZE_COLOR_TEMP_MIN, WYZE_COLOR_TEMP_MAX)
-    const homeKitValue = this._floatToRange(floatValue, HOMEKIT_COLOR_TEMP_MIN, HOMEKIT_COLOR_TEMP_MAX)
-    this.getCharacteristic(Characteristic.ColorTemperature).updateValue(homeKitValue)
+    this.plugin.log.debug(`Setting color temperature for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value} (${this._kelvinToMired(value)})`)
+    this.getCharacteristic(Characteristic.ColorTemperature).updateValue(this._kelvinToMired(value))
   }
 
   getService () {
@@ -98,7 +97,6 @@ module.exports = class WyzeLight extends WyzeAccessory {
     await this.sleep(500)
     const floatValue = this._rangeToFloat(value, HOMEKIT_COLOR_TEMP_MIN, HOMEKIT_COLOR_TEMP_MAX)
     const wyzeValue = this._floatToRange(floatValue, WYZE_COLOR_TEMP_MIN, WYZE_COLOR_TEMP_MAX)
-
     this.plugin.log.debug(`Setting color temperature for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value} (${wyzeValue})`)
 
     try {
@@ -115,5 +113,9 @@ module.exports = class WyzeLight extends WyzeAccessory {
 
   _floatToRange (value, min, max) {
     return Math.round((value * (max - min)) + min)
+  }
+
+  _kelvinToMired (value) {
+    return Math.round(1000000 / value)
   }
 }
