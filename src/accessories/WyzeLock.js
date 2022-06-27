@@ -18,6 +18,9 @@ const HOMEBRIDGE_BATTERY_CHARACTERISTIC = Characteristic.BatteryLevel
 const HOMEBRIDGE_CONTACT_SENSOR_SERVICE = Service.ContactSensor
 const HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC = Characteristic.ContactSensorState.CurrentDoorState
 
+const noResponse = new Error('No Response')
+noResponse.toString = () => { return noResponse.message }
+
 // The state of Wyze Locks can be read just like normal properties
 // However, setting the state of wyze locks needs to be done via a different API
 // This api is async and therefore we need to poll the state of the lock after trying to set the state of the lock
