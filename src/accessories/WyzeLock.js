@@ -64,7 +64,7 @@ module.exports = class WyzeLock extends WyzeAccessory {
     for (const property of propertyList.data.property_list) {
       switch (property.pid) {
         case WYZE_API_LOCKED_PROPERTY:
-          this.plugin.log.debug(`[LockFarmer] LockCurrentState "${property.value}"`)
+          this.plugin.log.debug(`[Lock] LockCurrentState "${property.value}"`)
           return property.value === '0' ? HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED : HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.UNSECURED
       }
     }
@@ -75,7 +75,7 @@ module.exports = class WyzeLock extends WyzeAccessory {
     for (const property of propertyList.data.property_list) {
       switch (property.pid) {
         case WYZE_API_LOCKED_PROPERTY:
-          this.plugin.log.debug(`[LockFarmer] getLockTargetState "${property.value}"`)
+          this.plugin.log.debug(`[Lock] getLockTargetState "${property.value}"`)
           return property.value === '0' ? HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED : HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.UNSECURED
       }
     }
@@ -104,7 +104,7 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async setLockTargetState (targetState) {
-    this.plugin.log.debug(`[LockFarmer] setLockTargetSate "${targetState}"`)
+    this.plugin.log.debug(`[Lockj] setLockTargetSate "${targetState}"`)
     await this.plugin.client.controlLock(this.mac, this.product_model, (targetState === HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED ? 'remoteLock' : 'remoteUnlock'))
 
     // Takes a few seconds for the lock command to actually update lock state property
