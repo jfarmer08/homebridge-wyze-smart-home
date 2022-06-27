@@ -59,19 +59,19 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   updateBrightness (value) {
+    this.plugin.log.debug(`Updating brightness record for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}: ${JSON.stringify(value)}`)
     this.getCharacteristic(Characteristic.Brightness).updateValue(value)
   }
 
   updateColorTemp (value) {
-    const floatValue = this._rangeToFloat(value, WYZE_COLOR_TEMP_MIN, WYZE_COLOR_TEMP_MAX)
-    const homeKitValue = this._floatToRange(floatValue, HOMEKIT_COLOR_TEMP_MIN, HOMEKIT_COLOR_TEMP_MAX)
-    this.getCharacteristic(Characteristic.ColorTemperature).updateValue(homeKitValue)
+    this.plugin.log.debug(`Updating color Temp record for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}: ${JSON.stringify(this._kelvinToMired(value))}`)
+    this.getCharacteristic(Characteristic.ColorTemperature).updateValue(this._kelvinToMired(value))
   }
 
   updateColor (value) {
     // Convert a Hex color from Wyze into the HSL values recognized by HomeKit.
     const hslValue = colorsys.hex2Hsv(value)
-    this.plugin.log.debug(`Updating color record for ${this.homeKitAccessory.context.mac} to ${value}: ${JSON.stringify(hslValue)}`)
+    this.plugin.log.debug(`Updating color record for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}: ${JSON.stringify(hslValue)}`)
 
     // Update Hue
     this.updateHue(hslValue.h)
@@ -109,7 +109,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   async setOn (value, callback) {
-    this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} to ${value}`)
+    this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
 
     try {
       await this.runActionList(WYZE_API_POWER_PROPERTY, (value) ? 1 : 0)
@@ -121,7 +121,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   async setBrightness (value, callback) {
     await this.sleep(250)
-    this.plugin.log.debug(`Setting brightness for ${this.homeKitAccessory.context.mac} to ${value}`)
+    this.plugin.log.debug(`Setting brightness for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
 
     try {
       await this.runActionList(WYZE_API_BRIGHTNESS_PROPERTY, value)
@@ -136,7 +136,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
     const floatValue = this._rangeToFloat(value, HOMEKIT_COLOR_TEMP_MIN, HOMEKIT_COLOR_TEMP_MAX)
     const wyzeValue = this._floatToRange(floatValue, WYZE_COLOR_TEMP_MIN, WYZE_COLOR_TEMP_MAX)
 
-    this.plugin.log.debug(`Setting color temperature for ${this.homeKitAccessory.context.mac} to ${value} (${wyzeValue})`)
+    this.plugin.log.debug(`Setting color temperature for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value} (${wyzeValue})`)
 
     try {
       await this.runActionList(WYZE_API_COLOR_TEMP_PROPERTY, wyzeValue)
@@ -148,7 +148,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   async setHue (value, callback) {
     await this.sleep(750)
-    this.plugin.log.debug(`Setting hue (color) for ${this.homeKitAccessory.context.mac} to ${value}`)
+    this.plugin.log.debug(`Setting hue (color) for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
     this.plugin.log.debug(`(H)S Values: ${value}, ${this.cache.saturation}`)
 
     try {
@@ -171,7 +171,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   async setSaturation (value, callback) {
     await this.sleep(1000)
-    this.plugin.log.debug(`Setting saturation (color) for ${this.homeKitAccessory.context.mac} to ${value}`)
+    this.plugin.log.debug(`Setting saturation (color) for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
     this.plugin.log.debug(`H(S) Values: ${this.cache.saturation}, ${value}`)
 
     try {
@@ -198,5 +198,9 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   _floatToRange (value, min, max) {
     return Math.round((value * (max - min)) + min)
+  }
+
+  _kelvinToMired (value) {
+    return Math.round(1000000 / value)
   }
 }
