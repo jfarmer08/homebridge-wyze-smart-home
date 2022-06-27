@@ -22,7 +22,6 @@
     "url": "http://github.com/jfarmer08/homebridge-wyze-smart-home/issues"
   },
   "engines": {
-    "node": ">=0.14.0",
     "node": ">=14.19.0",
     "homebridge": ">=0.2.0"
   },
