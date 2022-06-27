@@ -1,6 +1,6 @@
 {
   "name": "homebridge-wyze-smart-home",
-  "version": "0.5.20",
+  "version": "0.5.21",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
@@ -10,7 +10,7 @@
   },
   "keywords": [
     "homebridge-plugin",
-    "Wyze"
+    "Wyze", "Hoobs"
   ],
   "homepage": "http://github.com/jfarmer08/homebridge-wyze-smart-home",
   "repository": {
@@ -21,7 +21,7 @@
     "url": "http://github.com/jfarmer08/homebridge-wyze-smart-home/issues"
   },
   "engines": {
-    "node": ">=0.12.0",
+    "node": ">=0.14.0",
     "homebridge": ">=0.2.0"
   },
   "dependencies": {

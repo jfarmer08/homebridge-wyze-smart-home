@@ -1,6 +1,12 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.21
+- Battery Support for Locks
+- Door Sensor from lock no being reported
+- Update NPM Version
+- Change Log Update
+
 ### v0.5.20
 - Broke Offline Support
 
