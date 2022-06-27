@@ -2,6 +2,7 @@
   "pluginAlias": "WyzeSmartHome",
   "pluginType": "platform",
   "singular": true,
+  "footerDisplay": "For documentation please see [GitHub repository](https://github.com/jfarmer08/homebridge-wyze-smart-home/blob/main/README.md)",
   "schema": {
     "type": "object",
     "properties": {
