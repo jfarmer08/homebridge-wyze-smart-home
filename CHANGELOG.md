@@ -3,7 +3,7 @@
 
 ### v0.5.21
 - Battery Support for Locks
-- Door Sensor from lock no being reported
+- Door Sensor from lock now being reported
 - Update NPM Version
 - Change Log Update
 
