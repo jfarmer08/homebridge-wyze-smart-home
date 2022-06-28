@@ -37,8 +37,14 @@
     "eslint": "^8.17.0",
     "eslint-config-standard": "^17.0.0"
   },
-  "funding": {
+  "funding": [
+    {
     "type" : "paypal",
     "url" : "https://paypal.me/AllenFarmer"
+  },    
+  {
+    "type" : "buymeacoffee",
+    "url" : "https://www.buymeacoffee.com/jfarmer08"
   }
+  ]
 }
