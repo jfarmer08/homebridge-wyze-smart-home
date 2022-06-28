@@ -36,5 +36,9 @@
     "@typescript-eslint/parser": "^5.27.1",
     "eslint": "^8.17.0",
     "eslint-config-standard": "^17.0.0"
+  },
+  "funding": {
+    "type" : "paypal",
+    "url" : "https://paypal.me/AllenFarmer"
   }
 }
