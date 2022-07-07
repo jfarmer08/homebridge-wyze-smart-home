@@ -1,6 +1,10 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.23
+- Bug OutDoor Camera was not working with on/off
+- Bug Wyze Doorbell does not support on/off
+
 ### v0.5.22
 - Update NPM Version
 

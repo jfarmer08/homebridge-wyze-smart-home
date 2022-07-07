@@ -1,7 +1,6 @@
 {
   "name": "homebridge-wyze-smart-home",
-  "version": "0.5.21",
-  "version": "0.5.22",
+  "version": "0.5.23",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",

@@ -108,7 +108,7 @@ module.exports = class WyzeLock extends WyzeAccessory {
     await this.plugin.client.controlLock(this.mac, this.product_model, (targetState === HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED ? 'remoteLock' : 'remoteUnlock'))
 
     // Takes a few seconds for the lock command to actually update lock state property
-    // Poll every second to see if the lock state has changed to what we expect, or time out after 20 attempts
+    // Poll every second to see if the lock state has changed to what we expect, or time out after 30 attempts
     await this.poll(async () => await this.getLockCurrentState(), currentState => currentState === targetState, 1000, 30)
 
     this.lockService.setCharacteristic(Characteristic.LockCurrentState, targetState === HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.SECURED ? HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED : HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.UNSECURED)
