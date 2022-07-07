@@ -39,7 +39,12 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
 
     try {
-      await this.setProperty(WYZE_API_POWER_PROPERTY, (value) ? 1 : 0)
+      if (value === true) {
+        await this.runActionListOnOff(WYZE_API_POWER_PROPERTY, value ? 1 : 0, 'power_on')
+      } else {
+        await this.runActionListOnOff(WYZE_API_POWER_PROPERTY, value ? 1 : 0, 'power_off')
+      }
+
       callback()
     } catch (e) {
       callback(e)

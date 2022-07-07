@@ -120,7 +120,7 @@ module.exports = class WyzeSmartHome {
   getAccessoryClass (type, model) {
     switch (type) {
       case 'OutdoorPlug':
-        if (model == 'WLPPO') return // Discard entry for main unit. Only include the 2 electrical outlets.
+        if (model === 'WLPPO') return // Discard entry for main unit. Only include the 2 electrical outlets.
       case 'Plug':
         return WyzePlug
       case 'Light':
@@ -137,8 +137,9 @@ module.exports = class WyzeSmartHome {
       case 'TemperatureHumidity':
         return WyzeTemperatureHumidity
       case 'LeakSensor':
-          return WyzeLeakSensor
+        return WyzeLeakSensor
       case 'Camera':
+        if (model === 'WYZEDB3') return
         return WyzeCamera
     }
   }
