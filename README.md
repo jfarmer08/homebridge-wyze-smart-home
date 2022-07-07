@@ -13,11 +13,11 @@ This plugin adds support for Wyze Smart Home devices to [Homebridge](https://git
 - Color Bulb (Mesh Light)
 - Plug
 - Outdoor Plug
-- V1 & V2 Contact Sensor
-- V1 & V2 Motion Sensor
-- Tempeature Sensor
-- Leak Sensor
-- Lock (Battery Reporting / Door Status)
+- V1 & V2 Contact Sensor (Status / Battery)
+- V1 & V2 Motion Sensor (Status / Battery)
+- Tempeature Sensor (Status / Battery)
+- Leak Sensor (Status / Battery)
+- Lock (Battery / Door Status / Control)
 - Camera v2, v3, Outdoor Cam, PamCam (on/off)
 
 For more information about our version updates, please check our [change log](CHANGELOG.md).
