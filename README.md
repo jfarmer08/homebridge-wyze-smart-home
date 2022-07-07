@@ -18,7 +18,7 @@ This plugin adds support for Wyze Smart Home devices to [Homebridge](https://git
 - Tempeature Sensor
 - Leak Sensor
 - Lock (Battery Reporting / Door Status)
-- Camera (on/off)
+- Camera v2, v3, Outdoor Cam, PamCam (on/off)
 
 For more information about our version updates, please check our [change log](CHANGELOG.md).
 
