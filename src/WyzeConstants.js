@@ -31,7 +31,7 @@ const WYZE_SET_PROPERTY = 'app/v2/device/set_property'
 // Wyze Shared Property Values
 const WYZE_PROPERTY_NOTIFICATIONS = 'P1'
 const WYZE_API_POWER_PROPERTY = 'P3'
-const WYZE_PROPERTY_DEVICE_ONLINE = 'P5'
+const WYZE_PROPERTY_DEVICE_ONLINE_STATE = 'P5'
 
 const WYZE_ACTION_POWER_ON = 'power_on'
 const WYZE_ACTION_POWER_OFF = 'power_off'

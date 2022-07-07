@@ -89,8 +89,19 @@ module.exports = class WyzeAccessory {
   async runActionList (property, value) {
     try {
       this.updating = true
+      const response = await this.plugin.client.runActionList(this.mac, this.product_model, property, value, 'set_mesh_property')
 
-      const response = await this.plugin.client.runActionList(this.mac, this.product_model, property, value)
+      this.lastTimestamp = response.ts
+    } finally {
+      this.updating = false
+    }
+  }
+
+  async runActionListOnOff (property, value, actionKey) {
+    try {
+      this.updating = true
+      this.plugin.log.debug(`Setting runActionList Power State ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+      const response = await this.plugin.client.runActionList(this.mac, this.product_model, property, value, actionKey)
 
       this.lastTimestamp = response.ts
     } finally {
