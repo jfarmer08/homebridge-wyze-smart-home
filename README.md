@@ -45,6 +45,8 @@ Use the settings UI in Homebridge Config UI X to configure your Wyze account, or
 
 Supported devices will be discovered and added to Homebridge automatically.
 
+https://github.com/jfarmer08/homebridge-wyze-smart-home/discussions/24#discussion-4202742
+
 ### Optional fields
 
 * **`mfaCode`** &ndash; Only required for the initial login if you have two-factor authentication enabled for your account. This is typically a 6-digit code provided by your authenticator app.
