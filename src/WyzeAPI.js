@@ -23,14 +23,16 @@ module.exports = class WyzeAPI {
     this.appName = options.appName || 'com.hualai.WyzeCam'
     this.appVer = options.appVer || 'com.hualai.WyzeCam___2.18.44'
     this.appVersion = options.appVersion || '2.18.44'
+    this.appInfo = 'wyze_android_2.19.14' // Required for the thermostat
     this.sc = '9f275790cab94a72bd206c8876429f3c'
     this.sv = '9d74946e652647e9b6c9d59326aef104'
-    this.appKey = '275965684684dbdaf29a0ed9'
-    this.appSecret = '4deekof1ba311c5c33a9cb8e12787e8c'
     this.userAgent = options.userAgent || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15'
+
+    // Crypto Secrets
+    this.FORD_APP_KEY = '275965684684dbdaf29a0ed9' // Required for Locks
+    this.FORD_APP_SECRET = '4deekof1ba311c5c33a9cb8e12787e8c' // Required for Locks
     this.OLIVE_SIGNING_SECRET = 'wyze_app_secret_key_132' // Required for the thermostat
     this.OLIVE_APP_ID = '9319141212m2ik' //  Required for the thermostat
-    this.APP_INFO = 'wyze_android_2.19.14' // Required for the thermostat
 
     // Login tokens
     this.access_token = ''
@@ -130,7 +132,7 @@ module.exports = class WyzeAPI {
     const config = {
       baseURL: this.authBaseUrl,
       headers: { 'x-api-key': this.authApiKey, 'User-Agent': this.userAgent }
-    };
+    }
 
     return this._performRequest(url, data, config)
   }
@@ -291,15 +293,15 @@ module.exports = class WyzeAPI {
       // The action to take on the lock, "remoteLock" or "remoteUnlock"
       action: action,
       // Extracted app key
-      key: this.appKey,
+      key: this.FORD_APP_KEY,
       // Timestamp
       timestamp: Date.now().toString(),
       // Lock macs have their "uuid" prepended with their model, remove the model to get the uuid
       uuid: this.getUuid(deviceMac, deviceModel)
     }
-
+ 
     // Lock requests need to be signed. This is done by md5 hashing the method, path, request body and the app secret
-    body['sign'] = md5(encodeURIComponent(`post${path}${Object.keys(body).sort().map(key => `${key}=${body[key]}`).join('&')}${this.appSecret}`))
+    body['sign'] = md5(encodeURIComponent(`post${path}${Object.keys(body).sort().map(key => `${key}=${body[key]}`).join('&')}${this.FORD_APP_SECRET}`))
 
     let result
 

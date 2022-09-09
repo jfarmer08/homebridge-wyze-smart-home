@@ -13,7 +13,7 @@ const WyzeCamera = require('./accessories/WyzeCamera')
 const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
 
-const DEFAULT_REFRESH_INTERVAL = 10000
+const DEFAULT_REFRESH_INTERVAL = 30000
 
 function delay (ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -100,7 +100,7 @@ module.exports = class WyzeSmartHome {
   async loadDevice (device, timestamp) {
     const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model)
     if (!accessoryClass) {
-      this.log.debug(`Unsupported device type: ${device.product_type}`)
+      this.log.debug(`Unsupported device type or device is ignored: ${device.product_type} (Model: ${device.product_model})`)
       return
     }
 
@@ -120,26 +120,39 @@ module.exports = class WyzeSmartHome {
   getAccessoryClass (type, model) {
     switch (type) {
       case 'OutdoorPlug':
-        if (model === 'WLPPO') return // Discard entry for main unit. Only include the 2 electrical outlets.
+        if (this.config.excludeOutdoorPlug === true) return
+        else if (model === 'WLPPO') return
+        return WyzePlug
       case 'Plug':
+        if (this.config.excludePlug === true) return
         return WyzePlug
       case 'Light':
+        if (this.config.excludeLight === true) return
         return WyzeLight
       case 'MeshLight':
+        if (this.config.excludeMeshLight === true) return
+        return WyzeMeshLight
       case 'LightStrip':
+        if (this.config.excludeLightStrip === true) return
         return WyzeMeshLight
       case 'ContactSensor':
+        if (this.config.excludeContactSensor === true) return
         return WyzeContactSensor
       case 'MotionSensor':
+        if (this.config.excludeMotionSensor === true) return
         return WyzeMotionSensor
       case 'Lock':
+        if (this.config.excludeLock) return
         return WyzeLock
       case 'TemperatureHumidity':
+        if (this.config.excludeTemperatureHumidity === true) return
         return WyzeTemperatureHumidity
       case 'LeakSensor':
+        if (this.config.excludeLeakSensor === true) return
         return WyzeLeakSensor
       case 'Camera':
-        if (model === 'WYZEDB3') return
+        if (this.config.excludeCamera === true) return
+        else if (model === 'WYZEDB3') return
         return WyzeCamera
     }
   }

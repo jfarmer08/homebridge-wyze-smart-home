@@ -2,6 +2,7 @@
   "pluginAlias": "WyzeSmartHome",
   "pluginType": "platform",
   "singular": true,
+  "headerDisplay": "Wyze plug-in for [Homebridge](https://github.com/jfarmer08/homebridge-wyze-smart-home). This is a custom component to allow control of various Wyze devices using the unofficial API. Please note this mimics the Wyze app and therefore access may be cut off at anytime.",
   "footerDisplay": "For documentation please see [GitHub repository](https://github.com/jfarmer08/homebridge-wyze-smart-home/blob/main/README.md)",
   "schema": {
     "type": "object",
@@ -40,9 +41,46 @@
         "type": "string",
         "default": "",
         "required": false
+      },
+      "excludeOutdoorPlug": {
+        "title": "Exclude Outdoor Plug",
+        "type": "boolean"
+      },
+      "excludePlug": {
+        "title": "Exclude Plug",
+        "type": "boolean"
+      },
+      "excludeLight": {
+        "title": "Exclude Light Bulb",
+        "type": "boolean"
+      },
+      "excludeMeshLight": {
+        "title": "Exclude Mesh Light Bulb",
+        "type": "boolean"
+      },
+      "excludeLightStrip": {
+        "title": "Exclude Light Strip",
+        "type": "boolean"
+      },
+      "excludeContactSensor": {
+        "title": "Exclude Contact Sensor",
+        "type": "boolean"
+      },
+      "excludeMotionSensor": {
+        "title": "Exclude Motion Sensor",
+        "type": "boolean"
+      },
+      "excludeCamera": {
+        "title": "Exclude Camera",
+        "type": "boolean"
+      },
+      "excludeLock": {
+        "title": "Exclude Lock",
+        "type": "boolean"
       }
     }
   },
   "form": null,
   "display": null
 }
+

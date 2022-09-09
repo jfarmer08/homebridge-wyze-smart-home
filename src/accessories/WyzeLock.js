@@ -104,7 +104,7 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async setLockTargetState (targetState) {
-    this.plugin.log.debug(`[Lockj] setLockTargetSate "${targetState}"`)
+    this.plugin.log.debug(`[Lock] setLockTargetSate "${targetState}"`)
     await this.plugin.client.controlLock(this.mac, this.product_model, (targetState === HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED ? 'remoteLock' : 'remoteUnlock'))
 
     // Takes a few seconds for the lock command to actually update lock state property
