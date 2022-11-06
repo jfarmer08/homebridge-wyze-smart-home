@@ -15,12 +15,12 @@ const PLATFORM_NAME = 'WyzeSmartHome'
 
 const DEFAULT_REFRESH_INTERVAL = 30000
 
-function delay (ms) {
+function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 module.exports = class WyzeSmartHome {
-  constructor (log, config, api) {
+  constructor(log, config, api) {
     this.log = log
     this.config = config
     this.api = api
@@ -31,11 +31,11 @@ module.exports = class WyzeSmartHome {
     this.api.on('didFinishLaunching', this.didFinishLaunching.bind(this))
   }
 
-  static register () {
+  static register() {
     homebridge.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, WyzeSmartHome)
   }
 
-  getClient () {
+  getClient() {
     return new WyzeAPI({
       username: this.config.username,
       password: this.config.password,
@@ -44,24 +44,24 @@ module.exports = class WyzeSmartHome {
     }, this.log)
   }
 
-  didFinishLaunching () {
+  didFinishLaunching() {
     this.runLoop()
   }
 
-  async runLoop () {
+  async runLoop() {
     const interval = this.config.refreshInterval || DEFAULT_REFRESH_INTERVAL
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
         await this.refreshDevices()
-      } catch (e) {}
+      } catch (e) { }
 
       await delay(interval)
     }
   }
 
-  async refreshDevices () {
+  async refreshDevices() {
     this.log.debug('Refreshing devices...')
 
     try {
@@ -77,7 +77,7 @@ module.exports = class WyzeSmartHome {
     }
   }
 
-  async loadDevices (devices, timestamp) {
+  async loadDevices(devices, timestamp) {
     const foundAccessories = []
 
     for (const device of devices) {
@@ -97,10 +97,15 @@ module.exports = class WyzeSmartHome {
     this.accessories = foundAccessories
   }
 
-  async loadDevice (device, timestamp) {
+  async loadDevice(device, timestamp) {
     const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model)
     if (!accessoryClass) {
       this.log.debug(`Unsupported device type or device is ignored: ${device.product_type} (Model: ${device.product_model})`)
+      return
+    }
+
+    if (this.config.ignoreDevices?.find(d => d === device.mac)) {
+      this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
       return
     }
 
@@ -110,6 +115,8 @@ module.exports = class WyzeSmartHome {
       const homeKitAccessory = this.createHomeKitAccessory(device)
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
+    } else {
+      this.log.info(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
 
     await accessory.update(device, timestamp)
@@ -117,7 +124,7 @@ module.exports = class WyzeSmartHome {
     return accessory
   }
 
-  getAccessoryClass (type, model) {
+  getAccessoryClass(type, model) {
     switch (type) {
       case 'OutdoorPlug':
         if (this.config.excludeOutdoorPlug === true) return
@@ -157,7 +164,7 @@ module.exports = class WyzeSmartHome {
     }
   }
 
-  createHomeKitAccessory (device) {
+  createHomeKitAccessory(device) {
     const uuid = UUIDGen.generate(device.mac)
 
     const homeKitAccessory = new Accessory(device.nickname, uuid)
@@ -167,7 +174,7 @@ module.exports = class WyzeSmartHome {
   }
 
   // Homebridge calls this method on boot to reinitialize previously-discovered devices
-  configureAccessory (homeKitAccessory) {
+  configureAccessory(homeKitAccessory) {
     // Make sure we haven't set up this accessory already
     let accessory = this.accessories.find(a => a.homeKitAccessory === homeKitAccessory)
     if (accessory) {
