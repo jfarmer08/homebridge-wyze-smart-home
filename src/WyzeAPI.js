@@ -39,6 +39,8 @@ module.exports = class WyzeAPI {
     this.refresh_token = ''
 
     this.dumpData = false // Set this to true to log the Wyze object data blob one time at startup.
+    // Token is good for 216,000 seconds (60 hours) but 48 hours seems like a reasonable refresh interval 172800
+    setInterval(this.refreshToken.bind(this), 172800)
   }
 
   getRequestData (data = {}) {

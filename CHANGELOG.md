@@ -1,7 +1,9 @@
 # homebridge-wyze-smart-home
 ## Releases
 
-### v0.5.24
+### v0.5.24-beta.1
+
+### v0.5.24-beta.0
 - Feature Support for ignoring devices
 - Upate default refresh interval to 30 secounds
 - Update grammer error
