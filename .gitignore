@@ -9,3 +9,6 @@ persist/
 package-lock.json
 config.json
 backups/
+accessories/.cachedAccessories.bak
+*.bak
+accessories/cachedAccessories
