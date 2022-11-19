@@ -40,10 +40,6 @@
     {
     "type" : "paypal",
     "url" : "https://paypal.me/AllenFarmer"
-  },    
-  {
-    "type" : "buymeacoffee",
-    "url" : "https://www.buymeacoffee.com/jfarmer08"
   }
   ]
 }

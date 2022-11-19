@@ -2,6 +2,10 @@
 ## Releases
 
 ### v0.5.24-beta.1
+- Filter Devices by Mac Address (Thanks https://github.com/kliu99)
+- Filter Devices by Device Type
+- Refresh refreshToken every 48 Hours
+- Add Logging
 
 ### v0.5.24-beta.0
 - Feature Support for ignoring devices
