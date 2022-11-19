@@ -77,10 +77,17 @@
       "excludeLock": {
         "title": "Exclude Lock",
         "type": "boolean"
+      },
+      "ignoreDevices": {
+        "title": "Devices to Ignore",
+        "type": "array",
+        "items": {
+          "title": "Device Mac Address",
+          "type": "string"
+        }
       }
     }
   },
   "form": null,
   "display": null
 }
-
