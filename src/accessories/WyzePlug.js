@@ -14,6 +14,7 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   updateCharacteristics (device) {
+    this.plugin.log.debug(`[WyzePlug] Updating status of "${this.display_name}"`)
     if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
@@ -22,9 +23,11 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   getOutletService () {
+    this.plugin.log.debug(`[WyzePlug] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(Service.Outlet)
 
     if (!service) {
+      this.plugin.log.debug(`[WyzePlug] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(Service.Outlet)
     }
 
@@ -32,6 +35,7 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   getOnCharacteristic () {
+    this.plugin.log.debug(`[WyzePlug] Fetching status of "${this.display_name}"`)
     return this.getOutletService().getCharacteristic(Characteristic.On)
   }
 
