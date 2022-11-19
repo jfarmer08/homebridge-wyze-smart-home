@@ -104,22 +104,24 @@ module.exports = class WyzeSmartHome {
       return
     }
 
-    if (this.config.ignoreDevices?.find(d => d === device.mac)) {
+    if (this.config.filterByMacAddressList?.find(d => d === device.mac)) {
       this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
+      return
+    }
+    if (this.config.filterDeviceTypeList?.find(d => d === device.product_type)) {
+      this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
       return
     }
 
     let accessory = this.accessories.find(a => a.matches(device))
     if (!accessory) {
-      this.log.info(`Setting up new device: ${device.nickname} (MAC: ${device.mac})`)
       const homeKitAccessory = this.createHomeKitAccessory(device)
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
       this.log.info(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
-
-    await accessory.update(device, timestamp)
+      accessory.update(device, timestamp)    
 
     return accessory
   }
@@ -127,39 +129,27 @@ module.exports = class WyzeSmartHome {
   getAccessoryClass(type, model) {
     switch (type) {
       case 'OutdoorPlug':
-        if (this.config.excludeOutdoorPlug === true) return
-        else if (model === 'WLPPO') return
-        return WyzePlug
+        if (model == 'WLPPO') return;  // Discard entry for main unit. Only include the 2 electrical outlets.
       case 'Plug':
-        if (this.config.excludePlug === true) return
         return WyzePlug
       case 'Light':
-        if (this.config.excludeLight === true) return
         return WyzeLight
       case 'MeshLight':
-        if (this.config.excludeMeshLight === true) return
         return WyzeMeshLight
       case 'LightStrip':
-        if (this.config.excludeLightStrip === true) return
         return WyzeMeshLight
       case 'ContactSensor':
-        if (this.config.excludeContactSensor === true) return
         return WyzeContactSensor
       case 'MotionSensor':
-        if (this.config.excludeMotionSensor === true) return
         return WyzeMotionSensor
       case 'Lock':
-        if (this.config.excludeLock) return
         return WyzeLock
       case 'TemperatureHumidity':
-        if (this.config.excludeTemperatureHumidity === true) return
         return WyzeTemperatureHumidity
       case 'LeakSensor':
-        if (this.config.excludeLeakSensor === true) return
         return WyzeLeakSensor
       case 'Camera':
-        if (this.config.excludeCamera === true) return
-        else if (model === 'WYZEDB3') return
+        if (model === 'WYZEDB3') return
         return WyzeCamera
     }
   }
@@ -168,6 +158,13 @@ module.exports = class WyzeSmartHome {
     const uuid = UUIDGen.generate(device.mac)
 
     const homeKitAccessory = new Accessory(device.nickname, uuid)
+
+    homeKitAccessory.context = {
+      mac: device.mac,
+      product_type: device.product_type,
+      product_model: device.product_model,
+      nickname: device.nickname
+    }
 
     this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
     return homeKitAccessory
@@ -183,11 +180,9 @@ module.exports = class WyzeSmartHome {
 
     const accessoryClass = this.getAccessoryClass(homeKitAccessory.context.product_type, homeKitAccessory.context.product_model)
     if (accessoryClass) {
-      this.log.debug(`Configuring accessory: ${homeKitAccessory.displayName}`)
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
-      this.log.debug(`Unrecognized accessory type "${homeKitAccessory.context.product_type}", removing: ${homeKitAccessory.displayName}`)
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
     }
   }

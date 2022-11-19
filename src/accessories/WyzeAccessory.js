@@ -42,10 +42,10 @@ module.exports = class WyzeAccessory {
     }
 
     this.homeKitAccessory.getService(Service.AccessoryInformation)
-      .setCharacteristic(Characteristic.Name, device.nickname)
-      .setCharacteristic(Characteristic.Manufacturer, 'Wyze')
-      .setCharacteristic(Characteristic.Model, device.product_model)
-      .setCharacteristic(Characteristic.SerialNumber, device.mac)
+      .updateCharacteristic(Characteristic.Name, device.nickname)
+      .updateCharacteristic(Characteristic.Manufacturer, 'Wyze')
+      .updateCharacteristic(Characteristic.Model, device.product_model)
+      .updateCharacteristic(Characteristic.SerialNumber, device.mac)
 
     if (this.shouldUpdateCharacteristics(timestamp)) {
       await this.updateCharacteristics(device)
