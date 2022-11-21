@@ -2,7 +2,9 @@ const axios = require('axios')
 const md5 = require('md5')
 const fs = require('fs').promises
 const path = require('path')
-const { homebridge, UUIDGen } = require('./types')
+const { homebridge, UUIDGen } = require('../types')
+
+const payloadFactory = require('./payloadFactory')
 
 module.exports = class WyzeAPI {
   constructor (options, log) {
@@ -285,30 +287,19 @@ module.exports = class WyzeAPI {
     return result.data
   }
 
-  async controlLock (deviceMac, deviceModel, action) {
-    // Reverse engineered using references from: https://github.com/shauntarves/wyze-sdk
+   async controlLock (deviceMac, deviceModel, action) {
     const path = '/openapi/lock/v1/control'
-
-    let body = {
-      // Normal Wyze access token
-      access_token: this.access_token,
-      // The action to take on the lock, "remoteLock" or "remoteUnlock"
-      action: action,
-      // Extracted app key
-      key: this.FORD_APP_KEY,
-      // Timestamp
-      timestamp: Date.now().toString(),
-      // Lock macs have their "uuid" prepended with their model, remove the model to get the uuid
-      uuid: this.getUuid(deviceMac, deviceModel)
-    }
- 
-    // Lock requests need to be signed. This is done by md5 hashing the method, path, request body and the app secret
-    body['sign'] = md5(encodeURIComponent(`post${path}${Object.keys(body).sort().map(key => `${key}=${body[key]}`).join('&')}${this.FORD_APP_SECRET}`))
+    
+    let body = {}
+    body["action"] = action
+    body["uuid"] = this.getLockUuid(deviceMac, deviceModel)
 
     let result
 
     try {
-      result = await axios.post('https://yd-saas-toc.wyzecam.com/openapi/lock/v1/control', body)
+      var payload = payloadFactory.ford_create_payload(this.accessToken, body, path, "post")
+
+      result = await axios.post('https://yd-saas-toc.wyzecam.com/openapi/lock/v1/control', payload)
       this.log.debug(`API response: ${JSON.stringify(result.data, null, '\t')}`)
     } catch (e) {
       this.log.debug(`Request failed: ${e}`)
@@ -316,10 +307,40 @@ module.exports = class WyzeAPI {
       if (e.response) {
         this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
-
       throw e
     }
+    return result.data
   }
+ // async controlLock (deviceMac, deviceModel, action) {
+ //   const path = '/openapi/lock/v1/control'
+
+ //   let body = {
+ //     access_token: this.access_token,
+ //     action: action,
+ //     key: this.FORD_APP_KEY,
+ //     timestamp: Date.now().toString(),
+ //     uuid: this.getUuid(deviceMac, deviceModel)
+ //   }
+ 
+ //   body['sign'] = md5(encodeURIComponent(`post${path}${Object.keys(body).sort().map(key => `${key}=${body[key]}`).join('&')}${this.FORD_APP_SECRET}`))
+//
+ //   let result
+
+   // try {
+     // result = await axios.post('https://yd-saas-toc.wyzecam.com/openapi/lock/v1/control', body)
+    //  this.log.debug(`API response: ${JSON.stringify(result.data, null, '\t')}`)
+   // } catch (e) {
+  //    this.log.debug(`Request failed: ${e}`)
+
+    //  if (e.response) {
+   //     this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+   //   }
+//
+  //    throw e
+   // }
+    // Lets only Return Data if we are in debug
+   // return result.data
+ // }
 
   getUuid (deviceMac, deviceModel) {
     return deviceMac.replace(`${deviceModel}.`, '')
