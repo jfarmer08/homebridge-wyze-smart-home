@@ -9,6 +9,7 @@ const WyzeMotionSensor = require('./accessories/WyzeMotionSensor')
 const WyzeTemperatureHumidity = require('./accessories/WyzeTemperatureHumidity')
 const WyzeLeakSensor = require('./accessories/WyzeLeakSensor')
 const WyzeCamera = require('./accessories/WyzeCamera')
+const WyzeSwitch = require('./accessories/WyzeSwitch')
 
 const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
@@ -100,16 +101,16 @@ module.exports = class WyzeSmartHome {
   async loadDevice(device, timestamp) {
     const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model)
     if (!accessoryClass) {
-      this.log.debug(`Unsupported device type or device is ignored: ${device.product_type} (Model: ${device.product_model})`)
+    //  this.log.debug(`Unsupported device type or device is ignored: ${device.product_type} (Model: ${device.product_model})`)
       return
     }
 
     if (this.config.filterByMacAddressList?.find(d => d === device.mac)) {
-      this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
+      //this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
       return
     }
     if (this.config.filterDeviceTypeList?.find(d => d === device.product_type)) {
-      this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
+     // this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
       return
     }
 
@@ -118,8 +119,6 @@ module.exports = class WyzeSmartHome {
       const homeKitAccessory = this.createHomeKitAccessory(device)
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
-    } else {
-      this.log.info(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
       accessory.update(device, timestamp)    
 
@@ -151,6 +150,8 @@ module.exports = class WyzeSmartHome {
       case 'Camera':
         if (model === 'WYZEDB3') return
         return WyzeCamera
+      case 'Common':
+        return WyzeSwitch
     }
   }
 
@@ -184,6 +185,7 @@ module.exports = class WyzeSmartHome {
       this.accessories.push(accessory)
     } else {
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
+      this.log.debug(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
   }
 }
