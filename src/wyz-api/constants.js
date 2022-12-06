@@ -2,8 +2,14 @@ const {
     v4: uuidv4
 } = require('uuid');
 
-module.exports = class constants {
 
+module.exports = Object.freeze({
+    // Crypto Secrets
+    fordAppKey : '275965684684dbdaf29a0ed9', // Required for Locks
+    fordAppSecret : '4deekof1ba311c5c33a9cb8e12787e8c', // Required for Locks
+    oliveSigningSecret : 'wyze_app_secret_key_132', // Required for the thermostat
+    oliveAppId : '9319141212m2ik' //  Required for the thermostat
+});
     // App emulation constants
     PHONEID = uuidv4()
     APPNAME = 'com.hualai.WyzeCam'
@@ -36,9 +42,4 @@ module.exports = class constants {
     WYZE_RUN_ACTION = '/app/v2/auto/run_action';
     WYZE_GET_DEVICE_INFO = '/app/v2/device/get_device_info';
     WYZE_RUN_ACTION_LIST = '/app/v2/auto/run_action_list';
-    // Crypto Secrets
-    FORD_APP_KEY = '275965684684dbdaf29a0ed9' // Required for Locks
-    FORD_APP_SECRET = '4deekof1ba311c5c33a9cb8e12787e8c' // Required for Locks
-    OLIVE_SIGNING_SECRET = 'wyze_app_secret_key_132' // Required for the thermostat
-    OLIVE_APP_ID = '9319141212m2ik' //  Required for the thermostat
-}
+
