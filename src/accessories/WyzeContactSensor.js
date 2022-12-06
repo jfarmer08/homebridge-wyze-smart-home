@@ -1,5 +1,5 @@
 const { Service, Characteristic } = require('../types')
-const WyzeAccessory = require('./WyzeAccessory')
+const WyzeAccessory = require('./services/WyzeAccessory')
 
 const HOMEBRIDGE_SERVICE = Service.ContactSensor
 const HOMEBRIDGE_CHARACTERISTIC = Characteristic.ContactSensorState

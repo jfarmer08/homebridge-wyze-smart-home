@@ -1,6 +1,6 @@
 const colorsys = require('colorsys')
 const { Service, Characteristic } = require('../types')
-const WyzeAccessory = require('./WyzeAccessory')
+const WyzeAccessory = require('./services/WyzeAccessory')
 
 const WYZE_API_POWER_PROPERTY = 'P3'
 const WYZE_API_BRIGHTNESS_PROPERTY = 'P1501'
