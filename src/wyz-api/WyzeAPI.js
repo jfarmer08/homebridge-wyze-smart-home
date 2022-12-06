@@ -391,7 +391,7 @@ module.exports = class WyzeAPI {
       }
 
     try {
-      url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/set_iot_prop_by_topic'
+      var url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/set_iot_prop_by_topic'
       result = await axios.post(url, JSON.stringify(payload), config)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {

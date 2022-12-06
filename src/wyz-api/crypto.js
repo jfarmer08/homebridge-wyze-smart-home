@@ -40,7 +40,6 @@ const constants = require('./constants')
         }
 
         body = body.slice(0, -1)
-        console.log(body)
         var access_key = access_token + constants.oliveSigningSecret
         var secret = crypto.createHash('md5').update(utf8.encode(access_key))
         var secrestDig = secret.digest('hex')

@@ -1,7 +1,9 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./services/WyzeAccessory')
 
-const WYZE_API_POWER_PROPERTY = 'P3'
+var switchPowerState = false
+var iotState = "connected"
+var singlePressType = 0
 
 const noResponse = new Error('No Response')
 noResponse.toString = () => { return noResponse.message }
@@ -13,44 +15,38 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
     this.getOnCharacteristic().on('set', this.set.bind(this))
   }
 
-  updateCharacteristics (device) {
+  updateCharacteristics () {
     this.plugin.log.debug(`[WyzeSwitch] Updating status of "${this.display_name}"`)
     this.wallSwitchGetIotProp()
- //   if (device.conn_state === 0) {
-     //   this.getOnCharacteristic().updateValue(noResponse)
-  //  } else {
-       // this.getOnCharacteristic().updateValue(device.device_params.switch_state)
-  //  }
+    if (iotState === "disconnected") {
+        this.getOnCharacteristic().updateValue(noResponse)
+    } else {
+        this.getOnCharacteristic().updateValue((switchPowerState) ? 1 : 0)
+    }
   }
 
   async wallSwitchGetIotProp() {
     var keys = "iot_state,switch-power,switch-iot,single_press_type"
     const response = await this.plugin.client.getIotProp(this.mac, keys)
     var properties = response.data.props
-    var device_props = []
+    //var device_props = []
 
    const prop_key = Object.keys(properties);
    for (let i = 0; i < prop_key.length; i++) {
      const prop = prop_key[i];
 
      if (prop === 'iot_state') {
+        iotState = properties[prop]
         if (properties[prop] === 'disconnected') {
-            console.log("Offline")
         }
         } else if (prop == 'single_press_type') {
-
-        }else {
+            singlePressType = properties[prop]
+        } else {
             if (prop == 'switch-power'){
-                if(properties[prop] === false) {
-                    console.log("light is off")
-                }
+                switchPowerState = properties[prop]
             } 
-            else {
-                console.log("light is on")
-            }
-           
        }
-     device_props.push(prop, properties[prop])
+    // device_props.push(prop, properties[prop])
 
    }
   }
