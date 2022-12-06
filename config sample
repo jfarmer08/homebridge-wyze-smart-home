@@ -1,0 +1,39 @@
+{
+    "bridge": {
+        "name": "Home Test",
+        "username": "0E:D1:4B:32:A8:65",
+        "port": 56666,
+        "pin": "935-15-250",
+        "advertiser": "bonjour-hap",
+        "bind": [
+            "en0"
+        ]
+    },
+    "accessories": [],
+    "platforms": [
+        {
+            "name": "Config",
+            "port": 8581,
+            "auth": "form",
+            "theme": "auto",
+            "tempUnits": "f",
+            "lang": "auto",
+            "platform": "config"
+        },
+        {
+            "name": "Wyze",
+            "username": "EMAIL@gmail.com",
+            "password": "PASSWORD",
+            "refreshInterval": 45000,
+            "platform": "WyzeSmartHome",
+            "mfaCode": 859886,
+            "filterDeviceTypeList": [
+                "OutdoorPlug",
+                "Plug"
+              ],
+            "filterByMacAddressList": [
+            "macAddress1","macAddress2"
+            ]
+        }
+    ]
+}
