@@ -1,4 +1,4 @@
-const { Service, Characteristic } = require('../types')
+const { Service, Characteristic } = require('../../types')
 
 // Responses from the Wyze API can lag a little after a new value is set
 const UPDATE_THROTTLE_MS = 1000
@@ -71,6 +71,29 @@ module.exports = class WyzeAccessory {
   async getPropertyList () {
     const response = await this.plugin.client.getPropertyList(this.mac, this.product_model)
 
+    return response
+  }
+
+  async getLockInfo () {
+    const response = await this.plugin.client.getLockInfo(this.mac, this.product_model)
+
+    return response
+  }
+
+  async setIotPropSwitchPower (value) {
+    const response = await this.plugin.client.setIotProp(this.mac, this.product_model, 'switch-power', value)
+    return response
+  }
+
+  async setIotPropSwitchIot (value) {
+    const response = await this.plugin.client.setIotProp(this.mac, 'switch-iot', value)
+
+    return response
+  }
+
+  async wallSwitchGetIotProp() {
+    var keys = "iot_state,switch-power,switch-iot,single_press_type"
+    const response = await this.plugin.client.getIotProp(this.mac, keys)
     return response
   }
 
