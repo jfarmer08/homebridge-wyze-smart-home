@@ -5,6 +5,8 @@ const path = require('path')
 const { homebridge, UUIDGen } = require('../types')
 
 const payloadFactory = require('./payloadFactory')
+const crypto = require('./crypto')
+const constants = require('./constants')
 
 module.exports = class WyzeAPI {
   constructor (options, log) {
@@ -29,12 +31,6 @@ module.exports = class WyzeAPI {
     this.sc = '9f275790cab94a72bd206c8876429f3c'
     this.sv = '9d74946e652647e9b6c9d59326aef104'
     this.userAgent = options.userAgent || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15'
-
-    // Crypto Secrets
-    this.FORD_APP_KEY = '275965684684dbdaf29a0ed9' // Required for Locks
-    this.FORD_APP_SECRET = '4deekof1ba311c5c33a9cb8e12787e8c' // Required for Locks
-    this.OLIVE_SIGNING_SECRET = 'wyze_app_secret_key_132' // Required for the thermostat
-    this.OLIVE_APP_ID = '9319141212m2ik' //  Required for the thermostat
 
     // Login tokens
     this.access_token = ''
@@ -66,7 +62,7 @@ module.exports = class WyzeAPI {
     try {
       return await this._performRequest(url, this.getRequestData(data))
     } catch (e) {
-      this.log.debug(e)
+      this.log.error(e)
       if (this.refresh_token) {
         this.log.error('Error, refreshing access token and trying again')
 
@@ -95,13 +91,13 @@ module.exports = class WyzeAPI {
     }
 
     this.log.debug(`Performing request: ${url}`)
-    this.log.debug(`Request config: ${JSON.stringify(config)}`)
+    //this.log.debug(`Request config: ${JSON.stringify(config)}`)
 
     let result
 
     try {
       result = await axios(config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+     // this.log.debug(`API response: ${JSON.stringify(result.data)}`)
       if (this.dumpData) {
         this.log.info(`API response: ${JSON.stringify(result.data)}`)
         this.dumpData = false // Only want to do this once at start-up
@@ -287,22 +283,25 @@ module.exports = class WyzeAPI {
     return result.data
   }
 
-   async controlLock (deviceMac, deviceModel, action) {
-    const path = '/openapi/lock/v1/control'
+  async controlLock (deviceMac, deviceModel, action) {
+    await this.maybeLogin()
+    var path = '/openapi/lock/v1/control'
     
-    let body = {}
-    body["action"] = action
-    body["uuid"] = this.getLockUuid(deviceMac, deviceModel)
+    var payload = {
+      "uuid": this.getUuid(deviceMac, deviceModel),
+      "action": action  // "remoteLock" or "remoteUnlock"
+  }
 
     let result
 
     try {
-      var payload = payloadFactory.ford_create_payload(this.accessToken, body, path, "post")
+      payload = payloadFactory.fordCreatePayload(this.access_token, payload, path, "post")
 
-      result = await axios.post('https://yd-saas-toc.wyzecam.com/openapi/lock/v1/control', payload)
+      var urlPath = 'https://yd-saas-toc.wyzecam.com/openapi/lock/v1/control'
+      result = await axios.post(urlPath, payload)
       this.log.debug(`API response: ${JSON.stringify(result.data, null, '\t')}`)
     } catch (e) {
-      this.log.debug(`Request failed: ${e}`)
+      this.log.error(`Request failed: ${e}`)
 
       if (e.response) {
         this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
@@ -311,36 +310,100 @@ module.exports = class WyzeAPI {
     }
     return result.data
   }
- // async controlLock (deviceMac, deviceModel, action) {
- //   const path = '/openapi/lock/v1/control'
 
- //   let body = {
- //     access_token: this.access_token,
- //     action: action,
- //     key: this.FORD_APP_KEY,
- //     timestamp: Date.now().toString(),
- //     uuid: this.getUuid(deviceMac, deviceModel)
- //   }
- 
- //   body['sign'] = md5(encodeURIComponent(`post${path}${Object.keys(body).sort().map(key => `${key}=${body[key]}`).join('&')}${this.FORD_APP_SECRET}`))
-//
- //   let result
+  async getLockInfo(deviceMac, deviceModel) {
+    await this.maybeLogin()
 
-   // try {
-     // result = await axios.post('https://yd-saas-toc.wyzecam.com/openapi/lock/v1/control', body)
-    //  this.log.debug(`API response: ${JSON.stringify(result.data, null, '\t')}`)
-   // } catch (e) {
-  //    this.log.debug(`Request failed: ${e}`)
+    let result
+    var url_path = "/openapi/lock/v1/info"
 
-    //  if (e.response) {
-   //     this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
-   //   }
-//
-  //    throw e
-   // }
-    // Lets only Return Data if we are in debug
-   // return result.data
- // }
+    var payload = {
+      "uuid": this.getUuid(deviceMac, deviceModel),
+      "with_keypad": '1'
+  }
+    try {      
+      let config = {
+        params: payload
+      }  
+      payload = payloadFactory.fordCreatePayload(this.access_token, payload, url_path, "get")
+
+      var url = 'https://yd-saas-toc.wyzecam.com/openapi/lock/v1/info'
+      result = await axios.get(url, config)
+     // this.log.debug(`API response: ${JSON.stringify(result.data, null, '\t')}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
+  }
+
+  async  getIotProp(deviceMac, keys) {
+    await this.maybeLogin()
+    let result
+    var payload = payloadFactory.oliveCreateGetPayload(deviceMac, keys);
+    var signature = crypto.oliveCreateSignature(payload, this.access_token);
+    let config = {
+      headers: {
+        'Accept-Encoding': 'gzip',
+        'User-Agent': this.userAgent,
+        'appid': constants.oliveAppId,
+        'appinfo': this.appInfo,
+        'phoneid': this.phoneId,
+        'access_token': this.access_token,
+        'signature2': signature
+      },
+      params: payload
+    }
+    try {
+      var url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/get_iot_prop'
+      result = await axios.get(url, config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
+  }
+
+  async setIotProp(deviceMac, product_model, propKey, value) {
+    await this.maybeLogin()
+    var result
+    var payload = payloadFactory.oliveCreatePostPayload(deviceMac, product_model, propKey, value);
+    var signature = crypto.oliveCreateSignatureSingle(JSON.stringify(payload), this.access_token);
+      const config = {
+        headers: {
+          'Accept-Encoding': 'gzip',
+          'Content-Type': 'application/json',
+          'User-Agent': 'myapp',
+          'appid': constants.oliveAppId,
+          'appinfo': this.appInfo,
+          'phoneid': this.phoneId,
+          'access_token': this.access_token,
+          'signature2': signature
+        }
+      }
+
+    try {
+      url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/set_iot_prop_by_topic'
+      result = await axios.post(url, JSON.stringify(payload), config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
+  }
 
   getUuid (deviceMac, deviceModel) {
     return deviceMac.replace(`${deviceModel}.`, '')
