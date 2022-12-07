@@ -29,25 +29,20 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
     var keys = "iot_state,switch-power,switch-iot,single_press_type"
     const response = await this.plugin.client.getIotProp(this.mac, keys)
     var properties = response.data.props
-    //var device_props = []
 
    const prop_key = Object.keys(properties);
    for (let i = 0; i < prop_key.length; i++) {
      const prop = prop_key[i];
 
-     if (prop === 'iot_state') {
+    if (prop === 'iot_state') {
         iotState = properties[prop]
-        if (properties[prop] === 'disconnected') {
-        }
         } else if (prop == 'single_press_type') {
-            singlePressType = properties[prop]
+        singlePressType = properties[prop]
         } else {
-            if (prop == 'switch-power'){
-                switchPowerState = properties[prop]
-            } 
-       }
-    // device_props.push(prop, properties[prop])
-
+        if (prop == 'switch-power'){
+            switchPowerState = properties[prop]
+        } 
+    }
    }
   }
 
