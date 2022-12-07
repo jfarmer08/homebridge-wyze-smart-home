@@ -6,7 +6,7 @@
 - Lock changes - Reduce calls to wyze platform 
 - Major Changes to SDK
 - Initial support for Thermostat in SDK
-- Initial support for HMS in SDK. 
+- Initial support for HMS in SDK.
 ### v0.5.24
 - Release
 
