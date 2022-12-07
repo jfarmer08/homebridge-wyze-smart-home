@@ -1,48 +1,30 @@
-const { Service, Characteristic } = require('../types')
+const { Service,Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
-var switchPowerState = false
-var iotState = "connected"
-var singlePressType = 0
+const SinglePressType = {
+  CLASSIC: 1,
+  IOT: 2,
+}
 
 const noResponse = new Error('No Response')
 noResponse.toString = () => { return noResponse.message }
 
 module.exports = class WyzeSwitch extends WyzeAccessory {
-  constructor (plugin, homeKitAccessory) {
+  constructor (plugin, homeKitAccessory,PlatformAccessory) {
     super(plugin, homeKitAccessory)
 
-    this.getOnCharacteristic().on('set', this.set.bind(this))
+    this.wallSwitchGetIotProp()
+    this.getOnCharacteristic().on('set', this.set.bind(this))    
   }
 
   updateCharacteristics () {
+    this.wallSwitchGetIotProp()
     this.plugin.log.debug(`[WyzeSwitch] Updating status of "${this.display_name}"`)
-    this.updateIotProp()
-    if (iotState === "disconnected") {
+    if (this.iot_state === "disconnected") {
         this.getOnCharacteristic().updateValue(noResponse)
     } else {
-        this.getOnCharacteristic().updateValue((switchPowerState) ? 1 : 0)
+        this.getOnCharacteristic().updateValue((Number(this.switch_power)) ? 1 : 0)
     }
-  }
-
-  async updateIotProp() {
-    const response = await this.wallSwitchGetIotProp()
-    var properties = response.data.props
-
-   const prop_key = Object.keys(properties);
-   for (let i = 0; i < prop_key.length; i++) {
-     const prop = prop_key[i];
-
-    if (prop === 'iot_state') {
-        iotState = properties[prop]
-        } else if (prop == 'single_press_type') {
-        singlePressType = properties[prop]
-        } else {
-        if (prop == 'switch-power'){
-            switchPowerState = properties[prop]
-        } 
-    }
-   }
   }
 
   getSwitchService () {
@@ -65,7 +47,11 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   async set (value, callback) {
     this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
     try {
-      await this.power_onoff((value) ? true : false)
+      if ( this.single_press_type == SinglePressType.IOT){
+        await this.iot_onoff((value) ? true : false)
+      } else {
+        await this.power_onoff((value) ? true : false)
+      }
       callback()
     } catch (e) {
       callback(e)

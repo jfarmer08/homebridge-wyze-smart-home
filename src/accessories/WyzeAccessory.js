@@ -12,21 +12,14 @@ module.exports = class WyzeAccessory {
     this.homeKitAccessory = homeKitAccessory
   }
 
-  get display_name () {
-    return this.homeKitAccessory.displayName
-  }
-
-  get mac () {
-    return this.homeKitAccessory.context.mac
-  }
-
-  get product_type () {
-    return this.homeKitAccessory.context.product_type
-  }
-
-  get product_model () {
-    return this.homeKitAccessory.context.product_model
-  }
+  get display_name () { return this.homeKitAccessory.displayName }
+  get mac () { return this.homeKitAccessory.context.mac }
+  get product_type () { return this.homeKitAccessory.context.product_type }
+  get product_model () { return this.homeKitAccessory.context.product_model }
+  get single_press_type () { return this.homeKitAccessory.context.single_press_type }
+  get double_press_type () { return this.homeKitAccessory.context.double_press_type }
+  get iot_state () { return this.homeKitAccessory.context.iot_state }
+  get switch_power () { return this.homeKitAccessory.context.switch_power }
 
   /** Determines whether this accessory matches the given Wyze device */
   matches (device) {
@@ -34,12 +27,26 @@ module.exports = class WyzeAccessory {
   }
 
   async update (device, timestamp) {
-    this.homeKitAccessory.context = {
-      mac: device.mac,
-      product_type: device.product_type,
-      product_model: device.product_model,
-      nickname: device.nickname
+    if(device.product_type == "Common"){
+      this.homeKitAccessory.context = {
+        mac: device.mac,
+        product_type: device.product_type,
+        product_model: device.product_model,
+        nickname: device.nickname,
+        switch_power: this.switch_power,
+        iot_state: this.iot_onoff,
+        double_press_type: this.double_press_type,
+        single_press_type: this.single_press_type
+      }
+    } else {
+      this.homeKitAccessory.context = {
+        mac: device.mac,
+        product_type: device.product_type,
+        product_model: device.product_model,
+        nickname: device.nickname
+      }
     }
+
 
     this.homeKitAccessory.getService(Service.AccessoryInformation)
       .updateCharacteristic(Characteristic.Name, device.nickname)
@@ -70,25 +77,39 @@ module.exports = class WyzeAccessory {
 
   async getPropertyList () {
     const response = await this.plugin.client.getPropertyList(this.mac, this.product_model)
-
     return response
   }
 
   async getLockInfo () {
     const response = await this.plugin.client.getLockInfo(this.mac, this.product_model)
-
     return response
   }
 
   // Wall Switch Can we move this to its own class - wallSwitch
-  async wallSwitchSetIotProp(deviceMac, prop, value) {
-    const response = await this.plugin.client.setIotProp(deviceMac, prop, value)
+  async wallSwitchSetIotProp(deviceMac, productModel, prop, value) {
+    const response = await this.plugin.client.setIotProp(deviceMac, productModel, prop, value)
     return response
   }
 
   async wallSwitchGetIotProp() {
-    var keys = "iot_state,switch-power,switch-iot,single_press_type"
+    let keys = "iot_state,switch-power,switch-iot,single_press_type, double_press_type"
     const response = await this.plugin.client.getIotProp(this.mac, keys)
+    let properties = response.data.props
+    const prop_key = Object.keys(properties);
+    for (const element of prop_key) {
+      const prop = element;
+      if (prop === 'iot_state') {
+        this.homeKitAccessory.context.iot_state = properties[prop]
+          } else if (prop == 'single_press_type') {
+            this.homeKitAccessory.context.single_press_type = properties[prop]
+          } else if (prop == 'double_press_type') {
+            this.homeKitAccessory.context.double_press_type = properties[prop]
+          } else {
+          if (prop == 'switch-power'){
+            this.homeKitAccessory.context.switch_power = properties[prop]
+          } 
+      }
+    }
     return response
   }
 
@@ -98,43 +119,46 @@ module.exports = class WyzeAccessory {
   }
 
   async iot_onoff(value) {
-    const response = await this.wallSwitchSetIotProp(this.mac, 'switch-iot', value)
+    const response = await this.wallSwitchSetIotProp(this.mac, this.product_model, 'switch-iot', value)
     return response
   }
-
-
     //Thermostat: Can we move this to its own class - thermostat
   async thermostatSetIotProp(deviceMac, prop, value) {
     const response = await this.plugin.client.setIotProp(deviceMac, prop, value)
-
     return response
   }
   async thermostatGetIotProp() {
-    keys = 'trigger_off_val,emheat,temperature,humidity,time2temp_val,protect_time,mode_sys,heat_sp,cool_sp, current_scenario,config_scenario,temp_unit,fan_mode,iot_state,w_city_id,w_lat,w_lon,working_state, dev_hold,dev_holdtime,asw_hold,app_version,setup_state,wiring_logic_id,save_comfort_balance, kid_lock,calibrate_humidity,calibrate_temperature,fancirc_time,query_schedule'
+    // Might need to copy wallSwitchGetIotProp = and store context
+    const keys = 'trigger_off_val,emheat,temperature,humidity,time2temp_val,protect_time,mode_sys,heat_sp,cool_sp, current_scenario,config_scenario,temp_unit,fan_mode,iot_state,w_city_id,w_lat,w_lon,working_state, dev_hold,dev_holdtime,asw_hold,app_version,setup_state,wiring_logic_id,save_comfort_balance, kid_lock,calibrate_humidity,calibrate_temperature,fancirc_time,query_schedule'
     const response = await this.plugin.client.getIotProp(this.mac, keys)
     return response
   }
 
-  async set_preset() {
-    await this.thermostatSetIotProp(this.mac, 'config_scenario', value);
+  async setPreset() {
+    const response = await this.thermostatSetIotProp(this.mac, 'config_scenario', value)
+    return response
 }
 // auto, on, off
-  async set_fan_mode() {
-    await this.thermostatSetIotProp(this.mac, 'fan_mode', value);
+  async setFanMode() {
+    const response = await this.thermostatSetIotProp(this.mac, 'fan_mode', value)
+    return response
 }
 // auto, heat, cool
-  async set_hvac_mode() {
-    await this.thermostatSetIotProp(this.mac, 'mode_sys', value);
+  async setHvacMode() {
+    const response =await this.thermostatSetIotProp(this.mac, 'mode_sys', value)
+    return response
   }
 
   // heat stop point
-  async set_heat_point() {
-    await this.thermostatSetIotProp(this.mac, 'heat_sp', value);
+  async setHeatPoint() {
+    const response = await this.thermostatSetIotProp(this.mac, 'heat_sp', value)
+    return response
   }
 
   // Cool stop point
-  async set_cool_point() {
-    await this.thermostatSetIotProp(this.mac, 'cool_sp', value);
+  async setCoolPoint() {
+    const response = await this.thermostatSetIotProp(this.mac, 'cool_sp', value)
+    return response
   }
 
   async setProperty (property, value) {

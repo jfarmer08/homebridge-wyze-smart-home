@@ -314,9 +314,9 @@ module.exports = class WyzeAPI {
     await this.maybeLogin()
 
     let result
-    var url_path = "/openapi/lock/v1/info"
+    let url_path = "/openapi/lock/v1/info"
 
-    var payload = {
+    let payload = {
       "uuid": this.getUuid(deviceMac, deviceModel),
       "with_keypad": '1'
   }
@@ -326,7 +326,7 @@ module.exports = class WyzeAPI {
       }  
       payload = payloadFactory.fordCreatePayload(this.access_token, payload, url_path, "get")
 
-      var url = 'https://yd-saas-toc.wyzecam.com/openapi/lock/v1/info'
+      const url = 'https://yd-saas-toc.wyzecam.com/openapi/lock/v1/info'
       result = await axios.get(url, config)
       this.log.debug(`API response: ${result.data}`)
     } catch (e) {
@@ -374,9 +374,9 @@ module.exports = class WyzeAPI {
 
   async setIotProp(deviceMac, product_model, propKey, value) {
     await this.maybeLogin()
-    var result
-    var payload = payloadFactory.oliveCreatePostPayload(deviceMac, product_model, propKey, value);
-    var signature = crypto.oliveCreateSignatureSingle(JSON.stringify(payload), this.access_token);
+    let result
+    let payload = payloadFactory.oliveCreatePostPayload(deviceMac, product_model, propKey, value);
+    let signature = crypto.oliveCreateSignatureSingle(JSON.stringify(payload), this.access_token);
       const config = {
         headers: {
           'Accept-Encoding': 'gzip',
@@ -391,7 +391,7 @@ module.exports = class WyzeAPI {
       }
 
     try {
-      var url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/set_iot_prop_by_topic'
+      const url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/set_iot_prop_by_topic'
       result = await axios.post(url, JSON.stringify(payload), config)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
@@ -406,8 +406,10 @@ module.exports = class WyzeAPI {
   }
 
   async getUserProfile() {
-    var payload = payloadFactory.oliveCreateUserInfoPayload();
-    var signature = crypto.oliveCreateSignature(payload, this.access_token);
+    await this.maybeLogin()
+
+    let payload = payloadFactory.oliveCreateUserInfoPayload();
+    let signature = crypto.oliveCreateSignature(payload, this.access_token);
 
     let config = {
       headers: {
@@ -439,6 +441,7 @@ module.exports = class WyzeAPI {
   }
 
   async disableRemeAlarm(hms_id) {
+    await this.maybeLogin()
 
     let config = {
       headers: {
@@ -450,7 +453,7 @@ module.exports = class WyzeAPI {
       }
     }
     try {
-      var url = 'https://hms.api.wyze.com/api/v1/reme-alarm';
+      const url = 'https://hms.api.wyze.com/api/v1/reme-alarm';
       this.log.debug(`Performing request: ${url}`)
       result = await axios.get(url, config)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
@@ -466,8 +469,10 @@ module.exports = class WyzeAPI {
   }
 
   async getPlanBindingListByUser() {
-    var payload = payloadFactory.oliveCreateHmsPayload()
-    var signature = crypto.oliveCreateSignature(payload, this.access_token);
+    await this.maybeLogin()
+
+    let payload = payloadFactory.oliveCreateHmsPayload()
+    let signature = crypto.oliveCreateSignature(payload, this.access_token);
     let config = {
       headers: {
         'Accept-Encoding': 'gzip',
@@ -482,7 +487,7 @@ module.exports = class WyzeAPI {
     }
 
     try {
-      var url = 'https://wyze-membership-service.wyzecam.com/platform/v2/membership/get_plan_binding_list_by_user';
+      const url = 'https://wyze-membership-service.wyzecam.com/platform/v2/membership/get_plan_binding_list_by_user';
       this.log.debug(`Performing request: ${url}`)
       result = await axios.get(url, config)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
@@ -498,8 +503,10 @@ module.exports = class WyzeAPI {
   }
 
   async monitoringProfileStateStatus(hms_id) {
-    var query = payloadFactory.oliveCreateHmsGetPayload(hms_id);
-    var signature = crypto.oliveCreateSignature(query, this.access_token);
+    await this.maybeLogin()
+
+    let query = payloadFactory.oliveCreateHmsGetPayload(hms_id);
+    let signature = crypto.oliveCreateSignature(query, this.access_token);
 
     let config = {
       headers: {
@@ -516,7 +523,7 @@ module.exports = class WyzeAPI {
     }
 
     try {
-      var url = 'https://hms.api.wyze.com/api/v1/monitoring/v1/profile/state-status'
+      const url = 'https://hms.api.wyze.com/api/v1/monitoring/v1/profile/state-status'
       this.log.debug(`Performing request: ${url}`)
       result = await axios.get(url, config)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
@@ -532,8 +539,10 @@ module.exports = class WyzeAPI {
   }
 
   async thermostatSetIotProp(deviceMac,deviceModel, propKey, value) {
-    var payload = payloadFactory.oliveCreatePostPayload(deviceMac, deviceModel, propKey, value);
-    var signature = crypto.oliveCreateSignatureSingle(JSON.stringify(payload), this.access_token)
+    await this.maybeLogin()
+
+    let payload = payloadFactory.oliveCreatePostPayload(deviceMac, deviceModel, propKey, value);
+    let signature = crypto.oliveCreateSignatureSingle(JSON.stringify(payload), this.access_token)
 
     const config = {
       headers: {
@@ -549,7 +558,7 @@ module.exports = class WyzeAPI {
     }
     
     try {
-      var url = 'https://wyze-earth-service.wyzecam.com/plugin/earth/set_iot_prop_by_topic';
+      const url = 'https://wyze-earth-service.wyzecam.com/plugin/earth/set_iot_prop_by_topic';
       result = await axios.post(url, JSON.stringify(payload), config)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
