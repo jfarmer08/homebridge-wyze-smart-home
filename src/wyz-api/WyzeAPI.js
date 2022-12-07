@@ -406,46 +406,63 @@ module.exports = class WyzeAPI {
   }
 
   async getUserProfile() {
-    var payload = wyzePayloadFactory.olive_create_user_info_payload();
-
-    var signature = wyzeCrypto.olive_create_signature(payload, this.accessToken);
+    var payload = payloadFactory.oliveCreateUserInfoPayload();
+    var signature = crypto.oliveCreateSignature(payload, this.access_token);
 
     let config = {
       headers: {
         'Accept-Encoding': 'gzip',
-        'User-Agent': this.userAgent,
-        'appid': wyzeConstants.OLIVE_APP_ID,
-        'appinfo': wyzeConstants.APPINFO,
-        'phoneid': wyzeConstants.PHONEID,
-        'access_token': this.accessToken,
+        'User-Agent': 'myapp',
+        'appid': constants.oliveAppId,
+        'appinfo': this.appInfo,
+        'phoneid': this.phoneId,
+        'access_token': this.access_token,
         'signature2': signature
 
       },
-      params: {
-        'nonce': payload.nonce
-      }
+      params: payload
     }
-    var url = 'https://wyze-platform-service.wyzecam.com/app/v2/platform/get_user_profile';
+    try {
+      var url = 'https://wyze-platform-service.wyzecam.com/app/v2/platform/get_user_profile';
+      this.log.debug(`Performing request: ${url}`)
+      result = await axios.get(url, config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
 
-    const response_json = await axios.get(url, config);
-
-    return response_json.data.data;
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
   }
 
   async disableRemeAlarm(hms_id) {
 
-    url = 'https://hms.api.wyze.com/api/v1/reme-alarm';
     let config = {
       headers: {
-        'Authorization': self._auth_lib.token.access_token
+        'Authorization': this.access_token
       },
       payload: {
         'hms_id': hms_id,
         'remediation_id': 'emergency'
       }
     }
-    response_json = await axios.delete(url, headers = headers, json = payload);
-    return response_json.data
+    try {
+      var url = 'https://hms.api.wyze.com/api/v1/reme-alarm';
+      this.log.debug(`Performing request: ${url}`)
+      result = await axios.get(url, config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
   }
 
   async getPlanBindingListByUser() {
@@ -500,40 +517,6 @@ module.exports = class WyzeAPI {
 
     try {
       var url = 'https://hms.api.wyze.com/api/v1/monitoring/v1/profile/state-status'
-      this.log.debug(`Performing request: ${url}`)
-      result = await axios.get(url, config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
-    } catch (e) {
-      this.log.error(`Request failed: ${e}`)
-
-      if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
-      }
-      throw e
-    }
-    return result.data
-  }
-
-  async thermostatGetIotProp(deviceMac) {
-
-    var payload = payloadFactory.oliveCreateGetPayload(deviceMac)
-    var signature = crypto.oliveCreateSignature(payload, this.access_token)
-
-    const config = {
-      headers: {
-        'Accept-Encoding': 'gzip',
-        'User-Agent': 'myapp',
-        'appid': constants.oliveAppId,
-        'appinfo': this.appInfo,
-        'phoneid': this.phoneId,
-        'access_token': this.access_token,
-        'signature2': signature
-      },
-      payload: payload
-    }
-
-    try {
-      var url = 'https://wyze-earth-service.wyzecam.com/plugin/earth/get_iot_prop';
       this.log.debug(`Performing request: ${url}`)
       result = await axios.get(url, config)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)

@@ -1,5 +1,7 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./services/WyzeAccessory')
+const wallSwitch = require('./services/wallSwitch')
+
 
 var switchPowerState = false
 var iotState = "connected"
@@ -26,8 +28,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   }
 
   async wallSwitchGetIotProp() {
-    var keys = "iot_state,switch-power,switch-iot,single_press_type"
-    const response = await this.plugin.client.getIotProp(this.mac, keys)
+    const response = await this.wallSwitchGetIotProp()
     var properties = response.data.props
 
    const prop_key = Object.keys(properties);
@@ -66,7 +67,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   async set (value, callback) {
     this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
     try {
-      await this.setIotPropSwitchPower((value) ? true : false)
+      await this.power_onoff((value) ? true : false)
       callback()
     } catch (e) {
       callback(e)

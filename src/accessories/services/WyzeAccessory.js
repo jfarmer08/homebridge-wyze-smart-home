@@ -80,14 +80,9 @@ module.exports = class WyzeAccessory {
     return response
   }
 
-  async setIotPropSwitchPower (value) {
-    const response = await this.plugin.client.setIotProp(this.mac, this.product_model, 'switch-power', value)
-    return response
-  }
-
-  async setIotPropSwitchIot (value) {
-    const response = await this.plugin.client.setIotProp(this.mac, 'switch-iot', value)
-
+  // Wall Switch Can we move this to its own class - wallSwitch
+  async wallSwitchSetIotProp(deviceMac, prop, value) {
+    const response = await this.plugin.client.setIotProp(deviceMac, prop, value)
     return response
   }
 
@@ -95,6 +90,51 @@ module.exports = class WyzeAccessory {
     var keys = "iot_state,switch-power,switch-iot,single_press_type"
     const response = await this.plugin.client.getIotProp(this.mac, keys)
     return response
+  }
+
+  async power_onoff(value) {
+    const response = await this.wallSwitchSetIotProp(this.mac, this.product_model, 'switch-power', value)
+    return response
+  }
+
+  async iot_onoff(value) {
+    const response = await this.wallSwitchSetIotProp(this.mac, 'switch-iot', value)
+    return response
+  }
+
+
+    //Thermostat: Can we move this to its own class - thermostat
+  async thermostatSetIotProp(deviceMac, prop, value) {
+    const response = await this.plugin.client.setIotProp(deviceMac, prop, value)
+
+    return response
+  }
+  async thermostatGetIotProp() {
+    keys = 'trigger_off_val,emheat,temperature,humidity,time2temp_val,protect_time,mode_sys,heat_sp,cool_sp, current_scenario,config_scenario,temp_unit,fan_mode,iot_state,w_city_id,w_lat,w_lon,working_state, dev_hold,dev_holdtime,asw_hold,app_version,setup_state,wiring_logic_id,save_comfort_balance, kid_lock,calibrate_humidity,calibrate_temperature,fancirc_time,query_schedule'
+    const response = await this.plugin.client.getIotProp(this.mac, keys)
+    return response
+  }
+
+  async set_preset() {
+    await this.thermostatSetIotProp(this.mac, 'config_scenario', value);
+}
+// auto, on, off
+  async set_fan_mode() {
+    await this.thermostatSetIotProp(this.mac, 'fan_mode', value);
+}
+// auto, heat, cool
+  async set_hvac_mode() {
+    await this.thermostatSetIotProp(this.mac, 'mode_sys', value);
+  }
+
+  // heat stop point
+  async set_heat_point() {
+    await this.thermostatSetIotProp(this.mac, 'heat_sp', value);
+  }
+
+  // Cool stop point
+  async set_cool_point() {
+    await this.thermostatSetIotProp(this.mac, 'cool_sp', value);
   }
 
   async setProperty (property, value) {

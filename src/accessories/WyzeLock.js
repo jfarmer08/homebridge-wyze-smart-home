@@ -1,7 +1,4 @@
-const {
-  Service,
-  Characteristic,
-} = require('../types')
+const {Service,Characteristic,} = require('../types')
 const WyzeAccessory = require('./services/WyzeAccessory')
 
 var lockCurrentState = 1

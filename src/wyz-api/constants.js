@@ -9,7 +9,7 @@ module.exports = Object.freeze({
     fordAppSecret : '4deekof1ba311c5c33a9cb8e12787e8c', // Required for Locks
     oliveSigningSecret : 'wyze_app_secret_key_132', // Required for the thermostat
     oliveAppId : '9319141212m2ik' //  Required for the thermostat
-});
+})
     // App emulation constants
     PHONEID = uuidv4()
     APPNAME = 'com.hualai.WyzeCam'
@@ -42,4 +42,3 @@ module.exports = Object.freeze({
     WYZE_RUN_ACTION = '/app/v2/auto/run_action';
     WYZE_GET_DEVICE_INFO = '/app/v2/device/get_device_info';
     WYZE_RUN_ACTION_LIST = '/app/v2/auto/run_action_list';
-
