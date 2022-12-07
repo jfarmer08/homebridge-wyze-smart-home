@@ -1,4 +1,4 @@
-const { Service, Characteristic } = require('../../types')
+const { Service, Characteristic } = require('../types')
 
 // Responses from the Wyze API can lag a little after a new value is set
 const UPDATE_THROTTLE_MS = 1000

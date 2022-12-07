@@ -1,5 +1,5 @@
 const { Service, Characteristic } = require('../types')
-const WyzeAccessory = require('./services/WyzeAccessory')
+const WyzeAccessory = require('./WyzeAccessory')
 
 const HOMEBRIDGE_HUMIDITY_SERVICE = Service.HumiditySensor
 const HOMEBRIDGE_HUMIDITY_CHARACTERISTIC = Characteristic.CurrentRelativeHumidity

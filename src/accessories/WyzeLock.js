@@ -1,5 +1,5 @@
 const {Service,Characteristic,} = require('../types')
-const WyzeAccessory = require('./services/WyzeAccessory')
+const WyzeAccessory = require('./WyzeAccessory')
 
 var lockCurrentState = 1
 var lockTargetState = 1

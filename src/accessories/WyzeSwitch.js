@@ -1,7 +1,5 @@
 const { Service, Characteristic } = require('../types')
-const WyzeAccessory = require('./services/WyzeAccessory')
-const wallSwitch = require('./services/wallSwitch')
-
+const WyzeAccessory = require('./WyzeAccessory')
 
 var switchPowerState = false
 var iotState = "connected"
@@ -19,7 +17,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
 
   updateCharacteristics () {
     this.plugin.log.debug(`[WyzeSwitch] Updating status of "${this.display_name}"`)
-    this.wallSwitchGetIotProp()
+    this.updateIotProp()
     if (iotState === "disconnected") {
         this.getOnCharacteristic().updateValue(noResponse)
     } else {
@@ -27,7 +25,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
     }
   }
 
-  async wallSwitchGetIotProp() {
+  async updateIotProp() {
     const response = await this.wallSwitchGetIotProp()
     var properties = response.data.props
 

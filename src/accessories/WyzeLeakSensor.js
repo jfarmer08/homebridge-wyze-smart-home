@@ -1,5 +1,5 @@
 const { Service, Characteristic } = require('../types')
-const WyzeAccessory = require('./services/WyzeAccessory')
+const WyzeAccessory = require('./WyzeAccessory')
 
 const HOMEBRIDGE_SERVICE = Service.LeakSensor
 const HOMEBRIDGE_CHARACTERISTIC = Characteristic.LeakDetected

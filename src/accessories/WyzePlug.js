@@ -1,5 +1,5 @@
 const { Service, Characteristic } = require('../types')
-const WyzeAccessory = require('./services/WyzeAccessory')
+const WyzeAccessory = require('./WyzeAccessory')
 
 const WYZE_API_POWER_PROPERTY = 'P3'
 
