@@ -4,10 +4,13 @@ const {
 } = require('../types')
 const WyzeAccessory = require('./services/WyzeAccessory')
 
-const WYZE_API_LOCKED_PROPERTY = 'P3'
-const WYZE_API_ONLINE_PROPERTY = 'P5'
-const WYZE_API_BATTERY_PROPERTY = 'P8'
-const WYZE_API_DOOR_OPEN_CLOSED_STATE = 'P2001'
+var lockCurrentState = 1
+var lockTargetState = 1
+var currentDoorState = 1
+var lockBattery = 0
+var lockOnOffline = 1
+
+
 
 const HOMEBRIDGE_LOCK_MECHANISM_SERVICE = Service.LockMechanism
 const HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC = Characteristic.LockCurrentState
@@ -22,10 +25,6 @@ const HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC = Characteristic.ContactSensorSta
 //const noResponse = new Error('No Response')
 //noResponse.toString = () => { return noResponse.message }
 
-// The state of Wyze Locks can be read just like normal properties
-// However, setting the state of wyze locks needs to be done via a different API
-// This api is async and therefore we need to poll the state of the lock after trying to set the state of the lock
-// (I believe it's async due to the nature of the Zigbee-like protocol I've heard the Lock Gateway uses)
 module.exports = class WyzeLock extends WyzeAccessory {
   constructor (plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory)
@@ -60,16 +59,38 @@ module.exports = class WyzeLock extends WyzeAccessory {
       .onSet(this.setLockTargetState.bind(this))
   }
 
-  async updateCharacteristics (device) {
-      this.plugin.log.debug(`[Lock] Updating status of "${this.display_name}"`)
+  async updateCharacteristics () {
+    if (lockOnOffline === 0) {
+      this.getLockCurrentState().updateValue(noResponse)
+    } else {
+      this.getLockCurrentState
       this.getDoorStatus()
+      this.getBatteryStatus()
+    }
   }
 
-  async getLockCurrentState () {
+  async updateLockProperty() {
     const propertyList = await this.getLockInfo(this.mac, this.product_model)
-    console.log(propertyList.device.door_open_status)
-    this.plugin.log.debug(`[Lock] getLockCurrentState "${propertyList.device.locker_status.hardlock}"`)
-    if (propertyList.device.locker_status.hardlock === 2) {
+    var lockProperties = propertyList.device
+
+    const prop_key = Object.keys(lockProperties);
+    for (let i = 0; i < prop_key.length; i++) {
+      const prop = prop_key[i];
+     if (prop.locker_status === 'locker_status') {
+         lockCurrentState = lockProperties[prop]
+         } else if (prop == 'door_open_status') {
+          currentDoorState = lockProperties[prop]
+        } else if (prop == 'power'){
+          lockBattery = lockProperties[prop]
+        } else if (prop == 'onoff_line'){
+          lockOnOffline = lockProperties[prop]
+        }
+    }
+  }
+  async getLockCurrentState () {
+    this.updateLockProperty
+    this.plugin.log.debug(`[Lock] getLockCurrentState "${lockCurrentState}"`)
+    if (lockCurrentState === 2) {
       return HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.UNSECURED
     } else {
       return HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED
@@ -77,10 +98,8 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async getLockTargetState () {
-    const propertyList = await this.getLockInfo(this.mac, this.product_model)
-    console.log(propertyList.device.door_open_status)
-    this.plugin.log.debug(`[Lock] getLockTargetState "${propertyList.device.locker_status.hardlock}"`)
-    if (propertyList.device.locker_status.hardlock === 2) {
+    this.plugin.log.debug(`[Lock] getLockTargetState "${lockTargetState}"`)
+    if (lockTargetState === 2) {
       return HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.UNSECURED
     } else {
       return HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.SECURED
@@ -88,20 +107,17 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async getDoorStatus () {
-    const propertyList = await this.getPropertyList()
-    for (const property of propertyList.data.property_list) {
-      switch (property.pid) {
-        case WYZE_API_DOOR_OPEN_CLOSED_STATE:
-          this.plugin.log.debug(`[Lock] LockDoorStatus "${property.value}"`)
-          return property.value === '1' ? HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC.CLOSED : HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC.OPEN
-      }
+    this.plugin.log.debug(`[Lock] LockDoorStatus "${currentDoorState}"`)
+    if (currentDoorState === 2) {
+      return HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC.CLOSED
+    } else {
+      return HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC.OPEN
     }
   }
 
   async getBatteryStatus () {
-    const propertyList = await this.getLockInfo(this.mac, this.product_model)
-        this.plugin.log.debug(`[Lock] LockBattery "${propertyList.device.power}"`)
-        return propertyList.device.power
+        this.plugin.log.debug(`[Lock] LockBattery "${lockBattery}"`)
+        return this.checkBatteryVoltage(lockBattery)
   }
 
   async setLockTargetState (targetState) {
@@ -131,5 +147,11 @@ module.exports = class WyzeLock extends WyzeAccessory {
     }
 
     return new Promise(executePoll)
+  }
+
+  checkBatteryVoltage (deviceVoltage) {
+    if (deviceVoltage >= 100) {
+      return 100
+    } else { return deviceVoltage }
   }
 }
