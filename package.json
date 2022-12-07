@@ -1,6 +1,6 @@
 {
   "name": "homebridge-wyze-smart-home",
-  "version": "0.5.25.beta.2",
+  "version": "0.5.2-5.beta.2",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
@@ -10,7 +10,8 @@
   },
   "keywords": [
     "homebridge-plugin",
-    "Wyze", "Hoobs"
+    "Wyze",
+    "Hoobs"
   ],
   "homepage": "http://github.com/jfarmer08/homebridge-wyze-smart-home",
   "repository": {
@@ -32,7 +33,7 @@
     "moment": "^2.24.0",
     "urllib": "3.1.2",
     "crypto-js": "4.1.1",
-    "utf8" : "^3.0.0"
+    "utf8": "^3.0.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.27.1",
@@ -42,8 +43,8 @@
   },
   "funding": [
     {
-    "type" : "paypal",
-    "url" : "https://paypal.me/AllenFarmer"
-  }
+      "type": "paypal",
+      "url": "https://paypal.me/AllenFarmer"
+    }
   ]
 }
