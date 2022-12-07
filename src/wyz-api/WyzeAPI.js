@@ -91,20 +91,19 @@ module.exports = class WyzeAPI {
     }
 
     this.log.debug(`Performing request: ${url}`)
-    //this.log.debug(`Request config: ${JSON.stringify(config)}`)
+    this.log.debug(`Request config: ${JSON.stringify(config)}`)
 
     let result
 
     try {
       result = await axios(config)
-     // this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
       if (this.dumpData) {
         this.log.info(`API response: ${JSON.stringify(result.data)}`)
         this.dumpData = false // Only want to do this once at start-up
       }
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
-
       if (e.response) {
         this.log.error(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data)}`)
       }
@@ -329,7 +328,7 @@ module.exports = class WyzeAPI {
 
       var url = 'https://yd-saas-toc.wyzecam.com/openapi/lock/v1/info'
       result = await axios.get(url, config)
-     // this.log.debug(`API response: ${JSON.stringify(result.data, null, '\t')}`)
+      this.log.debug(`API response: ${result.data}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
       if (e.response) {
@@ -359,6 +358,7 @@ module.exports = class WyzeAPI {
     }
     try {
       var url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/get_iot_prop'
+      this.log.debug(`Performing request: ${url}`)
       result = await axios.get(url, config)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
@@ -392,6 +392,181 @@ module.exports = class WyzeAPI {
 
     try {
       var url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/set_iot_prop_by_topic'
+      result = await axios.post(url, JSON.stringify(payload), config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
+  }
+
+  async getUserProfile() {
+    var payload = wyzePayloadFactory.olive_create_user_info_payload();
+
+    var signature = wyzeCrypto.olive_create_signature(payload, this.accessToken);
+
+    let config = {
+      headers: {
+        'Accept-Encoding': 'gzip',
+        'User-Agent': this.userAgent,
+        'appid': wyzeConstants.OLIVE_APP_ID,
+        'appinfo': wyzeConstants.APPINFO,
+        'phoneid': wyzeConstants.PHONEID,
+        'access_token': this.accessToken,
+        'signature2': signature
+
+      },
+      params: {
+        'nonce': payload.nonce
+      }
+    }
+    var url = 'https://wyze-platform-service.wyzecam.com/app/v2/platform/get_user_profile';
+
+    const response_json = await axios.get(url, config);
+
+    return response_json.data.data;
+  }
+
+  async disableRemeAlarm(hms_id) {
+
+    url = 'https://hms.api.wyze.com/api/v1/reme-alarm';
+    let config = {
+      headers: {
+        'Authorization': self._auth_lib.token.access_token
+      },
+      payload: {
+        'hms_id': hms_id,
+        'remediation_id': 'emergency'
+      }
+    }
+    response_json = await axios.delete(url, headers = headers, json = payload);
+    return response_json.data
+  }
+
+  async getPlanBindingListByUser() {
+    var payload = payloadFactory.oliveCreateHmsPayload()
+    var signature = crypto.oliveCreateSignature(payload, this.access_token);
+    let config = {
+      headers: {
+        'Accept-Encoding': 'gzip',
+        'User-Agent': this.userAgent,
+        'appid': constants.oliveAppId,
+        'appinfo': this.appInfo,
+        'phoneid': this.phoneId,
+        'access_token': this.access_token,
+        'signature2': signature
+      },
+      params: payload
+    }
+
+    try {
+      var url = 'https://wyze-membership-service.wyzecam.com/platform/v2/membership/get_plan_binding_list_by_user';
+      this.log.debug(`Performing request: ${url}`)
+      result = await axios.get(url, config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
+  }
+
+  async monitoringProfileStateStatus(hms_id) {
+    var query = payloadFactory.oliveCreateHmsGetPayload(hms_id);
+    var signature = crypto.oliveCreateSignature(query, this.access_token);
+
+    let config = {
+      headers: {
+        'User-Agent': this.userAgent,
+        'appid': constants.oliveAppId,
+        'appinfo': this.appInfo,
+        'phoneid': this.phoneId,
+        'access_token': this.access_token,
+        'signature2': signature,
+        'Authorization': this.access_token,
+        'Content-Type': 'application/json'
+      },
+      params: query
+    }
+
+    try {
+      var url = 'https://hms.api.wyze.com/api/v1/monitoring/v1/profile/state-status'
+      this.log.debug(`Performing request: ${url}`)
+      result = await axios.get(url, config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
+  }
+
+  async thermostatGetIotProp(deviceMac) {
+
+    var payload = payloadFactory.oliveCreateGetPayload(deviceMac)
+    var signature = crypto.oliveCreateSignature(payload, this.access_token)
+
+    const config = {
+      headers: {
+        'Accept-Encoding': 'gzip',
+        'User-Agent': 'myapp',
+        'appid': constants.oliveAppId,
+        'appinfo': this.appInfo,
+        'phoneid': this.phoneId,
+        'access_token': this.access_token,
+        'signature2': signature
+      },
+      payload: payload
+    }
+
+    try {
+      var url = 'https://wyze-earth-service.wyzecam.com/plugin/earth/get_iot_prop';
+      this.log.debug(`Performing request: ${url}`)
+      result = await axios.get(url, config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
+  }
+
+  async thermostatSetIotProp(deviceMac,deviceModel, propKey, value) {
+    var payload = payloadFactory.oliveCreatePostPayload(deviceMac, deviceModel, propKey, value);
+    var signature = crypto.oliveCreateSignatureSingle(JSON.stringify(payload), this.access_token)
+
+    const config = {
+      headers: {
+        'Accept-Encoding': 'gzip',
+        'Content-Type': 'application/json',
+        'User-Agent': 'myapp',
+        'appid': constants.oliveAppId,
+        'appinfo': this.appInfo,
+        'phoneid': this.phoneId,
+        'access_token': this.access_token,
+        'signature2': signature
+      }
+    }
+    
+    try {
+      var url = 'https://wyze-earth-service.wyzecam.com/plugin/earth/set_iot_prop_by_topic';
       result = await axios.post(url, JSON.stringify(payload), config)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
