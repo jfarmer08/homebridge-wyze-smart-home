@@ -1,7 +1,7 @@
 # homebridge-wyze-smart-home
 ## Releases
 
-### v0.5.25-beta.0
+### v0.5.25-beta.1
 - Wall Switch Support
 - Lock changes - Reduce calls to wyze platform 
 - Major Changes to SDK
