@@ -2,6 +2,10 @@
 ## Releases
 
 ### v0.5.25-beta.2
+- Wall Switch Status update
+- HMS
+- lOCk support is broken
+### v0.5.25-beta.2
 - Wall Switch was not status being followed
 - Unable to turn Wall Switch On or Off.
 - LOCK support is broken for this release
