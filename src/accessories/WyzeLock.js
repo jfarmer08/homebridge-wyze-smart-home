@@ -71,8 +71,8 @@ module.exports = class WyzeLock extends WyzeAccessory {
     var lockProperties = propertyList.device
 
     const prop_key = Object.keys(lockProperties);
-    for (let i = 0; i < prop_key.length; i++) {
-      const prop = prop_key[i];
+    for (const element of prop_key) {
+      const prop = element;
      if (prop.locker_status === 'locker_status') {
          lockCurrentState = lockProperties[prop]
          } else if (prop == 'door_open_status') {

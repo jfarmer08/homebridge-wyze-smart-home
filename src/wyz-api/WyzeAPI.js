@@ -377,6 +377,8 @@ module.exports = class WyzeAPI {
     let result
     let payload = payloadFactory.oliveCreatePostPayload(deviceMac, product_model, propKey, value);
     let signature = crypto.oliveCreateSignatureSingle(JSON.stringify(payload), this.access_token);
+
+    console.log(payload)
       const config = {
         headers: {
           'Accept-Encoding': 'gzip',
@@ -538,6 +540,51 @@ module.exports = class WyzeAPI {
     return result.data
   }
 
+  //Needs worked on
+  async monitoringProfileActive(hms_id, home, away) {
+    await this.maybeLogin()
+
+    query = payloadFactory.oliveCreateHmsPatchPayload(hms_id);
+    signature = crypto.oliveCreateSignature(query, this.access_token)
+    let config = {
+      headers: {
+        'Accept-Encoding': 'gzip',
+        'User-Agent': 'myapp',
+        'appid': constants.oliveAppId,
+        'appinfo': this.appinfo,
+        'phoneid': this.phoneId,
+        'access_token': this.access_token,
+        'signature2': signature,
+        'Authorization': this.access_token
+      },
+      params: [
+        {
+            "state": "home",
+            "active": home
+        },
+        {
+            "state": "away",
+            "active": away
+        }
+     ],
+      payload: query
+    }
+
+    try {
+      const url = "https://hms.api.wyze.com/api/v1/monitoring/v1/profile/active";
+      this.log.debug(`Performing request: ${url}`)
+      result = await axios.patch(url, config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
+  }
   async thermostatSetIotProp(deviceMac,deviceModel, propKey, value) {
     await this.maybeLogin()
 

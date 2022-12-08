@@ -18,8 +18,10 @@ module.exports = class WyzeAccessory {
   get product_model () { return this.homeKitAccessory.context.product_model }
   get single_press_type () { return this.homeKitAccessory.context.single_press_type }
   get double_press_type () { return this.homeKitAccessory.context.double_press_type }
-  get iot_state () { return this.homeKitAccessory.context.iot_state }
-  get switch_power () { return this.homeKitAccessory.context.switch_power }
+  get triple_press_type () { return this.homeKitAccessory.context.triple_press_type }
+  get long_press_type () { return this.homeKitAccessory.context.long_press_type }
+  get iot_state () { return this.homeKitAccessory.context.iot_state } //Device online / offline
+  get switch_power () { return this.homeKitAccessory.context.switch_power } //Power on / Power off
 
   /** Determines whether this accessory matches the given Wyze device */
   matches (device) {
@@ -34,7 +36,7 @@ module.exports = class WyzeAccessory {
         product_model: device.product_model,
         nickname: device.nickname,
         switch_power: this.switch_power,
-        iot_state: this.iot_onoff,
+        iot_state: this.iot_state,
         double_press_type: this.double_press_type,
         single_press_type: this.single_press_type
       }
@@ -87,30 +89,51 @@ module.exports = class WyzeAccessory {
 
   // Wall Switch Can we move this to its own class - wallSwitch
   async wallSwitchSetIotProp(deviceMac, productModel, prop, value) {
-    const response = await this.plugin.client.setIotProp(deviceMac, productModel, prop, value)
-    return response
+    let response
+    try {
+      this.updating = true
+      response = await this.plugin.client.setIotProp(deviceMac, productModel, prop, value)
+
+      this.lastTimestamp = response.ts
+    } finally {
+      this.updating = false
+      return response
+
+    }
   }
 
   async wallSwitchGetIotProp() {
-    let keys = "iot_state,switch-power,switch-iot,single_press_type, double_press_type"
-    const response = await this.plugin.client.getIotProp(this.mac, keys)
-    let properties = response.data.props
-    const prop_key = Object.keys(properties);
-    for (const element of prop_key) {
-      const prop = element;
-      if (prop === 'iot_state') {
-        this.homeKitAccessory.context.iot_state = properties[prop]
-          } else if (prop == 'single_press_type') {
-            this.homeKitAccessory.context.single_press_type = properties[prop]
-          } else if (prop == 'double_press_type') {
-            this.homeKitAccessory.context.double_press_type = properties[prop]
-          } else {
-          if (prop == 'switch-power'){
-            this.homeKitAccessory.context.switch_power = properties[prop]
-          } 
+    let keys = "iot_state,switch-power,switch-iot,single_press_type, double_press_type, triple_press_type, long_press_type"
+    let response
+    try {
+      this.updating = true
+      response = await this.plugin.client.getIotProp(this.mac, keys)
+      let properties = response.data.props
+      const prop_key = Object.keys(properties);
+      for (const element of prop_key) {
+        const prop = element;
+        if (prop === 'iot_state') {
+          this.homeKitAccessory.context.iot_state = properties[prop]
+            } else if (prop == 'single_press_type') {
+              this.homeKitAccessory.context.single_press_type = properties[prop]
+            } else if (prop == 'double_press_type') {
+              this.homeKitAccessory.context.double_press_type = properties[prop]
+            } else if (prop == 'triple_press_type') {
+              this.homeKitAccessory.context.triple_press_type = properties[prop]
+            } 
+            else if (prop == 'long_press_type') {
+              this.homeKitAccessory.context.long_press_type = properties[prop]
+            } else {
+            if (prop == 'switch-power'){
+              this.homeKitAccessory.context.switch_power = properties[prop]
+            } 
+        }
       }
-    }
-    return response
+      this.lastTimestamp = response.ts
+    } finally {
+      this.updating = false
+      return response
+     }
   }
 
   async power_onoff(value) {
@@ -138,7 +161,7 @@ module.exports = class WyzeAccessory {
     const response = await this.thermostatSetIotProp(this.mac, 'config_scenario', value)
     return response
 }
-// auto, on, off
+// auto, on, off / / ['auto', 'circ', 'on']
   async setFanMode() {
     const response = await this.thermostatSetIotProp(this.mac, 'fan_mode', value)
     return response
@@ -158,6 +181,29 @@ module.exports = class WyzeAccessory {
   // Cool stop point
   async setCoolPoint() {
     const response = await this.thermostatSetIotProp(this.mac, 'cool_sp', value)
+    return response
+  }
+  //HMS
+  async getHmsID() {
+    //need to phrase out HMSID from devices-deviceList and return that
+    const response = await this.plugin.client.getPlanBindingListByUser()
+    return response
+  }
+
+  async setHMSCode(hms_id, mode) {
+     if(mode == "mode(Disarmed)") {
+      await this.plugin.client.disableRemeAlarm(hms_id)
+      await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
+     } else if( mode === HMSMode.AWAY ) {
+      await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
+     }  else if( mode === HMSMode.HOME ) {
+      await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
+     }
+     return response
+  }
+
+  async getHmsUpdate(hms_id) {
+    const response = await this.plugin.client.getPlanBindingListByUser(hms_id)
     return response
   }
 
