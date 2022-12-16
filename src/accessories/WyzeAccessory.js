@@ -157,29 +157,29 @@ module.exports = class WyzeAccessory {
     return response
   }
 
-  async setPreset() {
+  async setPreset(value) {
     const response = await this.thermostatSetIotProp(this.mac, 'config_scenario', value)
     return response
 }
 // auto, on, off / / ['auto', 'circ', 'on']
-  async setFanMode() {
+  async setFanMode(value) {
     const response = await this.thermostatSetIotProp(this.mac, 'fan_mode', value)
     return response
 }
 // auto, heat, cool
-  async setHvacMode() {
+  async setHvacMode(value) {
     const response =await this.thermostatSetIotProp(this.mac, 'mode_sys', value)
     return response
   }
 
   // heat stop point
-  async setHeatPoint() {
+  async setHeatPoint(value) {
     const response = await this.thermostatSetIotProp(this.mac, 'heat_sp', value)
     return response
   }
 
   // Cool stop point
-  async setCoolPoint() {
+  async setCoolPoint(value) {
     const response = await this.thermostatSetIotProp(this.mac, 'cool_sp', value)
     return response
   }
