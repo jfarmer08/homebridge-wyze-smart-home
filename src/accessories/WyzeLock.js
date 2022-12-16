@@ -1,14 +1,6 @@
 const {Service,Characteristic,} = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
-var lockCurrentState = 1
-var lockTargetState = 1
-var currentDoorState = 1
-var lockBattery = 0
-var lockOnOffline = 1
-
-
-
 const HOMEBRIDGE_LOCK_MECHANISM_SERVICE = Service.LockMechanism
 const HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC = Characteristic.LockCurrentState
 const HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC = Characteristic.LockTargetState
@@ -54,40 +46,24 @@ module.exports = class WyzeLock extends WyzeAccessory {
     this.lockService.getCharacteristic(HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC)
       .onGet(this.getLockTargetState.bind(this))
       .onSet(this.setLockTargetState.bind(this))
+      this.lockGetProperty()
   }
 
   async updateCharacteristics () {
-    if (lockOnOffline === 0) {
+    this.lockGetProperty()
+    if (this.lockOnoffLine === 0) {
       this.getLockCurrentState().updateValue(noResponse)
     } else {
-      this.getLockCurrentState
+      this.getLockCurrentState()
       this.getDoorStatus()
       this.getBatteryStatus()
     }
   }
 
-  async updateLockProperty() {
-    const propertyList = await this.getLockInfo(this.mac, this.product_model)
-    var lockProperties = propertyList.device
-
-    const prop_key = Object.keys(lockProperties);
-    for (const element of prop_key) {
-      const prop = element;
-     if (prop.locker_status === 'locker_status') {
-         lockCurrentState = lockProperties[prop]
-         } else if (prop == 'door_open_status') {
-          currentDoorState = lockProperties[prop]
-        } else if (prop == 'power'){
-          lockBattery = lockProperties[prop]
-        } else if (prop == 'onoff_line'){
-          lockOnOffline = lockProperties[prop]
-        }
-    }
-  }
   async getLockCurrentState () {
-    this.updateLockProperty
-    this.plugin.log.debug(`[Lock] getLockCurrentState "${lockCurrentState}"`)
-    if (lockCurrentState === 2) {
+
+    this.plugin.log.debug(`[Lock] getLockCurrentState "${this.display_name}"`)
+    if (this.lockLockerStatusHardlock === 2) {
       return HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.UNSECURED
     } else {
       return HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED
@@ -95,8 +71,8 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async getLockTargetState () {
-    this.plugin.log.debug(`[Lock] getLockTargetState "${lockTargetState}"`)
-    if (lockTargetState === 2) {
+    this.plugin.log.debug(`[Lock] getLockTargetState "${this.display_name}"`)
+    if (this.lockLockerStatusHardlock === 2) {
       return HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.UNSECURED
     } else {
       return HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.SECURED
@@ -104,8 +80,8 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async getDoorStatus () {
-    this.plugin.log.debug(`[Lock] LockDoorStatus "${currentDoorState}"`)
-    if (currentDoorState === 2) {
+    this.plugin.log.debug(`[Lock] LockDoorStatus "${this.display_name}"`)
+    if (this.lockDoorOpenStatus === 2) {
       return HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC.CLOSED
     } else {
       return HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC.OPEN
@@ -113,17 +89,17 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async getBatteryStatus () {
-        this.plugin.log.debug(`[Lock] LockBattery "${lockBattery}"`)
-        return this.checkBatteryVoltage(lockBattery)
+        this.plugin.log.debug(`[Lock] LockBattery "${this.display_name}"`)
+        return this.checkBatteryVoltage(this.lockPower)
   }
 
   async setLockTargetState (targetState) {
-    this.plugin.log.debug(`[Lock] setLockTargetSate "${targetState}"`)
+    this.plugin.log.debug(`[Lock] setLockTargetSate "${targetState}"`) // this is zero or 1 
     await this.plugin.client.controlLock(this.mac, this.product_model, (targetState === HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED ? 'remoteLock' : 'remoteUnlock'))
 
     // Takes a few seconds for the lock command to actually update lock state property
     // Poll every second to see if the lock state has changed to what we expect, or time out after 30 attempts
-    await this.poll(async () => await this.getLockCurrentState(), currentState => currentState === targetState, 1000, 30)
+   // await this.poll(async () => await this.getLockCurrentState(), this.locker_status ? 1 : 0 , this.locker_status ? 1 : 0 === targetState, 1000, 10)
     this.lockService.setCharacteristic(Characteristic.LockCurrentState, targetState === HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.SECURED ? HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED : HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.UNSECURED)
   }
 
