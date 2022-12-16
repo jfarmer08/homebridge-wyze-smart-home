@@ -442,17 +442,7 @@ module.exports = class WyzeAccessory {
     const response = await this.wallSwitchSetIotProp(this.mac, this.product_model, 'switch-iot', value)
     return response
   }
-    //Thermostat: Can we move this to its own class - thermostat
-  async thermostatSetIotProp(deviceMac, prop, value) {
-    const response = await this.plugin.client.setIotProp(deviceMac, prop, value)
-    return response
-  }
-  async thermostatGetIotProp() {
-    // Might need to copy wallSwitchGetIotProp = and store context
-    const keys = 'trigger_off_val,emheat,temperature,humidity,time2temp_val,protect_time,mode_sys,heat_sp,cool_sp, current_scenario,config_scenario,temp_unit,fan_mode,iot_state,w_city_id,w_lat,w_lon,working_state, dev_hold,dev_holdtime,asw_hold,app_version,setup_state,wiring_logic_id,save_comfort_balance, kid_lock,calibrate_humidity,calibrate_temperature,fancirc_time,query_schedule'
-    const response = await this.plugin.client.getIotProp(this.mac, keys)
-    return response
-  }
+
 
   async setPreset(value) {
     const response = await this.thermostatSetIotProp(this.mac, 'config_scenario', value)
@@ -469,6 +459,11 @@ module.exports = class WyzeAccessory {
     return response
   }
 
+  async setTargetTemperature(value) {
+    const response = await this.thermostatSetIotProp(this.mac, 'temperature', value)
+    return response
+  }
+
   // heat stop point
   async setHeatPoint(value) {
     const response = await this.thermostatSetIotProp(this.mac, 'heat_sp', value)
@@ -480,6 +475,7 @@ module.exports = class WyzeAccessory {
     const response = await this.thermostatSetIotProp(this.mac, 'cool_sp', value)
     return response
   }
+
   //HMS
   async getHmsID() {
     //need to phrase out HMSID from devices-deviceList and return that
