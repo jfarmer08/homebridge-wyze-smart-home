@@ -24,6 +24,8 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     constructor (plugin, homeKitAccessory) {
       super(plugin, homeKitAccessory)
         // do setup code here
+
+        
         this.setThermostatCallbacks()
 
         this.getTemperatureCharacteristic()
@@ -119,35 +121,36 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     }
 
     // this is where we do the magic
-    updateCharacteristics (device) {
-
+    updateCharacteristics () {
+        
         this.plugin.log.debug(`[Thermostat] Updating status of "${this.display_name}"`)
         this.thermostatGetIotProp()
+
+        this.getTemperatureCharacteristic().updateValue(this.f2c(this.thermostatTemperture))
+
+        // need to check heating/cooling mode to get correct target
+        this.getTargetTemperatureCharacteristic(this.f2c(this.getTargetTemperatureForWorkingState(this.thermostatWorkingState)))
+
+        // off, heat, cool, auto
+        this.getTargetHeatingCoolingStateCharacteristic().updateValue(this.Wyze2HomekitStates[this.thermostatModeSys]);
+
+        this.getCurrentHeatingCoolingStatCharacteristic().updateValue(this.Wyze2HomekitWorkingStates[this.thermostatWorkingState])
+        this.getCoolingThresholdTemperatureCharacteristic().updateValue(this.f2c(this.thermostatCoolSetpoint))
+        this.getHeatingThresholdTemperatureCharacteristic().updateValue(this.f2c(this.thermostatHeatSetpoint))
+        this.getTemperatureDisplayUnitsCharacteristic().updateValue(this.Wyze2HomekitUnits[this.thermostatTempUnit])
         this.plugin.log.debug(`[Thermostat] Done updating status of "${this.display_name}"`)
 
-        // this.getTemperatureCharacteristic().updateValue(this.f2c(device.device_params.temperature))
-
-        // // need to check heating/cooling mode to get correct target
-        // this.getTargetTemperatureCharacteristic(this.f2c(this.getTargetTemperatureForWorkingState(device.device_params.working_state)))
-
-        // // off, heat, cool, auto
-        // this.getTargetHeatingCoolingStateCharacteristic().updateValue(this.Wyze2HomekitStates[device.device_params.mode_sys]);
-
-        // this.getCurrentHeatingCoolingStatCharacteristic().updateValue(this.Wyze2HomekitWorkingStates[device.device_params.working_state])
-        // this.getCoolingThresholdTemperatureCharacteristic().updateValue(this.f2c(device.device_params.cool_sp))
-        // this.getHeatingThresholdTemperatureCharacteristic().updateValue(this.f2c(device.device_params.heat_sp))
-        // this.getTemperatureDisplayUnitsCharacteristic().updateValue(this.Wyze2HomekitUnits[device.device_params.temp_unit])
     }
 
     getTargetTemperatureForWorkingState (device) {
-        let s = this.Wyze2HomekitWorkingStates[device.device_params.working_state]
+        let s = this.Wyze2HomekitWorkingStates[this.thermostatWorkingState]
 
         if (s == this.Wyze2HomekitWorkingStates.cooling) {
-            return this.f2c(device.device_params.cool_sp)
+            return this.f2c(this.thermostatCoolSetpoint)
         } else if (s == this.Wyze2HomekitWorkingStates.heating) {
-            return this.f2c(device.device_params.heat_sp)
+            return this.f2c(this.thermostatHeatSetpoint)
         } else {
-            return this.f2c(device.device_params.temperature)
+            return this.f2c(this.temperature)
         }
     }
 

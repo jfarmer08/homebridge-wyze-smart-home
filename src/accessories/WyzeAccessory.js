@@ -43,6 +43,15 @@ module.exports = class WyzeAccessory {
   get cameraPowerSwitch ()        { return this.homeKitAccessory.context.device_params.power_switch}
   get cameraMotionSwitch ()        { return this.homeKitAccessory.context.device_params.motion_alarm_switch}
 
+  // from thermostat
+  get thermostatTemperture()      { return this.homeKitAccessory.context.device_params?.temperature }
+  get thermostatModeSys()         { return this.homeKitAccessory.context.device_params?.mode_sys }
+  get thermostatWorkingState()    { return this.homeKitAccessory.context.device_params?.working_state }
+  get thermostatCoolSetpoint()    { return this.homeKitAccessory.context.device_params?.cool_sp }
+  get thermostatHeatSetpoint()    { return this.homeKitAccessory.context.device_params?.heat_sp }
+  get thermostatTempUnit()        { return this.homeKitAccessory.context.device_params?.temp_unit }
+
+
   /** Determines whether this accessory matches the given Wyze device */
   matches (device) {
     return this.mac === device.mac
@@ -273,6 +282,24 @@ module.exports = class WyzeAccessory {
           }        
         }
         break
+        case "Thermostat":
+          this.homeKitAccessory.context = {
+            mac: device.mac,
+            product_type: device.product_type,
+            product_model: device.product_model,
+            nickname: device.nickname,
+            conn_state: device.conn_state,
+            push_switch: device.push_switch,
+            device_params: device.device_params = {
+              temperature: this.thermostatTemperture,
+              cool_sp: this.thermostatCoolSetpoint,
+              heat_sp: this.thermostatHeatSetpoint,
+              working_state: this.thermostatWorkingState,
+              temp_unit: this.thermostatTempUnit,
+              mode_sys: this.thermostatWorkingState
+            }        
+          }
+          break
       default:
         this.homeKitAccessory.context = {
           mac: device.mac,
@@ -449,26 +476,28 @@ async thermostatGetIotProp() {
     let response
     try {
       this.updating = true
-      response = await this.plugin.client.getIotProp(this.mac, keys)
+      response = await this.plugin.client.thermostatGetIotProp(this.mac, keys)
       let properties = response.data.props
       const prop_key = Object.keys(properties);
-      this.plugin.log.debug("Thermostat Props: " + prop_key)
-      // for (const element of prop_key) {
-      //   const prop = element;
-      //   if (prop === 'iot_state') {
-      //     this.homeKitAccessory.context.device_params.iot_state = properties[prop]
-      //   } else if (prop == 'temperature'){
-      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
-      //   } else if (prop == 'temperature'){
-      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
-      //   } else if (prop == 'temperature'){
-      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
-      //   } else if (prop == 'temperature'){
-      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
-      //   } else if (prop == 'temperature'){
-      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
-      //   }
-      // }
+      this.plugin.log.debug("Thermostat Props: " + JSON.stringify(properties))
+      for (const element of prop_key) {
+        const prop = element;
+        if (prop === 'temperature') {
+          this.homeKitAccessory.context.device_params.teperature = properties[prop]
+          this.plugin.log.debug("Thermostat temp: " + properties[prop])
+
+        } else if (prop == 'cool_sp'){
+          this.homeKitAccessory.context.device_params.cool_sp = properties[prop]
+        } else if (prop == 'heat_sp'){
+          this.homeKitAccessory.context.device_params.heat_sp = properties[prop]
+        } else if (prop == 'working_state'){
+          this.homeKitAccessory.context.device_params.working_state = properties[prop]
+        } else if (prop == 'temp_unit'){
+          this.homeKitAccessory.context.device_params.temp_unit = properties[prop]
+        } else if (prop == 'mode_sys'){
+          this.homeKitAccessory.context.device_params.mode_sys = properties[prop]
+        }
+      }
       this.lastTimestamp = response.ts
 
     } catch(e) {

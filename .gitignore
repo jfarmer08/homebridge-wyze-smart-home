@@ -12,3 +12,4 @@ backups/
 accessories/.cachedAccessories.bak
 *.bak
 accessories/cachedAccessories
+output.json

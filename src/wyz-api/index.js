@@ -584,6 +584,40 @@ module.exports = class WyzeAPI {
     }
     return result.data
   }
+
+  async thermostatGetIotProp(deviceMac, keys) {
+    await this.maybeLogin()
+    let result
+    var payload = payloadFactory.oliveCreateGetPayload(deviceMac, keys);
+    var signature = crypto.oliveCreateSignature(payload, this.access_token);
+    let config = {
+      headers: {
+        'Accept-Encoding': 'gzip',
+        'User-Agent': this.userAgent,
+        'appid': constants.oliveAppId,
+        'appinfo': this.appInfo,
+        'phoneid': this.phoneId,
+        'access_token': this.access_token,
+        'signature2': signature
+      },
+      params: payload
+    }
+    try {
+      var url = 'https://wyze-earth-service.wyzecam.com/plugin/earth/get_iot_prop'
+      this.log.debug(`Performing request: ${url}`)
+      result = await axios.get(url, config)
+      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+    } catch (e) {
+      this.log.error(`Request failed: ${e}`)
+
+      if (e.response) {
+        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+      }
+      throw e
+    }
+    return result.data
+  }
+
   async thermostatSetIotProp(deviceMac,deviceModel, propKey, value) {
     await this.maybeLogin()
 
