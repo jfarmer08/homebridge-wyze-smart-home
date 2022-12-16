@@ -1,6 +1,13 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
+const homebridgeCharacteristic = {
+  'home' : Characteristic.SecuritySystemTargetState.STAY_ARM,
+  nightArm : Characteristic.SecuritySystemTargetState.NIGHT_ARM,
+  'away' :Characteristic.SecuritySystemTargetState.AWAY_ARM,
+  'disarm' : Characteristic.SecuritySystemTargetState.DISARM
+}
+
 const HMSMode = {
   CHANGING : 'changing',
   DISARMED : 'disarm',

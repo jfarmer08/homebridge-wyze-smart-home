@@ -1,5 +1,5 @@
 const { homebridge, Accessory, UUIDGen } = require('./types')
-const WyzeAPI = require('./wyz-api/WyzeAPI')
+const WyzeAPI = require('./wyz-api')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
@@ -85,6 +85,7 @@ module.exports = class WyzeSmartHome {
       const accessory = await this.loadDevice(device, timestamp)
       if (accessory) {
         foundAccessories.push(accessory)
+        this.api.updatePlatformAccessories([accessory])
       }
     }
 
@@ -159,13 +160,13 @@ module.exports = class WyzeSmartHome {
     const uuid = UUIDGen.generate(device.mac)
 
     const homeKitAccessory = new Accessory(device.nickname, uuid)
-
-    homeKitAccessory.context = {
-      mac: device.mac,
-      product_type: device.product_type,
-      product_model: device.product_model,
-      nickname: device.nickname
-    }
+      homeKitAccessory.context = {
+        mac: device.mac,
+        product_type: device.product_type,
+        product_model: device.product_model,
+        nickname: device.nickname,
+        conn_state: device.conn_state
+      }
 
     this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
     return homeKitAccessory

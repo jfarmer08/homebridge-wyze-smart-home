@@ -298,7 +298,7 @@ module.exports = class WyzeAPI {
 
       var urlPath = 'https://yd-saas-toc.wyzecam.com/openapi/lock/v1/control'
       result = await axios.post(urlPath, payload)
-      this.log.debug(`API response: ${JSON.stringify(result.data, null, '\t')}`)
+      this.log.debug(`API response: ${result.data}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
@@ -378,7 +378,6 @@ module.exports = class WyzeAPI {
     let payload = payloadFactory.oliveCreatePostPayload(deviceMac, product_model, propKey, value);
     let signature = crypto.oliveCreateSignatureSingle(JSON.stringify(payload), this.access_token);
 
-    console.log(payload)
       const config = {
         headers: {
           'Accept-Encoding': 'gzip',
