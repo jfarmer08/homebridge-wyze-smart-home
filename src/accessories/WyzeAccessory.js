@@ -444,6 +444,41 @@ module.exports = class WyzeAccessory {
   }
 
 
+async thermostatGetIotProp() {
+    let keys = "trigger_off_val,emheat,temperature,humidity,time2temp_val,protect_time,mode_sys,heat_sp,cool_sp, current_scenario,config_scenario,temp_unit,fan_mode,iot_state,w_city_id,w_lat,w_lon,working_state, dev_hold,dev_holdtime,asw_hold,app_version,setup_state,wiring_logic_id,save_comfort_balance, kid_lock,calibrate_humidity,calibrate_temperature,fancirc_time,query_schedule"
+    let response
+    try {
+      this.updating = true
+      response = await this.plugin.client.getIotProp(this.mac, keys)
+      let properties = response.data.props
+      const prop_key = Object.keys(properties);
+      this.plugin.log.debug("Thermostat Props: " + prop_key)
+      // for (const element of prop_key) {
+      //   const prop = element;
+      //   if (prop === 'iot_state') {
+      //     this.homeKitAccessory.context.device_params.iot_state = properties[prop]
+      //   } else if (prop == 'temperature'){
+      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
+      //   } else if (prop == 'temperature'){
+      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
+      //   } else if (prop == 'temperature'){
+      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
+      //   } else if (prop == 'temperature'){
+      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
+      //   } else if (prop == 'temperature'){
+      //     this.homeKitAccessory.context.device_params.temperature = properties[prop]
+      //   }
+      // }
+      this.lastTimestamp = response.ts
+
+    } catch(e) {
+      this.plugin.log.debug("Error in thermostat: " + e)
+    } finally {
+      this.updating = false
+      return response
+    }
+  }
+
   async setPreset(value) {
     const response = await this.thermostatSetIotProp(this.mac, 'config_scenario', value)
     return response
@@ -456,11 +491,6 @@ module.exports = class WyzeAccessory {
 // auto, heat, cool
   async setHvacMode(value) {
     const response =await this.thermostatSetIotProp(this.mac, 'mode_sys', value)
-    return response
-  }
-
-  async setTargetTemperature(value) {
-    const response = await this.thermostatSetIotProp(this.mac, 'temperature', value)
     return response
   }
 
