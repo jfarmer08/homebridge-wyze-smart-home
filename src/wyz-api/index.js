@@ -620,10 +620,9 @@ module.exports = class WyzeAPI {
 
   async thermostatSetIotProp(deviceMac,deviceModel, propKey, value) {
     await this.maybeLogin()
-
+    let result
     let payload = payloadFactory.oliveCreatePostPayload(deviceMac, deviceModel, propKey, value);
     let signature = crypto.oliveCreateSignatureSingle(JSON.stringify(payload), this.access_token)
-
     const config = {
       headers: {
         'Accept-Encoding': 'gzip',

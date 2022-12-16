@@ -60,6 +60,8 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     }
 
     async setTargetTemperature(targetTemp) {
+        this.plugin.log.debug(`[Thermostat] Setting targetTemperature status of "${this.display_name}" to ${targetTemp}`)
+
         // switch on current heating cooling state since we are NOT in auto mode
         switch(this.thermostatModeSys) {
             case this.Wyze2HomekitStates.auto:
@@ -76,20 +78,27 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     }
 
     async setTargetHeatingCoolingState(targetState) {
+        this.plugin.log.debug(`[Thermostat] Setting targetHeatingCoolingState status of "${this.display_name}" to ${targetState}`)
+
         let val = this.getKey(this.Wyze2HomekitStates, targetState)
         this.setHvacMode(val)
         this.getTargetHeatingCoolingStateCharacteristic().updateValue(targetState);
     }
 
     async setCoolingThreshold(coolingTemp) {
-        this.setCoolPoint(this.c2f(coolingTemp))
-        this.getCoolingThresholdTemperatureCharacteristic().updateValue(this.c2f(coolingTemp))
+        this.plugin.log.debug(`[Thermostat] Setting setCoolingThreshold status of "${this.display_name}" to ${coolingTemp}`)
+
+        let val = this.c2f(coolingTemp)
+        this.setCoolPoint(val)
+        this.getHeatingThresholdTemperatureCharacteristic().updateValue(coolingTemp)
     }
 
     async setHeatingThreshold(heatingTemp) {
+        this.plugin.log.debug(`[Thermostat] Setting setHeatingThreshold status of "${this.display_name}" to ${heatingTemp}`)
+
         let val = this.c2f(heatingTemp)
         this.setHeatPoint(val)
-        this.getHeatingThresholdTemperatureCharacteristic().updateValue(val)
+        this.getHeatingThresholdTemperatureCharacteristic().updateValue(heatingTemp)
     }
 
     async setTemperatureUnits(tempUnits) {
