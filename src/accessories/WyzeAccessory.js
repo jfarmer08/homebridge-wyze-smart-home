@@ -44,12 +44,24 @@ module.exports = class WyzeAccessory {
   get cameraMotionSwitch ()       { return this.homeKitAccessory.context.device_params.motion_alarm_switch}
 
   // from thermostat
-  get thermostattemperature()     { return this.homeKitAccessory.context.device_params?.temperature }
+  get thermostatTemperature()     { return this.homeKitAccessory.context.device_params?.temperature }
+  set thermostatTemperature(value){ this.homeKitAccessory.context.device_params.temperature = value }
+
   get thermostatModeSys()         { return this.homeKitAccessory.context.device_params?.mode_sys }
+  set thermostatModeSys(value)    { this.homeKitAccessory.context.device_params.mode_sys = value }
+
   get thermostatWorkingState()    { return this.homeKitAccessory.context.device_params?.working_state }
+  set thermostatWorkingState(value)    { this.homeKitAccessory.context.device_params.working_state = value }
+
   get thermostatCoolSetpoint()    { return this.homeKitAccessory.context.device_params?.cool_sp }
+  set thermostatCoolSetpoint(value)    { this.homeKitAccessory.context.device_params.cool_sp = value}
+
   get thermostatHeatSetpoint()    { return this.homeKitAccessory.context.device_params?.heat_sp }
+  set thermostatHeatSetpoint(value)    { this.homeKitAccessory.context.device_params.heat_sp = value }
+
   get thermostatTempUnit()        { return this.homeKitAccessory.context.device_params?.temp_unit }
+  set thermostatTempUnit(value)        { this.homeKitAccessory.context.device_params.temp_unit = value }
+
   get thermostatConnState()       { return this.homeKitAccessory.context.conn_state }
 
 
@@ -292,7 +304,7 @@ module.exports = class WyzeAccessory {
             conn_state: device.conn_state,
             push_switch: device.push_switch,
             device_params: device.device_params = {
-              temperature: this.thermostattemperature,
+              temperature: this.thermostatTemperature,
               cool_sp: this.thermostatCoolSetpoint,
               heat_sp: this.thermostatHeatSetpoint,
               working_state: this.thermostatWorkingState,
