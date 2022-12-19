@@ -38,7 +38,6 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     }
 
     
-
     getThermostatService () {
         this.plugin.log.debug(`[Thermostat] Retrieving previous service for "${this.display_name}"`)
         let service = this.homeKitAccessory.getService(HOMEBRIDGE_THERMOSTAT_SERVICE)
@@ -57,7 +56,34 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
         this.getCoolingThresholdTemperatureCharacteristic().on('set', this.setCoolingThreshold.bind(this))
         this.getHeatingThresholdTemperatureCharacteristic().on('set', this.setHeatingThreshold.bind(this))
         this.getTemperatureDisplayUnitsCharacteristic().on('set', this.setTemperatureUnits.bind(this))
+
+        this.getTargetTemperatureCharacteristic().onGet(this.getTargetTemperature.bind(this))
+        this.getTargetHeatingCoolingStateCharacteristic().onGet(this.getTargetHeatingCoolingState.bind(this))
+        this.getCoolingThresholdTemperatureCharacteristic().onGet(this.getCoolingThreshold.bind(this))
+        this.getHeatingThresholdTemperatureCharacteristic().onGet(this.getHeatingThreshold.bind(this))
+        this.getTemperatureDisplayUnitsCharacteristic().onGet(this.getTemperatureUnits.bind(this))
     }
+
+    async getTargetTemperature() {
+        return this.getTargetTemperatureForSystemState();
+    }
+
+    async getTargetHeatingCoolingState() {
+        return this.Wyze2HomekitStates[this.thermostatModeSys]
+    }
+
+    async getCoolingThreshold() {
+        return this.f2c(this.thermostatCoolSetpoint)
+    }
+
+    async getHeatingThreshold() {
+        return this.f2c(this.thermostatHeatSetpoint)
+    }
+
+    async getTemperatureUnits() {
+        return this.Wyze2HomekitUnits[this.thermostatTempUnit]
+    }
+
 
     async setTargetTemperature(targetTemp) {
         this.plugin.log.debug(`[Thermostat] Setting targetTemperature status of "${this.display_name}" to ${targetTemp}`)
@@ -76,7 +102,6 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
                 // do nothing, some other issue if we get here
         }
         this.getTargetTemperatureCharacteristic().updateValue(targetTemp)
-        this.updateCharacteristics()
     }
 
     async setTargetHeatingCoolingState(targetState) {
@@ -84,7 +109,6 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
 
         let val = this.getKey(this.Wyze2HomekitStates, targetState)
         this.setHvacMode(val)
-        this.updateCharacteristics()
         this.getTargetHeatingCoolingStateCharacteristic().updateValue(targetState);
     }
 
@@ -93,7 +117,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
 
         let val = this.c2f(coolingTemp)
         this.setCoolPoint(val)
-        this.thermostatCoolSetpoint = coolingTemp
+        this.thermostatCoolSetpoint = val
         this.getCoolingThresholdTemperatureCharacteristic().updateValue(coolingTemp)
     }
 
@@ -102,7 +126,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
 
         let val = this.c2f(heatingTemp)
         this.setHeatPoint(val)
-        this.thermostatHeatSetpoint = heatingTemp
+        this.thermostatHeatSetpoint = val
         this.getHeatingThresholdTemperatureCharacteristic().updateValue(heatingTemp)
     }
 
@@ -110,6 +134,37 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
         // nothing to do at the moment
     }
 
+    // this is where we do the magic
+    async updateCharacteristics () {
+        
+        this.plugin.log.debug(`[Thermostat] Updating status of "${this.display_name}"`)
+
+        // have to wait for this call to finish before updating or we might get null data
+        this.thermostatGetIotProp().then(this.fillData.bind(this))
+    }
+
+    fillData() {
+        this.plugin.log.debug("Thermostat Data: " + this.f2c(this.thermostatTemperature))
+        this.getTemperatureCharacteristic().updateValue(this.f2c(this.thermostatTemperature))
+
+        this.plugin.log.debug("Thermostat Data: " + this.getTargetTemperatureForSystemState())
+        this.getTargetTemperatureCharacteristic().updateValue(this.getTargetTemperatureForSystemState())
+        
+        this.plugin.log.debug("Thermostat Data: " + this.Wyze2HomekitStates[this.thermostatModeSys])
+        this.getTargetHeatingCoolingStateCharacteristic().updateValue(this.Wyze2HomekitStates[this.thermostatModeSys]);
+
+        this.plugin.log.debug("Thermostat Data: " + this.Wyze2HomekitWorkingStates[this.thermostatWorkingState])
+        this.getCurrentHeatingCoolingStateCharacteristic().updateValue(this.Wyze2HomekitWorkingStates[this.thermostatWorkingState])
+
+        this.plugin.log.debug("Thermostat Data: " + this.f2c(this.thermostatCoolSetpoint))
+        this.getCoolingThresholdTemperatureCharacteristic().updateValue(this.f2c(this.thermostatCoolSetpoint))
+
+        this.plugin.log.debug("Thermostat Data: " + this.f2c(this.thermostatHeatSetpoint))
+        this.getHeatingThresholdTemperatureCharacteristic().updateValue(this.f2c(this.thermostatHeatSetpoint))
+
+        this.plugin.log.debug("Thermostat Data: " + this.Wyze2HomekitUnits[this.thermostatTempUnit])
+        this.getTemperatureDisplayUnitsCharacteristic().updateValue(this.Wyze2HomekitUnits[this.thermostatTempUnit])
+    }
 
     getTemperatureCharacteristic () {
         this.plugin.log.debug(`[Thermostat] Fetching temperature status of "${this.display_name}"`)
@@ -144,38 +199,6 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     getTemperatureDisplayUnitsCharacteristic () {
         this.plugin.log.debug(`[Thermostat] Fetching Temperature Display Units status of "${this.display_name}"`)
         return this.getThermostatService().getCharacteristic(HOMEBRIDGE_TEMERPATUREDISPLAYUNITS_CHARACTERISTIC)
-    }
-
-    // this is where we do the magic
-    async updateCharacteristics () {
-        
-        this.plugin.log.debug(`[Thermostat] Updating status of "${this.display_name}"`)
-
-        // have to wait for this call to finish before updating or we might get null data
-        this.thermostatGetIotProp().then(this.fillData.bind(this))
-    }
-
-    fillData() {
-        this.plugin.log.debug("Thermostat Data: " + this.f2c(this.thermostatTemperature))
-        this.getTemperatureCharacteristic().updateValue(this.f2c(this.thermostatTemperature))
-
-        this.plugin.log.debug("Thermostat Data: " + this.getTargetTemperatureForSystemState(this.thermostatModeSys))
-        this.getTargetTemperatureCharacteristic().updateValue(this.getTargetTemperatureForSystemState(this.thermostatModeSys))
-        
-        this.plugin.log.debug("Thermostat Data: " + this.Wyze2HomekitStates[this.thermostatModeSys])
-        this.getTargetHeatingCoolingStateCharacteristic().updateValue(this.Wyze2HomekitStates[this.thermostatModeSys]);
-
-        this.plugin.log.debug("Thermostat Data: " + this.Wyze2HomekitWorkingStates[this.thermostatWorkingState])
-        this.getCurrentHeatingCoolingStateCharacteristic().updateValue(this.Wyze2HomekitWorkingStates[this.thermostatWorkingState])
-
-        this.plugin.log.debug("Thermostat Data: " + this.f2c(this.thermostatCoolSetpoint))
-        this.getCoolingThresholdTemperatureCharacteristic().updateValue(this.f2c(this.thermostatCoolSetpoint))
-
-        this.plugin.log.debug("Thermostat Data: " + this.f2c(this.thermostatHeatSetpoint))
-        this.getHeatingThresholdTemperatureCharacteristic().updateValue(this.f2c(this.thermostatHeatSetpoint))
-
-        this.plugin.log.debug("Thermostat Data: " + this.Wyze2HomekitUnits[this.thermostatTempUnit])
-        this.getTemperatureDisplayUnitsCharacteristic().updateValue(this.Wyze2HomekitUnits[this.thermostatTempUnit])
     }
 
     getTargetTemperatureForSystemState() {
