@@ -2,46 +2,101 @@
   "pluginAlias": "WyzeSmartHome",
   "pluginType": "platform",
   "singular": true,
+  "headerDisplay": "Wyze plug-in for Homebridge. This is a custom component to allow control of various Wyze devices using the unofficial API. Please note this mimics the Wyze app and therefore access may be cut off at anytime.",
+  "footerDisplay": "For documentation please see GitHub repository",
   "schema": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "title": "Plugin Name",
-        "description": "This name will appear in your Homebridge log",
-        "type": "string",
-        "default": "Wyze",
-        "required": true
-      },
-      "username": {
-        "title": "Username (E-Mail Address)",
-        "description": "The e-mail address used for your Wyze account",
-        "type": "string",
-        "default": "",
-        "required": true
-      },
-      "password": {
-        "title": "Password",
-        "description": "The password used for your Wyze account",
-        "type": "string",
-        "default": "",
-        "required": true
-      },
-      "refreshInterval": {
-        "title": "Refresh Interval",
-        "description": "Specify the number of milliseconds to wait between updates, default is 60000 ms (60 seconds)",
-        "type": "integer",
-        "default": 60000,
-        "required": false
-      },
-      "mfaCode": {
-        "title": "One-time Password (for two-factor authentication)",
-        "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
-        "type": "string",
-        "default": "",
-        "required": false
-      }
-    }
+  "type": "object",
+  "properties": {
+  "name": {
+  "title": "Plugin Name",
+  "description": "This name will appear in your Homebridge log",
+  "type": "string",
+  "default": "Wyze",
+  "required": true
+  },
+  "username": {
+  "title": "Username (E-Mail Address)",
+  "description": "The e-mail address used for your Wyze account",
+  "type": "string",
+  "default": "",
+  "required": true
+  },
+  "password": {
+  "title": "Password",
+  "description": "The password used for your Wyze account",
+  "type": "string",
+  "default": "",
+  "required": true
+  },
+  "refreshInterval": {
+  "title": "Refresh Interval",
+  "description": "Specify the number of milliseconds to wait between updates, default is 60000 ms (60 seconds)",
+  "type": "integer",
+  "default": 60000,
+  "minimum": 60000,
+  "maximum": 180000,
+  "multipleOf": 10000,
+  "required": false
+  },
+  "mfaCode": {
+  "title": "One-time Password (for two-factor authentication)",
+  "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
+  "type": "string",
+  "default": "",
+  "required": false
+  },
+  
+  "showAdvancedOptions": {
+  "title": "Advance Options",
+  "default": false,
+  "type": "boolean"
+  },
+  "excludeMacAdress": {
+  "title": "Exlcude by Mac Address",
+  "default": false,
+  "type": "boolean",
+  "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
+  },
+  "filterByMacAddressList": {
+  "type": "array",
+  "title": "",
+  "items": {
+  "title": "Device Mac Address",
+  "type": "string"},
+  "condition": {
+  "functionBody": "return model.excludeMacAdress === true;"}
+  },
+  "excludedeviceType": {
+  "title": "Exlcude Device by Type",
+  "default": false,
+  "type": "boolean",
+  "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
+  },
+  "filterDeviceTypeList": {
+  "title": "Exlcude Device by Type",
+  "type": "array",
+  "uniqueItems": true,
+  "items": {
+  "title": "Device Type",
+  "type": "string",
+  "enum": [
+  "OutdoorPlug",
+  "Plug",
+  "Light",
+  "MeshLight",
+  "LightStrip",
+  "ContactSensor",
+  "MotionSensor",
+  "Lock",
+  "TemperatureHumidity",
+  "LeakSensor",
+  "Camera"
+  ]
+  },
+  "condition": {"functionBody": "return model.excludedeviceType === true;"}
+  }
+  }
   },
   "form": null,
   "display": null
-}
+  }

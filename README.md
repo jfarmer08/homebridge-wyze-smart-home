@@ -1,10 +1,17 @@
 # homebridge-wyze-smart-home
+[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 [![npm](https://img.shields.io/npm/dt/homebridge-wyze-smart-home)](https://www.npmjs.com/package/homebridge-wyze-smart-home)
 [![npm](https://img.shields.io/npm/v/homebridge-wyze-smart-home.svg?style=flat-square)](https://www.npmjs.com/package/homebridge-wyze-smart-home)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/AllenFarmer)
 
 [![homebridge-wyze-smart-home: Wyze Connected Home plugin for Homebridge](https://github.com/jfarmer08/homebridge-wyze-smart-home/blob/main/logo.png?raw=true)](https://github.com/jfarmer08/homebridge-wyze-smart-home)
 
 This plugin adds support for Wyze Smart Home devices to [Homebridge](https://github.com/homebridge/homebridge).
+
+# Funding   [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/AllenFarmer)
+If you like what I have done here and want to help I would recommend that you firstly look into supporting Homebridge. None of this could happen without them.
+
+After you have done that if you feel like my work has been valuable to you I welcome your support through Paypal. All funding goes back into product purchases. I would love to support all products that Wyze has under their portfolio along with other product that gets rebranded for other companys.  
 
 ## Supported Devices
 - Light Bulb
@@ -12,15 +19,14 @@ This plugin adds support for Wyze Smart Home devices to [Homebridge](https://git
 - Color Bulb (Mesh Light)
 - Plug
 - Outdoor Plug
-- V1 & V2 Contact Sensor
-- V1 & V2 Motion Sensor
-- Tempeature Sensor
-- Leak Sensor
-- Lock
+- V1 & V2 Contact Sensor (Status / Battery)
+- V1 & V2 Motion Sensor (Status / Battery)
+- Tempeature Sensor (Status / Battery)
+- Leak Sensor (Status / Battery)
+- Lock (Battery / Door Status / Control)
+- Camera v2, v3, Outdoor Cam, PamCam (on/off)
 
 For more information about our version updates, please check our [change log](CHANGELOG.md).
-
-<a href="https://www.buymeacoffee.com/jfarmer08" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-red.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" ></a>
 
 ## Configuration
 
@@ -34,8 +40,9 @@ Use the settings UI in Homebridge Config UI X to configure your Wyze account, or
       "name": "Wyze",
       "username": "YOUR_EMAIL",
       "password": "YOUR_PASSWORD",
-      "mfaCode": "YOUR_2FA_AUTHENTICATION_PIN"
-    }
+      "mfaCode": "YOUR_2FA_AUTHENTICATION_PIN",
+      "filterDeviceTypeList": ["OutdoorPlug","Plug"],
+      "filterByMacAddressList": ["MAC_ADDRESS_1","MAC_ADDRESS_2"]}
   ]
 }
 ```
