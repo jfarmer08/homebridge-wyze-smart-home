@@ -62,6 +62,9 @@ module.exports = class WyzeAccessory {
   get thermostatTempUnit()        { return this.homeKitAccessory.context.device_params?.temp_unit }
   set thermostatTempUnit(value)        { this.homeKitAccessory.context.device_params.temp_unit = value }
 
+  get thermostatTime2Temp()        { return this.homeKitAccessory.context.device_params?.time2temp_val }
+  set thermostatTime2Temp(value)        { this.homeKitAccessory.context.device_params.time2temp_val = value }
+
   get thermostatConnState()       { return this.homeKitAccessory.context.conn_state }
 
 
@@ -309,7 +312,8 @@ module.exports = class WyzeAccessory {
               heat_sp: this.thermostatHeatSetpoint,
               working_state: this.thermostatWorkingState,
               temp_unit: this.thermostatTempUnit,
-              mode_sys: this.thermostatModeSys
+              mode_sys: this.thermostatModeSys,
+              time2temp_val: this.thermostatTime2Temp
             }        
           }
           break
@@ -508,6 +512,8 @@ module.exports = class WyzeAccessory {
           this.homeKitAccessory.context.device_params.mode_sys = properties[prop]
         } else if (prop == 'iot_state') {
           this.homeKitAccessory.context.conn_state = properties[prop]
+        } else if (prop == 'time2temp_val') {
+          this.homeKitAccessory.context.device_params.thermostatTime2Temp = properties[prop]
         }
       }
       this.lastTimestamp = response.ts
