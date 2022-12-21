@@ -309,7 +309,7 @@ module.exports = class WyzeAccessory {
               heat_sp: this.thermostatHeatSetpoint,
               working_state: this.thermostatWorkingState,
               temp_unit: this.thermostatTempUnit,
-              mode_sys: this.thermostatWorkingState
+              mode_sys: this.thermostatModeSys
             }        
           }
           break
@@ -349,7 +349,7 @@ module.exports = class WyzeAccessory {
   updateCharacteristics (device) {
     //
   }
-
+  
   async getPropertyList () {
     const response = await this.plugin.client.getPropertyList(this.mac, this.product_model)
     return response

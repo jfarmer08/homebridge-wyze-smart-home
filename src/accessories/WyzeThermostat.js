@@ -1,17 +1,6 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
-// Already exist in temp sensor
-const HOMEBRIDGE_THERMOSTAT_SERVICE = Service.Thermostat
-
-const HOMEBRIDGE_TEMPERATURE_CHARACTERISTIC = Characteristic.CurrentTemperature
-const HOMEBRIDGE_CURRENTHEATINGCOOLINGSTATE_CHARACTERISTIC = Characteristic.CurrentHeatingCoolingState
-const HOMEBRIDGE_TARGETHEATINGCOOLINGSTATE_CHARACTERISTIC = Characteristic.TargetHeatingCoolingState
-const HOMEBRIDGE_TARGETTEMPERATURE_CHARACTERISTIC = Characteristic.TargetTemperature
-const HOMEBRIDGE_COOLINGTHRESHOLDTEMPERATURE_CHARACTERISTIC = Characteristic.CoolingThresholdTemperature
-const HOMEBRIDGE_HEATINGTHRESHOLDTEMPERATURE_CHARACTERISTIC = Characteristic.HeatingThresholdTemperature
-const HOMEBRIDGE_TEMERPATUREDISPLAYUNITS_CHARACTERISTIC = Characteristic.TemperatureDisplayUnits
-
 // want to add a temperature/humidity sensor to display how long it will take for system to complete current job - prop time2temp_val
 // add temp humidity for real humidity as well
 // add switch maybe to control fan mode - switch on is fan auto and switch off is fan off
@@ -22,70 +11,99 @@ noResponse.toString = () => { return noResponse.message }
 
 module.exports = class WyzeThermostat extends WyzeAccessory {
     constructor (plugin, homeKitAccessory) {
-      super(plugin, homeKitAccessory)
-        // do setup code here
+        super(plugin, homeKitAccessory)
 
-        
-        this.setThermostatCallbacks()
+        // set accessory information
+        this.homeKitAccessory.getService(Service.Thermostat.AccessoryInformation)
+            .setCharacteristic(Characteristic.Manufacturer, 'Wyze')
+            .setCharacteristic(Characteristic.Model, 'Thermostat')
+            .setCharacteristic(Characteristic.SerialNumber, 'Default-Serial');
 
-        this.getTemperatureCharacteristic()
-        this.getTargetTemperatureCharacteristic()
-        this.getTargetHeatingCoolingStateCharacteristic()
-        this.getCurrentHeatingCoolingStateCharacteristic()
-        this.getCoolingThresholdTemperatureCharacteristic()
-        this.getHeatingThresholdTemperatureCharacteristic()
-        this.getTemperatureDisplayUnitsCharacteristic()
-    }
 
-    
-    getThermostatService () {
-        this.plugin.log.debug(`[Thermostat] Retrieving previous service for "${this.display_name}"`)
-        let service = this.homeKitAccessory.getService(HOMEBRIDGE_THERMOSTAT_SERVICE)
-    
-        if (!service) {
-          this.plugin.log.debug(`[Thermostat] Adding service for "${this.display_name}"`)
-          service = this.homeKitAccessory.addService(HOMEBRIDGE_THERMOSTAT_SERVICE)
+        this.service = this.getThermostatService()
+
+        // GET current heat/cool/off state
+        this.service.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+            .onGet(this.handleCurrentHeatingCoolingStateGet.bind(this));
+
+        // GET current temperature
+        this.service.getCharacteristic(Characteristic.CurrentTemperature)
+            .onGet(this.handleCurrentTemperatureGet.bind(this));
+
+        // Target heat/cool/off state
+        this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
+            .onGet(this.handleTargetHeatingCoolingStateGet.bind(this))
+            .onSet(this.handleTargetHeatingCoolingStateSet.bind(this));
+
+        // Target temperature handlers - needed given that the system is not in auto
+        this.service.getCharacteristic(Characteristic.TargetTemperature)
+            .onGet(this.handleTargetTemperatureGet.bind(this))
+            .onSet(this.handleTargetTemperatureSet.bind(this));
+
+        // Cooling setpoint handlers - needed for system in Auto
+        this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature)
+            .onGet(this.handleCoolingThresholdTemperatureGet.bind(this))
+            .onSet(this.handleCoolingThresholdTemperatureSet.bind(this));
+
+        // Heating setpoint handlers - needed for system in Auto
+        this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature)
+            .onGet(this.handleHeatingThresholdTemperatureGet.bind(this))
+            .onSet(this.handleHeatingThresholdTemperatureSet.bind(this));
+
+        // Target display unit handlers
+        this.service.getCharacteristic(Characteristic.TemperatureDisplayUnits)
+            .onGet(this.handleTemperatureDisplayUnitsGet.bind(this))
+            .onSet(this.handleTemperatureDisplayUnitsSet.bind(this));
+
+        this.runStartup();
         }
-    
-        return service
+
+    async runStartup() {
+        this.updateCharacteristics()
     }
 
-    setThermostatCallbacks() {
-        this.getTargetTemperatureCharacteristic().onSet(this.setTargetTemperature.bind(this))
-        this.getTargetHeatingCoolingStateCharacteristic().on('set', this.setTargetHeatingCoolingState.bind(this))
-        this.getCoolingThresholdTemperatureCharacteristic().on('set', this.setCoolingThreshold.bind(this))
-        this.getHeatingThresholdTemperatureCharacteristic().on('set', this.setHeatingThreshold.bind(this))
-        this.getTemperatureDisplayUnitsCharacteristic().on('set', this.setTemperatureUnits.bind(this))
+    // GET Methods for returning device data to homekit when homekit asks for example when loading the home app for the first time
 
-        this.getTargetTemperatureCharacteristic().onGet(this.getTargetTemperature.bind(this))
-        this.getTargetHeatingCoolingStateCharacteristic().onGet(this.getTargetHeatingCoolingState.bind(this))
-        this.getCoolingThresholdTemperatureCharacteristic().onGet(this.getCoolingThreshold.bind(this))
-        this.getHeatingThresholdTemperatureCharacteristic().onGet(this.getHeatingThreshold.bind(this))
-        this.getTemperatureDisplayUnitsCharacteristic().onGet(this.getTemperatureUnits.bind(this))
+    async handleCurrentTemperatureGet() {
+        this.plugin.log.debug("Thermostat GET Data: " + this.f2c(this.thermostatTemperature))
+
+        return this.f2c(this.thermostatTemperature)
     }
+    async handleCurrentHeatingCoolingStateGet() {
 
-    async getTargetTemperature() {
-        return this.getTargetTemperatureForSystemState();
+        this.plugin.log.debug("Thermostat GET Data: " + this.f2c(this.thermostatTemperature))
+
+        return this.Wyze2HomekitWorkingStates[this.thermostatWorkingState]
     }
-
-    async getTargetHeatingCoolingState() {
+    async handleTargetHeatingCoolingStateGet() {
         return this.Wyze2HomekitStates[this.thermostatModeSys]
     }
-
-    async getCoolingThreshold() {
+    async handleTargetTemperatureGet() {
+        return this.getTargetTemperatureForSystemState()
+    }
+    async handleCoolingThresholdTemperatureGet() {
         return this.f2c(this.thermostatCoolSetpoint)
     }
-
-    async getHeatingThreshold() {
+    async handleHeatingThresholdTemperatureGet() {
         return this.f2c(this.thermostatHeatSetpoint)
     }
-
-    async getTemperatureUnits() {
+    async handleTemperatureDisplayUnitsGet() {
         return this.Wyze2HomekitUnits[this.thermostatTempUnit]
     }
 
 
-    async setTargetTemperature(targetTemp) {
+
+    // SET Methods for taking data from homekit and applying it to Wyze thermostat
+    async handleTargetHeatingCoolingStateSet(value) {
+        let targetState = this.getKey(this.Wyze2HomekitStates, value)
+        this.plugin.log.debug(`[Thermostat] Setting targetHeatingCoolingState status of "${this.display_name}" to ${targetState} (${value})`)
+
+        this.setHvacMode(targetState)
+        this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(value);
+
+    }
+    async handleTargetTemperatureSet(value) {
+        let targetTemp = this.c2f(value)
         this.plugin.log.debug(`[Thermostat] Setting targetTemperature status of "${this.display_name}" to ${targetTemp}`)
 
         // switch on current heating cooling state since we are NOT in auto mode
@@ -101,38 +119,30 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
             default:
                 // do nothing, some other issue if we get here
         }
-        this.getTargetTemperatureCharacteristic().updateValue(targetTemp)
+        this.service.getCharacteristic(Characteristic.TargetTemperature).updateValue(value)
     }
+    async handleCoolingThresholdTemperatureSet(value) {
+        let val = this.c2f(value)
 
-    async setTargetHeatingCoolingState(targetState) {
-        this.plugin.log.debug(`[Thermostat] Setting targetHeatingCoolingState status of "${this.display_name}" to ${targetState}`)
+        this.plugin.log.debug(`[Thermostat] Setting setCoolingThreshold status of "${this.display_name}" to ${val}`)
 
-        let val = this.getKey(this.Wyze2HomekitStates, targetState)
-        this.setHvacMode(val)
-        this.getTargetHeatingCoolingStateCharacteristic().updateValue(targetState);
-    }
-
-    async setCoolingThreshold(coolingTemp) {
-        this.plugin.log.debug(`[Thermostat] Setting setCoolingThreshold status of "${this.display_name}" to ${coolingTemp}`)
-
-        let val = this.c2f(coolingTemp)
         this.setCoolPoint(val)
-        this.thermostatCoolSetpoint = val
-        this.getCoolingThresholdTemperatureCharacteristic().updateValue(coolingTemp)
+        this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature).updateValue(value)
     }
+    async handleHeatingThresholdTemperatureSet(value) {
+        let val = this.c2f(value)
 
-    async setHeatingThreshold(heatingTemp) {
-        this.plugin.log.debug(`[Thermostat] Setting setHeatingThreshold status of "${this.display_name}" to ${heatingTemp}`)
+        this.plugin.log.debug(`[Thermostat] Setting setHeatingThreshold status of "${this.display_name}" to ${val}`)
 
-        let val = this.c2f(heatingTemp)
         this.setHeatPoint(val)
-        this.thermostatHeatSetpoint = val
-        this.getHeatingThresholdTemperatureCharacteristic().updateValue(heatingTemp)
+        this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature).updateValue(value)
+    }
+    async handleTemperatureDisplayUnitsSet(value) {
+        // nothing for now, can use internally maybe
+        this.plugin.log.debug(`[Thermostat] Setting temperatureDisplayUnits status of "${this.display_name}" to ${value}`)
+        this.service.getCharacteristic(Characteristic.TemperatureDisplayUnits).updateValue(value)
     }
 
-    async setTemperatureUnits(tempUnits) {
-        // nothing to do at the moment
-    }
 
     // this is where we do the magic
     async updateCharacteristics () {
@@ -145,60 +155,19 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
 
     fillData() {
         this.plugin.log.debug("Thermostat Data: " + this.f2c(this.thermostatTemperature))
-        this.getTemperatureCharacteristic().updateValue(this.f2c(this.thermostatTemperature))
 
         this.plugin.log.debug("Thermostat Data: " + this.getTargetTemperatureForSystemState())
-        this.getTargetTemperatureCharacteristic().updateValue(this.getTargetTemperatureForSystemState())
         
         this.plugin.log.debug("Thermostat Data: " + this.Wyze2HomekitStates[this.thermostatModeSys])
-        this.getTargetHeatingCoolingStateCharacteristic().updateValue(this.Wyze2HomekitStates[this.thermostatModeSys]);
 
         this.plugin.log.debug("Thermostat Data: " + this.Wyze2HomekitWorkingStates[this.thermostatWorkingState])
-        this.getCurrentHeatingCoolingStateCharacteristic().updateValue(this.Wyze2HomekitWorkingStates[this.thermostatWorkingState])
 
         this.plugin.log.debug("Thermostat Data: " + this.f2c(this.thermostatCoolSetpoint))
-        this.getCoolingThresholdTemperatureCharacteristic().updateValue(this.f2c(this.thermostatCoolSetpoint))
 
         this.plugin.log.debug("Thermostat Data: " + this.f2c(this.thermostatHeatSetpoint))
-        this.getHeatingThresholdTemperatureCharacteristic().updateValue(this.f2c(this.thermostatHeatSetpoint))
 
         this.plugin.log.debug("Thermostat Data: " + this.Wyze2HomekitUnits[this.thermostatTempUnit])
-        this.getTemperatureDisplayUnitsCharacteristic().updateValue(this.Wyze2HomekitUnits[this.thermostatTempUnit])
-    }
 
-    getTemperatureCharacteristic () {
-        this.plugin.log.debug(`[Thermostat] Fetching temperature status of "${this.display_name}"`)
-        return this.getThermostatService().getCharacteristic(HOMEBRIDGE_TEMPERATURE_CHARACTERISTIC)
-    }
-
-    getCurrentHeatingCoolingStateCharacteristic () {
-        this.plugin.log.debug(`[Thermostat] Fetching Current Heating Cooling State status of "${this.display_name}"`)
-        return this.getThermostatService().getCharacteristic(HOMEBRIDGE_CURRENTHEATINGCOOLINGSTATE_CHARACTERISTIC)
-    }
-
-    getTargetHeatingCoolingStateCharacteristic () {
-        this.plugin.log.debug(`[Thermostat] Fetching Target Heating Cooling State status of "${this.display_name}"`)
-        return this.getThermostatService().getCharacteristic(HOMEBRIDGE_TARGETHEATINGCOOLINGSTATE_CHARACTERISTIC)
-    }
-
-    getTargetTemperatureCharacteristic () {
-        this.plugin.log.debug(`[Thermostat] Fetching Target Temperature status of "${this.display_name}"`)
-        return this.getThermostatService().getCharacteristic(HOMEBRIDGE_TARGETTEMPERATURE_CHARACTERISTIC)
-    }
-
-    getCoolingThresholdTemperatureCharacteristic () {
-        this.plugin.log.debug(`[Thermostat] Fetching Cooling Threshold status of "${this.display_name}"`)
-        return this.getThermostatService().getCharacteristic(HOMEBRIDGE_COOLINGTHRESHOLDTEMPERATURE_CHARACTERISTIC)
-    }
-
-    getHeatingThresholdTemperatureCharacteristic () {
-        this.plugin.log.debug(`[Thermostat] Fetching Heating Threshold status of "${this.display_name}"`)
-        return this.getThermostatService().getCharacteristic(HOMEBRIDGE_HEATINGTHRESHOLDTEMPERATURE_CHARACTERISTIC)
-    }
-
-    getTemperatureDisplayUnitsCharacteristic () {
-        this.plugin.log.debug(`[Thermostat] Fetching Temperature Display Units status of "${this.display_name}"`)
-        return this.getThermostatService().getCharacteristic(HOMEBRIDGE_TEMERPATUREDISPLAYUNITS_CHARACTERISTIC)
     }
 
     getTargetTemperatureForSystemState() {
@@ -210,6 +179,18 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
         } else {
             return this.f2c(this.thermostatTemperature)
         }
+    }
+
+    getThermostatService() {
+        this.plugin.log.debug(`[Thermostat] Retrieving previous service for "${this.display_name}"`)
+        let service = this.homeKitAccessory.getService(Service.Thermostat)
+    
+        if (!service) {
+          this.plugin.log.debug(`[Thermostat] Adding service for "${this.display_name}"`)
+          service = this.homeKitAccessory.addService(Service.Thermostat)
+        }
+    
+        return service
     }
 
     f2c(fahrenheit) {
