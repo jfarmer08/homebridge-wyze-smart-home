@@ -90,7 +90,8 @@
   "Lock",
   "TemperatureHumidity",
   "LeakSensor",
-  "Camera"
+  "Camera",
+  "Thermostat"
   ]
   },
   "condition": {"functionBody": "return model.excludedeviceType === true;"}

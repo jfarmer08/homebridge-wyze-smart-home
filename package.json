@@ -28,12 +28,13 @@
   "dependencies": {
     "axios": "^0.21.1",
     "colorsys": "^1.0.22",
+    "crypto-js": "4.1.1",
+    "homebridge": "^1.6.0",
     "md5": "^2.2.1",
-    "uuid": "8.3.2",
     "moment": "^2.24.0",
     "urllib": "3.1.2",
-    "crypto-js": "4.1.1",
-    "utf8": "^3.0.0"
+    "utf8": "^3.0.0",
+    "uuid": "8.3.2"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.27.1",

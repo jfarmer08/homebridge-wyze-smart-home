@@ -10,6 +10,8 @@ const WyzeTemperatureHumidity = require('./accessories/WyzeTemperatureHumidity')
 const WyzeLeakSensor = require('./accessories/WyzeLeakSensor')
 const WyzeCamera = require('./accessories/WyzeCamera')
 const WyzeSwitch = require('./accessories/WyzeSwitch')
+const WyzeThermostat = require('./accessories/WyzeThermostat')
+
 
 const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
@@ -121,7 +123,7 @@ module.exports = class WyzeSmartHome {
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     }
-      accessory.update(device, timestamp)    
+    accessory.update(device, timestamp)    
 
     return accessory
   }
@@ -153,6 +155,8 @@ module.exports = class WyzeSmartHome {
         return WyzeCamera
       case 'Common':
         return WyzeSwitch
+      case 'Thermostat':
+        return WyzeThermostat
     }
   }
 
