@@ -1,5 +1,5 @@
 const { homebridge, Accessory, UUIDGen } = require('./types')
-const WyzeAPI = require('./WyzeAPI')
+const WyzeAPI = require('./wyz-api')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
