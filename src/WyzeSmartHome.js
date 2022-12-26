@@ -105,11 +105,11 @@ module.exports = class WyzeSmartHome {
     }
 
     if (this.config.filterByMacAddressList?.find(d => d === device.mac)) {
-      this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
+      this.log.debug(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
       return
     }
     if (this.config.filterDeviceTypeList?.find(d => d === device.product_type)) {
-      this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
+      this.log.debug(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
       return
     }
 
@@ -119,7 +119,7 @@ module.exports = class WyzeSmartHome {
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
-      this.log.info(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
+      this.log.debug(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
       accessory.update(device, timestamp)    
 
