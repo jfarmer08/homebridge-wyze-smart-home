@@ -51,7 +51,7 @@
   "default": false,
   "type": "boolean"
   },
-  "excludeMacAdress": {
+  "excludeMacAddress": {
   "title": "Exlcude by Mac Address",
   "default": false,
   "type": "boolean",
@@ -64,7 +64,7 @@
   "title": "Device Mac Address",
   "type": "string"},
   "condition": {
-  "functionBody": "return model.excludeMacAdress === true;"}
+  "functionBody": "return model.excludeMacAddress === true;"}
   },
   "excludedeviceType": {
   "title": "Exlcude Device by Type",
@@ -90,7 +90,8 @@
   "Lock",
   "TemperatureHumidity",
   "LeakSensor",
-  "Camera"
+  "Camera",
+  "Common"
   ]
   },
   "condition": {"functionBody": "return model.excludedeviceType === true;"}
