@@ -8,58 +8,52 @@ const homebridgeCharacteristic = {
   'disarm' : Characteristic.SecuritySystemTargetState.DISARM
 }
 
-const HMSMode = {
-  CHANGING : 'changing',
-  DISARMED : 'disarm',
-  AWAY : 'away',
-  HOME : 'home',
+const HmsToHomebridge = {
+  'CHANGING' : 'changing',
+  'disarm': Characteristic.SecuritySystemTargetState.DISARM,
+  'away': Characteristic.SecuritySystemTargetState.AWAY_ARM,
+  'home': Characteristic.SecuritySystemTargetState.STAY_ARM,
 }
 
 module.exports = class WyzeHMS extends WyzeAccessory {
   constructor (plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory)
 
-    this.Service = this.api.hap.Service;
-    this.Characteristic = this.api.hap.Characteristic;
-
     // create a new Security System service
-    this.service = new this.Service(this.Service.SecuritySystem);
+    let securityService = this.homeKitAccessory.getService(Service.SecuritySystem) ||
+      this.homeKitAccessory.addService(Service.SecuritySystem)
 
     // create handlers for required characteristics
-    this.service.getCharacteristic(this.Characteristic.SecuritySystemCurrentState)
+    securityService.getCharacteristic(Characteristic.SecuritySystemCurrentState)
       .onGet(this.handleSecuritySystemCurrentStateGet.bind(this));
 
-    this.service.getCharacteristic(this.Characteristic.SecuritySystemTargetState)
+    securityService.getCharacteristic(Characteristic.SecuritySystemTargetState)
       .onGet(this.handleSecuritySystemTargetStateGet.bind(this))
-      .onSet(this.handleSecuritySystemTargetStateSet.bind(this));      
-      this.Service = this.api.hap.Service;
-      this.Characteristic = this.api.hap.Characteristic;
+      .onSet(this.handleSecuritySystemTargetStateSet.bind(this)) 
+  }
 
-      // create a new Security System service
-      this.service = new this.Service(this.Service.SecuritySystem);
-
-      // create handlers for required characteristics
-      this.service.getCharacteristic(this.Characteristic.SecuritySystemCurrentState)
-        .onGet(this.handleSecuritySystemCurrentStateGet.bind(this));
-
-      this.service.getCharacteristic(this.Characteristic.SecuritySystemTargetState)
-        .onGet(this.handleSecuritySystemTargetStateGet.bind(this))
-        .onSet(this.handleSecuritySystemTargetStateSet.bind(this));
-
-        //getHmsID() Get the ID and store it in the accessory
-        //getHmsUpdate(hms_id) get id from the Accessory
+  async updateCharacteristics (device) {
+    this.plugin.log.debug(`[HMS] Updating Current State of "${this.display_name}"`)
+    if (device.conn_state === 0) {
+      this.getCharacteristic(Characteristic.On).updateValue(noResponse)
+    } else {
+      if (this.hmsHmsID == null) {
+        await this.getHmsID()
+        await this.getHmsUpdate(this.hmsHmsID)
+        this.handleSecuritySystemCurrentStateGet()
+      }else {
+        await this.getHmsUpdate(this.hmsHmsID)
+        await this.handleSecuritySystemCurrentStateGet()
+      }
+    }
   }
 
   /**
    * Handle requests to get the current value of the "Security System Current State" characteristic
    */
   handleSecuritySystemCurrentStateGet() {
-    this.log.debug('Triggered GET SecuritySystemCurrentState');
-    this.getHmsUpdate(hms_id) //get the ID from the accessory
-    // set this to a valid value for SecuritySystemCurrentState
-    const currentValue = this.Characteristic.SecuritySystemCurrentState.STAY_ARM;
-
-    return currentValue;
+    this.plugin.log.debug(`[HMS] Fetching Current State of "${this.display_name}"`)
+    return this.convertHmsStateToHomeKitState(this.hmsStatus);
   }
 
 
@@ -67,20 +61,48 @@ module.exports = class WyzeHMS extends WyzeAccessory {
    * Handle requests to get the current value of the "Security System Target State" characteristic
    */
   handleSecuritySystemTargetStateGet() {
-    this.log.debug('Triggered GET SecuritySystemTargetState');
-
+    this.plugin.log.debug(`[HMS] Fetching Target State of "${this.display_name}"`)
     // set this to a valid value for SecuritySystemTargetState
-    const currentValue = this.Characteristic.SecuritySystemTargetState.STAY_ARM;
-
-    return currentValue;
+    return this.convertHmsStateToHomeKitState(this.hmsStatus);
   }
 
   /**
    * Handle requests to set the "Security System Target State" characteristic
    */
-  handleSecuritySystemTargetStateSet(value) {
-    this.log.debug('Triggered SET SecuritySystemTargetState:', value)
-    setHMSCode(hms_id, mode) // get the ID from the access Get value and compare it to HMSModes
+  async handleSecuritySystemTargetStateSet(value) {
+    this.plugin.log.debug(`[HMS] Target State Set of "${this.display_name}"`)
+    await this.setHMSState(this.hmsHmsID,this.convertHomeKitStateToHmsState(value))
   }
 
+  convertHmsStateToHomeKitState(hmsState) {
+    switch (hmsState) {
+        case "home":
+            return Characteristic.SecuritySystemTargetState.STAY_ARM;
+            break;
+        case "away":
+            return Characteristic.SecuritySystemTargetState.AWAY_ARM;
+            break;
+        case "disarm":
+            return Characteristic.SecuritySystemTargetState.DISARM;
+            break;
+    }
+  }
+  convertHomeKitStateToHmsState(homeKitState) {
+    switch (homeKitState) {
+        case Characteristic.SecuritySystemTargetState.STAY_ARM:
+        case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+            return "home";
+            break;
+        case Characteristic.SecuritySystemTargetState.AWAY_ARM :
+            return "away";
+            break;
+        case Characteristic.SecuritySystemTargetState.DISARM:
+            return "off";
+            break;
+    }
+  }
+
+  sleep (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
 }

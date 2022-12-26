@@ -39,9 +39,19 @@ module.exports = class WyzeAccessory {
   get lockKeypadMac ()            { return this.homeKitAccessory.context.device_params?.keypadMac }
   get lockLockerStatusDoor ()     { return this.homeKitAccessory.context.device_params?.door }
   get lockLockerStatusHardlock () { return this.homeKitAccessory.context.device_params?.hardlock }
+  
   // from Camera
   get cameraPowerSwitch ()        { return this.homeKitAccessory.context.device_params.power_switch}
   get cameraMotionSwitch ()       { return this.homeKitAccessory.context.device_params.motion_alarm_switch}
+  get cameraNotification ()        { return this.homeKitAccessory.context.device_params?.notification}
+  get cameraOn ()        { return this.homeKitAccessory.context.device_params?.on}
+  get cameraAvailable ()        { return this.homeKitAccessory.context.device_params?.available}
+  get cameraSiren ()        { return this.homeKitAccessory.context.device_params?.cameraSiren}
+  get cameraFloodLight ()        { return this.homeKitAccessory.context.device_params?.floodLight}
+
+  // from HMS
+  get hmsHmsID ()        { return this.homeKitAccessory.context.device_params?.hmsId}
+  get hmsStatus ()        {return this.homeKitAccessory.context.device_params?.hmsStatus}
 
   // from thermostat
   get thermostatTemperature()     { return this.homeKitAccessory.context.device_params?.temperature }
@@ -144,28 +154,14 @@ module.exports = class WyzeAccessory {
           nickname: device.nickname,
           conn_state: device.conn_state,
           device_params: device.device_params = {
-            p2p_id : device.device_params.p2p_id,
-            p2p_type : device.device_params.p2p_type,
             ssid : device.device_params.ssid,
             ip : device.device_params.ip,
-            public_ip : device.device_params.public_ip,
             power_switch : device.device_params.power_switch,
-            temperature : device.device_params.temperature,
-            humidity : device.device_params.humidity,
-            temp_humi_room_type : device.device_params.temp_humi_room_type,
-            comfort_standard_level : device.device_params.comfort_standard_level,
-            is_temperature_humidity : device.device_params.is_temperature_humidity,
-            records_event_switch : device.device_params.records_event_switch,
-            motion_alarm_switch : device.device_params.motion_alarm_switch,
-            audio_alarm_switch : device.device_params.audio_alarm_switch,
-            smoke_alarm_switch : device.device_params.smoke_alarm_switch,
-            co_alarm_switch : device.device_params.co_alarm_switch,
-            electricity : device.device_params.electricity,
-            battery_charging_status : device.device_params.battery_charging_status,
-            is_link_toy_car : device.device_params.is_link_toy_car,
-            power_saving_mode_switch : device.device_params.power_saving_mode_switch,
-            dongle_product_model: device.device_params.dongle_product_model,
-            ai_notification_v2: device.device_params.ai_notification_v2,
+            notification : this.cameraNotification,
+            on : this.cameraOn,
+            available : this.cameraAvailable,
+            siren : this.cameraSiren,
+            floodLight : this.cameraFloodLight,
           },
         }
         break
@@ -353,32 +349,11 @@ module.exports = class WyzeAccessory {
   updateCharacteristics (device) {
     //
   }
-  
-  async getPropertyList () {
-    const response = await this.plugin.client.getPropertyList(this.mac, this.product_model)
-    return response
-  }
 
   async getLockInfo () {
     const response = await this.plugin.client.getLockInfo(this.mac, this.product_model)
     return response
   }
-
-  // Wall Switch Can we move this to its own class - wallSwitch
-  async wallSwitchSetIotProp(deviceMac, productModel, prop, value) {
-    let response
-    try {
-      this.updating = true
-      response = await this.plugin.client.setIotProp(deviceMac, productModel, prop, value)
-
-      this.lastTimestamp = response.ts
-    } finally {
-      this.updating = false
-      return response
-
-    }
-  }
-
   async lockGetProperty() {
     this.updating = true
     const propertyList = await this.plugin.client.getLockInfo(this.mac, this.product_model)
@@ -444,6 +419,20 @@ module.exports = class WyzeAccessory {
       }
     } 
     this.updating = false
+  }
+  // Wall Switch Can we move this to its own class - wallSwitch
+  async wallSwitchSetIotProp(deviceMac, productModel, prop, value) {
+    let response
+    try {
+      this.updating = true
+      response = await this.plugin.client.setIotProp(deviceMac, productModel, prop, value)
+
+      this.lastTimestamp = response.ts
+    } finally {
+      this.updating = false
+      return response
+
+    }
   }
 
   async wallSwitchGetIotProp() {
@@ -557,58 +546,154 @@ module.exports = class WyzeAccessory {
   async getHmsID() {
     //need to phrase out HMSID from devices-deviceList and return that
     const response = await this.plugin.client.getPlanBindingListByUser()
-    return response
+       this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
   }
 
-  async setHMSCode(hms_id, mode) {
-     if(mode == "mode(Disarmed)") {
-      await this.plugin.client.disableRemeAlarm(hms_id)
-      await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
-     } else if( mode === HMSMode.AWAY ) {
-      await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
-     }  else if( mode === HMSMode.HOME ) {
-      await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
+  async setHMSState(hms_id, mode) {
+    let response
+     if(mode == "disarm") {
+      response = await this.plugin.client.disableRemeAlarm(hms_id)
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
+     } else if( mode === "away" ) {
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
+     }  else if( mode === "home" ) {
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
      }
      return response
   }
 
   async getHmsUpdate(hms_id) {
-    const response = await this.plugin.client.getPlanBindingListByUser(hms_id)
+    const response = await this.plugin.client.monitoringProfileStateStatus(hms_id)
+      this.homeKitAccessory.context.device_params.hmsStatus = response.message
+  }
+
+  //Camera
+  async cameraTurnOn() {
+      await this.runActionList(this.mac, this.product_model, "P3", 'power_on')
+  }
+
+  async cameraTurnOff() {
+      await this.runActionList(this.mac, this.product_model, "P3", 'power_off')
+  }
+
+  async cameraSirenOn() {
+      await this.runActionList(this.mac, this.product_model, "P1049", 'siren_on')
+  }
+
+  async cameraSirenOff() {
+      await this.runActionList(this.mac, this.product_model, "P1049", 'siren_off')
+  }
+
+  async cameraFloodLightOn() {
+      await this.setProperty(this.mac, this.product_model, "P1049", "1")
+  }
+
+  async cameraFloodLightOff() {
+      await this.setProperty(this.mac, this.product_model, "P1049", "2")
+  }
+
+  async turnOnNotifications() {
+    await this.setProperty(this.mac, this.product_model, "P1", "1")
+  }
+
+  async turnOffNotifications() {
+    await this.setProperty(this.mac, this.product_model, "P1", "0")
+  }
+
+  async getCameraPropertyList () {
+
+    const cameraProperty = {  
+      NOTIFICATION : "P1",
+      ON : "P3",
+      AVAILABLE : "P5",
+      CAMERA_SIREN : "P1049",
+      FLOOD_LIGHT : "P1056",
+    }
+
+    const propertyList = await this.getPropertyList(this.mac, this.product_model)
+    for (const property of propertyList.data.property_list) {
+      switch (property.pid) {
+        case cameraProperty.NOTIFICATION:
+          this.homeKitAccessory.context.device_params.notification = property.value
+        case cameraProperty.ON:
+          this.homeKitAccessory.context.device_params.on = property.value
+        case cameraProperty.AVAILABLE:
+          this.homeKitAccessory.context.device_params.available = property.value
+        case cameraProperty.CAMERA_SIREN:
+          this.homeKitAccessory.context.device_params.cameraSiren = property.value
+        case cameraProperty.FLOOD_LIGHT:
+          this.homeKitAccessory.context.device_params.floodLight = property.value
+      }
+    }
+  }
+  //WyzeLight
+  async lightTurnOn() {
+    await this.setProperty(this.mac, this.product_model, "P3", "0")
+  }
+  async lightTurnOff() {
+    await this.setProperty(this.mac, this.product_model, "P3", "1")
+  }
+  async lightSetBrightness(value) {
+    await this.setProperty(this.mac, this.product_model, "P1501", value)
+  }
+  async setColorTemperature(value) {
+    await this.setProperty(this.mac, this.product_model, "P1502", value)
+  }
+  // Replaced with the same calls below
+  async setProperty (mac, product_model, value) {
+    try {
+      this.updating = true
+
+      const response = await this.plugin.client.setProperty(mac, product_model, property, value)
+
+      this.lastTimestamp = response.ts
+    } finally {
+      this.updating = false
+    }
+  }
+
+  async runActionList (mac, product_model, property, value, actionKey) {
+    try {
+      this.updating = true
+      const response = await this.plugin.client.runActionList(mac, product_model, property, value, actionKey)
+
+      this.lastTimestamp = response.ts
+    } finally {
+      this.updating = false
+    }
+  }
+
+  async getPropertyList (mac, product_model) {
+    const response = await this.plugin.client.getPropertyList(mac, product_model)
     return response
   }
 
-  async setProperty (property, value) {
-    try {
-      this.updating = true
+  // Will remove when no longer being used
+  // async getPropertyList () {
+  //   const response = await this.plugin.client.getPropertyList(this.mac, this.product_model)
+  //   return response
+  // }
 
-      const response = await this.plugin.client.setProperty(this.mac, this.product_model, property, value)
+  // async setProperty (property, value) {
+  //   try {
+  //     this.updating = true
 
-      this.lastTimestamp = response.ts
-    } finally {
-      this.updating = false
-    }
-  }
+  //     const response = await this.plugin.client.setProperty(this.mac, this.product_model, property, value)
 
-  async runActionList (property, value) {
-    try {
-      this.updating = true
-      const response = await this.plugin.client.runActionList(this.mac, this.product_model, property, value, 'set_mesh_property')
+  //     this.lastTimestamp = response.ts
+  //   } finally {
+  //     this.updating = false
+  //   }
+  // }
 
-      this.lastTimestamp = response.ts
-    } finally {
-      this.updating = false
-    }
-  }
+  // async runActionList (property, value) {
+  //   try {
+  //     this.updating = true
+  //     const response = await this.plugin.client.runActionList(this.mac, this.product_model, property, value, 'set_mesh_property')
 
-  async runActionListOnOff (property, value, actionKey) {
-    try {
-      this.updating = true
-      this.plugin.log.debug(`Setting runActionList Power State ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
-      const response = await this.plugin.client.runActionList(this.mac, this.product_model, property, value, actionKey)
-
-      this.lastTimestamp = response.ts
-    } finally {
-      this.updating = false
-    }
-  }
+  //     this.lastTimestamp = response.ts
+  //   } finally {
+  //     this.updating = false
+  //   }
+  // }
 }

@@ -18,7 +18,6 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     // create a new Switch service
     let powerService = this.homeKitAccessory.getService('Power') ||
       this.homeKitAccessory.addService(Service.Switch,'Power', '0026BB765291-Power')
-
       powerService.subtype = 'Power'
 
     // create handlers for required characteristics
@@ -30,15 +29,16 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.homeKitAccessory.addService(Service.Switch,'Siren', '0026BB765292-Siren')
       sirenService.subtype = 'Siren'
 
-
     // create handlers for required characteristics
     sirenService.getCharacteristic(Characteristic.On)
       .onGet(this.handleSirenOnGet.bind(this))
       .onSet(this.handleSirenOnSet.bind(this))
 
-    let floodLightService = this.homeKitAccessory.getService('Flood Light') ||
-      this.homeKitAccessory.addService(Service.Switch, 'Flood Light', '0026BB765292-FloodLight')
-    floodLightService.subtype = 'FloodLight'
+    //let floodLightService = this.homeKitAccessory.getService('Flood Light') ||
+     // this.homeKitAccessory.addService(Service.Switch, 'Flood Light', '0026BB765292-FloodLight')
+   //floodLightService.subtype = 'FloodLight'
+
+    this.getCameraPropertyList()
 //////////////
     //new Service(displayName?: string, UUID: string, subtype?: string):
 
@@ -63,13 +63,13 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     handlePowerOnGet() {
       this.plugin.log.debug(`[Camera] Fetching Power status of "${this.display_name}"`)
   
-      return this.cameraPowerSwitch;
+      return this.cameraOn;
     }
 
     handleSirenOnGet() {
       this.plugin.log.debug(`[Camera] Fetching Siren status of "${this.display_name}"`)
   
-      return this.cameraMotionSwitch;
+      return this.cameraSiren;
     }
   
     /**
@@ -79,10 +79,9 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) Power to ${value}`)
       try {
         if (value === true) {
-          await this.runActionListOnOff(WYZE_API_POWER_PROPERTY, value ? 1 : 0, 'power_on')
+          await this.cameraTurnOn()
         } else {
-          await this.runActionListOnOff(WYZE_API_POWER_PROPERTY, value ? 1 : 0, 'power_off')
-        }
+          await this.cameraTurnOff()        }
   
       } catch (e) {
         console.log(e)
@@ -96,9 +95,9 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) Siren`)
       try {
         if (value === true) {
-          await this.runActionListOnOff(WYZE_API_POWER_PROPERTY, value ? 1 : 0, 'power_on')
+          await this.cameraSirenOn()
         } else {
-          await this.runActionListOnOff(WYZE_API_POWER_PROPERTY, value ? 1 : 0, 'power_off')
+          await this.cameraSirenOff()
         }
   
       } catch (e) {

@@ -11,7 +11,7 @@ const WyzeLeakSensor = require('./accessories/WyzeLeakSensor')
 const WyzeCamera = require('./accessories/WyzeCamera')
 const WyzeSwitch = require('./accessories/WyzeSwitch')
 const WyzeThermostat = require('./accessories/WyzeThermostat')
-
+const WyzeHMS = require('./accessories/WyzeHMS')
 
 const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
@@ -102,6 +102,7 @@ module.exports = class WyzeSmartHome {
   }
 
   async loadDevice(device, timestamp) {
+
     const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model)
     if (!accessoryClass) {
      this.log.debug(`Unsupported device type or device is ignored: ${device.product_type} (Model: ${device.product_model})`)
@@ -126,6 +127,20 @@ module.exports = class WyzeSmartHome {
     accessory.update(device, timestamp)    
 
     return accessory
+  }
+
+  async loadHmsDevice() {
+    // Load HMSID
+    let hmsID
+    const response = await this.client.getPlanBindingListByUser()
+    hmsID = response.data[0].deviceList[0].device_id
+    console.log(hmsID)
+    let list = response.data[0].deviceList[0]
+    console.log(list)
+    let list1 = response.data[0]
+    console.log(list1)
+
+
   }
 
   getAccessoryClass(type, model) {
@@ -154,9 +169,12 @@ module.exports = class WyzeSmartHome {
         if (model === 'WYZEDB3') return
         return WyzeCamera
       case 'Common':
+        if (model === 'JA_HP') return
         return WyzeSwitch
       case 'Thermostat':
         return WyzeThermostat
+      case 'S1Gateway':
+        return WyzeHMS
     }
   }
 
