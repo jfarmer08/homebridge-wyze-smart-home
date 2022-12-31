@@ -1,7 +1,6 @@
 const md5 = require('md5')
-
-var constants = require('./constants')
-var crypto = require('./crypto')
+let constants = require('./constants')
+let crypto = require('./crypto')
 
 
      

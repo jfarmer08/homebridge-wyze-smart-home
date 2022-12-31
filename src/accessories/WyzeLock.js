@@ -123,8 +123,5 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   checkBatteryVoltage (deviceVoltage) {
-    if (deviceVoltage >= 100) {
-      return 100
-    } else { return deviceVoltage }
-  }
+    if (deviceVoltage >= 100) { return 100 } else if ( deviceVoltage == "undefined") { return 100 } else { return deviceVoltage }}
 }
