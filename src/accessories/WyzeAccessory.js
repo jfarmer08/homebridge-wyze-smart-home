@@ -50,6 +50,10 @@ module.exports = class WyzeAccessory {
  get cameraSiren ()        { return this.homeKitAccessory.context.device_params?.cameraSiren}
  get cameraFloodLight ()        { return this.homeKitAccessory.context.device_params?.floodLight}
 
+ // from HMS
+ get hmsHmsID ()        { return this.homeKitAccessory.context.device_params?.hmsId}
+ get hmsStatus ()        {return this.homeKitAccessory.context.device_params?.hmsStatus}
+
 
   /** Determines whether this accessory matches the given Wyze device */
   matches (device) {
@@ -267,6 +271,24 @@ module.exports = class WyzeAccessory {
           }        
         }
         break
+      case "S1Gateway":
+        this.homeKitAccessory.context = {
+          mac: device.mac,
+          product_type: device.product_type,
+          product_model: device.product_model,
+          nickname: device.nickname,
+          device_params: device.device_params = {
+            battery: device.device_params.battery,
+            indicator_light_switch: device.device_params.indicator_light_switch,
+            power_source: device.device_params.power_source,
+            ssid: device.device_params.ssid,
+            ip: device.device_params.ip,
+            rssi: device.device_params.rssi,
+            hmsID: this.hmsHmsID,
+            hmsStatus: this.hmsStatus
+          } 
+        }
+        break
       default:
         this.homeKitAccessory.context = {
           mac: device.mac,
@@ -481,6 +503,35 @@ module.exports = class WyzeAccessory {
   async lightTurnOff() { await this.setProperty(this.mac, this.product_model, "P3", "1")}
   async lightSetBrightness(value) { await this.setProperty(this.mac, this.product_model, "P1501", value)}
   async setColorTemperature(value) { await this.setProperty(this.mac, this.product_model, "P1502", value)}
+
+  //HMS
+  async getHmsID() {
+    const response = await this.plugin.client.getPlanBindingListByUser()
+        this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
+  }
+  
+  async setHMSState(hms_id, mode) {
+    let responseDisable
+    let response
+    console.log(hms_id)
+    console.log(mode)
+      if(mode == "off") {
+      responseDisable = await this.plugin.client.disableRemeAlarm(hms_id)
+      console.log(responseDisable)
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
+      } else if( mode === "away" ) {
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
+      }  else if( mode === "home" ) {
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
+      }
+      console.log(response)
+      return response
+  }
+
+  async getHmsUpdate(hms_id) {
+    const response = await this.plugin.client.monitoringProfileStateStatus(hms_id)
+      this.homeKitAccessory.context.device_params.hmsStatus = response.message
+  }
   
   async setProperty (property, value) {
     try {
@@ -498,6 +549,7 @@ module.exports = class WyzeAccessory {
     async getHmsID() {
       //need to phrase out HMSID from devices-deviceList and return that
       const response = await this.plugin.client.getPlanBindingListByUser()
+        console.log(response.data[0].deviceList[0].device_id)
          this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
     }
   

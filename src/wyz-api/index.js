@@ -457,7 +457,7 @@ module.exports = class WyzeAPI {
       const url = 'https://hms.api.wyze.com/api/v1/reme-alarm';
       this.log.debug(`Performing request: ${url}`)
       result = await axios.get(url, config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      this.log.debug(`API response disable: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
@@ -471,7 +471,7 @@ module.exports = class WyzeAPI {
 
   async getPlanBindingListByUser() {
     await this.maybeLogin()
-
+    let result
     let payload = payloadFactory.oliveCreateHmsPayload()
     let signature = crypto.oliveCreateSignature(payload, this.access_token);
     let config = {
@@ -505,7 +505,7 @@ module.exports = class WyzeAPI {
 
   async monitoringProfileStateStatus(hms_id) {
     await this.maybeLogin()
-
+    let result
     let query = payloadFactory.oliveCreateHmsGetPayload(hms_id);
     let signature = crypto.oliveCreateSignature(query, this.access_token);
 
@@ -542,21 +542,26 @@ module.exports = class WyzeAPI {
   //Needs worked on
   async monitoringProfileActive(hms_id, home, away) {
     await this.maybeLogin()
-
-    query = payloadFactory.oliveCreateHmsPatchPayload(hms_id);
-    signature = crypto.oliveCreateSignature(query, this.access_token)
-    let config = {
+    let result
+    const payload = payloadFactory.oliveCreateHmsPatchPayload(hms_id);
+    console.log(payload)
+    const signature = crypto.oliveCreateSignature(payload, this.access_token)
+    
+    const config = {
       headers: {
-        'Accept-Encoding': 'gzip',
         'User-Agent': 'myapp',
         'appid': constants.oliveAppId,
-        'appinfo': this.appinfo,
-        'phoneid': this.phoneId,
+        'appinfo': 'wyze_android_2.19.14',
+        'phoneid': constants.phoneId,
         'access_token': this.access_token,
         'signature2': signature,
-        'Authorization': this.access_token
+        'Authorization': this.access_token 
       },
-      params: [
+      params: payload
+    }
+    
+    const data = {
+       data: [
         {
             "state": "home",
             "active": home
@@ -565,18 +570,18 @@ module.exports = class WyzeAPI {
             "state": "away",
             "active": away
         }
-     ],
-      payload: query
+     ]
     }
 
     try {
       const url = "https://hms.api.wyze.com/api/v1/monitoring/v1/profile/active";
       this.log.debug(`Performing request: ${url}`)
-      result = await axios.patch(url, config)
+      result = await axios.patch(url, data, config)
+      console.log(result)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
-
+      console.log(e)
       if (e.response) {
         this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
@@ -593,10 +598,10 @@ module.exports = class WyzeAPI {
     let config = {
       headers: {
         'Accept-Encoding': 'gzip',
-        'User-Agent': this.userAgent,
+        'User-Agent': constants.userAgent,
         'appid': constants.oliveAppId,
-        'appinfo': this.appInfo,
-        'phoneid': this.phoneId,
+        'appinfo': constants.appInfo,
+        'phoneid': constants.phoneId,
         'access_token': this.access_token,
         'signature2': signature
       },
