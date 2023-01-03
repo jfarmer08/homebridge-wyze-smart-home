@@ -1,6 +1,22 @@
 {
     "cSpell.words": [
+<<<<<<< HEAD
         "Wyze",
         "WYZEDB"
+=======
+        "appinfo",
+        "APPNAME",
+        "APPVER",
+        "APPVERSION",
+        "hardlock",
+        "hualai",
+        "Hvac",
+        "phoneid",
+        "Reme",
+        "rssi",
+        "ssid",
+        "uuidv",
+        "Wyze"
+>>>>>>> reModel
     ]
 }

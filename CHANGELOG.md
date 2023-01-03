@@ -1,43 +1,48 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.25-beta.2
+- Wall Switch Status update
+- HMS
+- lOCk support is broken
+### v0.5.25-beta.2
+- Wall Switch was not status being followed
+- Unable to turn Wall Switch On or Off.
+- LOCK support is broken for this release
+### v0.5.25-beta.1
+- Wall Switch Support
+- Lock changes - Reduce calls to wyze platform 
+- Major Changes to SDK
+- Initial support for Thermostat in SDK
+- Initial support for HMS in SDK.
 ### v0.5.24
 - Release
-
 ### v0.5.24-beta.1
 - Filter Devices by Mac Address (Thanks https://github.com/kliu99)
 - Filter Devices by Device Type
 - Refresh refreshToken every 48 Hours
 - Add Logging
-
 ### v0.5.24-beta.0
 - Feature Support for ignoring devices
 - Upate default refresh interval to 30 secounds
 - Update grammer error
-
 ### v0.5.23
 - Bug OutDoor Camera was not working with on/off
 - Bug Wyze Doorbell does not support on/off
-
 ### v0.5.22
 - Update NPM Version
-
 ### v0.5.21
 - Battery Support for Locks
 - Door Sensor from lock now being reported
 - Update NPM Version
 - Change Log Update
-
 ### v0.5.20
 - Broke Offline Support
-
 ### v0.5.19
 - Issue with Locks after adding Camera Support
-
 ### v0.5.18
 - Initial Support for Camera on/off switch
 - Code Clean up
-
 ### v0.5.17
 - Initial Support for noResponse when device is offline. 
     ContactSensor v2
@@ -47,7 +52,6 @@
     Motion Sensor
     Plug
 - Initial Support for Battery Level on Leak Sensor
-
 ### v0.5.15
 - Bug Sensor can send a value greater then 100 for Battery Level
 - v0.5.14 Initial Support for Battery level on Temperature Sensor
