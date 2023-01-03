@@ -1,11 +1,6 @@
 {
   "name": "homebridge-wyze-smart-home",
-<<<<<<< HEAD
   "version": "0.5.25-beta.4",
-=======
-  "private": true,
-  "version": "0.5.2-5.beta.3",
->>>>>>> reModel
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
@@ -31,17 +26,11 @@
     "homebridge": ">=0.2.0"
   },
   "dependencies": {
-    "@homebridge/plugin-ui-utils": "0.0.18",
     "axios": "^0.21.1",
     "colorsys": "^1.0.22",
     "crypto-js": "4.1.1",
     "homebridge": "^1.6.0",
     "md5": "^2.2.1",
-<<<<<<< HEAD
-=======
-    "moment": "^2.24.0",
-    "urllib": "3.1.2",
->>>>>>> reModel
     "utf8": "^3.0.0",
     "uuid": "8.3.2"
   },
