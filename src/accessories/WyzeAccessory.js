@@ -12,44 +12,67 @@ module.exports = class WyzeAccessory {
     this.homeKitAccessory = homeKitAccessory
   }
 
- // Default Prop
- get display_name ()             { return this.homeKitAccessory.displayName }
- get mac ()                      { return this.homeKitAccessory.context.mac }
- get product_type ()             { return this.homeKitAccessory.context.product_type }
- get product_model ()            { return this.homeKitAccessory.context.product_model }
- // Wall Switch Prop
- get single_press_type ()        { return this.homeKitAccessory.context.device_params?.single_press_type }
- get double_press_type ()        { return this.homeKitAccessory.context.device_params?.double_press_type }
- get triple_press_type ()        { return this.homeKitAccessory.context.device_params?.triple_press_type }
- get long_press_type ()          { return this.homeKitAccessory.context.device_params?.long_press_type }
- get iot_state ()                { return this.homeKitAccessory.context.device_params?.iot_state } //Device online / offline
- get switch_power ()             { return this.homeKitAccessory.context.device_params?.switch_power } //Power on / Power off
- // Lock Prop - only add get if you need to access them
- // From Device List
- get switch_state ()             { return this.homeKitAccessory.context.device_params.switch_state }
- get open_close_state ()         { return this.homeKitAccessory.context.device_params.open_close_state }
- // from lockInfo
- get lockPower ()                { return this.homeKitAccessory.context.device_params?.power }
- get lockDoorOpenStatus ()       { return this.homeKitAccessory.context.device_params?.door_open_status }
- get lockOnoffLine ()            { return this.homeKitAccessory.context.device_params?.onoff_line }
- get lockTrashMode ()            { return this.homeKitAccessory.context.device_params?.trash_mode }
- get lockKeypadEnableStatus ()   { return this.homeKitAccessory.context.device_params?.keypad_enable_status }
- get lockDoorSensor ()           { return this.homeKitAccessory.context.device_params?.door_sensor }
- get lockKeypadPower ()          { return this.homeKitAccessory.context.device_params?.keypadPower }
- get lockKeypadOnoffLine ()      { return this.homeKitAccessory.context.device_params?.keypadOnoff_line }
- get lockKeypadMac ()            { return this.homeKitAccessory.context.device_params?.keypadMac }
- get lockLockerStatusDoor ()     { return this.homeKitAccessory.context.device_params?.door }
- get lockLockerStatusHardlock () { return this.homeKitAccessory.context.device_params?.hardlock }
- 
- // from Camera
- get cameraPowerSwitch ()        { return this.homeKitAccessory.context.device_params.power_switch}
- get cameraMotionSwitch ()       { return this.homeKitAccessory.context.device_params.motion_alarm_switch}
- get cameraNotification ()        { return this.homeKitAccessory.context.device_params?.notification}
- get cameraOn ()        { return this.homeKitAccessory.context.device_params?.on}
- get cameraAvailable ()        { return this.homeKitAccessory.context.device_params?.available}
- get cameraSiren ()        { return this.homeKitAccessory.context.device_params?.cameraSiren}
- get cameraFloodLight ()        { return this.homeKitAccessory.context.device_params?.floodLight}
+  // Default Prop
+  get display_name ()             { return this.homeKitAccessory.displayName }
+  get mac ()                      { return this.homeKitAccessory.context.mac }
+  get product_type ()             { return this.homeKitAccessory.context.product_type }
+  get product_model ()            { return this.homeKitAccessory.context.product_model }
+  // Wall Switch Prop
+  get single_press_type ()        { return this.homeKitAccessory.context.device_params?.single_press_type }
+  get double_press_type ()        { return this.homeKitAccessory.context.device_params?.double_press_type }
+  get triple_press_type ()        { return this.homeKitAccessory.context.device_params?.triple_press_type }
+  get long_press_type ()          { return this.homeKitAccessory.context.device_params?.long_press_type }
+  get iot_state ()                { return this.homeKitAccessory.context.device_params?.iot_state } //Device online / offline
+  get switch_power ()             { return this.homeKitAccessory.context.device_params?.switch_power } //Power on / Power off
+  // Lock Prop - only add get if you need to access them
+  // From Device List
+  get switch_state ()             { return this.homeKitAccessory.context.device_params.switch_state }
+  get open_close_state ()         { return this.homeKitAccessory.context.device_params.open_close_state }
+  // from lockInfo
+  get lockPower ()                { return this.homeKitAccessory.context.device_params?.power }
+  get lockDoorOpenStatus ()       { return this.homeKitAccessory.context.device_params?.door_open_status }
+  get lockOnoffLine ()            { return this.homeKitAccessory.context.device_params?.onoff_line }
+  get lockTrashMode ()            { return this.homeKitAccessory.context.device_params?.trash_mode }
+  get lockKeypadEnableStatus ()   { return this.homeKitAccessory.context.device_params?.keypad_enable_status }
+  get lockDoorSensor ()           { return this.homeKitAccessory.context.device_params?.door_sensor }
+  get lockKeypadPower ()          { return this.homeKitAccessory.context.device_params?.keypadPower }
+  get lockKeypadOnoffLine ()      { return this.homeKitAccessory.context.device_params?.keypadOnoff_line }
+  get lockKeypadMac ()            { return this.homeKitAccessory.context.device_params?.keypadMac }
+  get lockLockerStatusDoor ()     { return this.homeKitAccessory.context.device_params?.door }
+  get lockLockerStatusHardlock () { return this.homeKitAccessory.context.device_params?.hardlock }
+  
+  // from Camera
+  get cameraPowerSwitch ()        { return this.homeKitAccessory.context.device_params.power_switch}
+  get cameraMotionSwitch ()       { return this.homeKitAccessory.context.device_params.motion_alarm_switch}
+  get cameraNotification ()        { return this.homeKitAccessory.context.device_params?.notification}
+  get cameraOn ()        { return this.homeKitAccessory.context.device_params?.on}
+  get cameraAvailable ()        { return this.homeKitAccessory.context.device_params?.available}
+  get cameraSiren ()        { return this.homeKitAccessory.context.device_params?.cameraSiren}
+  get cameraFloodLight ()        { return this.homeKitAccessory.context.device_params?.floodLight}
 
+  // from thermostat
+  get thermostatTemperature()     { return this.homeKitAccessory.context.device_params?.temperature }
+  set thermostatTemperature(value){ this.homeKitAccessory.context.device_params.temperature = value }
+
+  get thermostatModeSys()         { return this.homeKitAccessory.context.device_params?.mode_sys }
+  set thermostatModeSys(value)    { this.homeKitAccessory.context.device_params.mode_sys = value }
+
+  get thermostatWorkingState()    { return this.homeKitAccessory.context.device_params?.working_state }
+  set thermostatWorkingState(value)    { this.homeKitAccessory.context.device_params.working_state = value }
+
+  get thermostatCoolSetpoint()    { return this.homeKitAccessory.context.device_params?.cool_sp }
+  set thermostatCoolSetpoint(value)    { this.homeKitAccessory.context.device_params.cool_sp = value}
+
+  get thermostatHeatSetpoint()    { return this.homeKitAccessory.context.device_params?.heat_sp }
+  set thermostatHeatSetpoint(value)    { this.homeKitAccessory.context.device_params.heat_sp = value }
+
+  get thermostatTempUnit()        { return this.homeKitAccessory.context.device_params?.temp_unit }
+  set thermostatTempUnit(value)        { this.homeKitAccessory.context.device_params.temp_unit = value }
+
+  get thermostatTime2Temp()        { return this.homeKitAccessory.context.device_params?.time2temp_val }
+  set thermostatTime2Temp(value)        { this.homeKitAccessory.context.device_params.time2temp_val = value }
+
+  get thermostatConnState()       { return this.homeKitAccessory.context.conn_state }
 
   /** Determines whether this accessory matches the given Wyze device */
   matches (device) {
@@ -264,6 +287,25 @@ module.exports = class WyzeAccessory {
             keypadMac: this.lockKeypadMac,
             door: this.lockLockerStatusDoor,
             hardlock: this.lockLockerStatusHardlock,
+          }        
+        }
+        break
+      case "Thermostat":
+        this.homeKitAccessory.context = {
+          mac: device.mac,
+          product_type: device.product_type,
+          product_model: device.product_model,
+          nickname: device.nickname,
+          conn_state: device.conn_state,
+          push_switch: device.push_switch,
+          device_params: device.device_params = {
+            temperature: this.thermostatTemperature,
+            cool_sp: this.thermostatCoolSetpoint,
+            heat_sp: this.thermostatHeatSetpoint,
+            working_state: this.thermostatWorkingState,
+            temp_unit: this.thermostatTempUnit,
+            mode_sys: this.thermostatModeSys,
+            time2temp_val: this.thermostatTime2Temp
           }        
         }
         break
@@ -515,5 +557,71 @@ module.exports = class WyzeAccessory {
     } finally {
       this.updating = false
     }
+  }
+
+  // Thermostat Methods
+  async thermostatGetIotProp() {
+    let keys = "trigger_off_val,emheat,temperature,humidity,time2temp_val,protect_time,mode_sys,heat_sp,cool_sp, current_scenario,config_scenario,temp_unit,fan_mode,iot_state,w_city_id,w_lat,w_lon,working_state, dev_hold,dev_holdtime,asw_hold,app_version,setup_state,wiring_logic_id,save_comfort_balance, kid_lock,calibrate_humidity,calibrate_temperature,fancirc_time,query_schedule"
+    let response
+    try {
+      this.updating = true
+      response = await this.plugin.client.thermostatGetIotProp(this.mac, keys)
+      let properties = response.data.props
+      const prop_key = Object.keys(properties);
+      for (const element of prop_key) {
+        const prop = element;
+        if (prop === 'temperature') {
+          this.homeKitAccessory.context.device_params.temperature = Math.round(properties[prop])
+        } else if (prop == 'cool_sp'){
+          this.homeKitAccessory.context.device_params.cool_sp = Math.round(properties[prop])
+        } else if (prop == 'heat_sp'){
+          this.homeKitAccessory.context.device_params.heat_sp = Math.round(properties[prop])
+        } else if (prop == 'working_state'){
+          this.homeKitAccessory.context.device_params.working_state = properties[prop]
+        } else if (prop == 'temp_unit'){
+          this.homeKitAccessory.context.device_params.temp_unit = properties[prop]
+        } else if (prop == 'mode_sys'){
+          this.homeKitAccessory.context.device_params.mode_sys = properties[prop]
+        } else if (prop == 'iot_state') {
+          this.homeKitAccessory.context.conn_state = properties[prop]
+        } else if (prop == 'time2temp_val') {
+          this.homeKitAccessory.context.device_params.thermostatTime2Temp = properties[prop]
+        }
+      }
+      this.lastTimestamp = response.ts
+
+    } catch(e) {
+      this.plugin.log.debug("Error in thermostat: " + e)
+    } finally {
+      this.updating = false
+      return response
+    }
+  }
+
+  async setPreset(value) {
+    const response = await this.plugin.client.thermostatSetIotProp(this.mac, this.product_model, 'config_scenario', value)
+    return response
+  }
+  // auto, on, off / / ['auto', 'circ', 'on']
+  async setFanMode(value) {
+    const response = await this.plugin.client.thermostatSetIotProp(this.mac, this.product_model, 'fan_mode', value)
+    return response
+  }
+  // auto, heat, cool
+  async setHvacMode(value) {
+    const response =await this.plugin.client.thermostatSetIotProp(this.mac, this.product_model, 'mode_sys', value)
+    return response
+  }
+
+  // heat stop point
+  async setHeatPoint(value) {
+    const response = await this.plugin.client.thermostatSetIotProp(this.mac, this.product_model, 'heat_sp', value)
+    return response
+  }
+
+  // Cool stop point
+  async setCoolPoint(value) {
+    const response = await this.plugin.client.thermostatSetIotProp(this.mac, this.product_model, 'cool_sp', value)
+    return response
   }
 }
