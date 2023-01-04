@@ -570,26 +570,34 @@ module.exports = class WyzeAccessory {
       const prop_key = Object.keys(properties);
       for (const element of prop_key) {
         const prop = element;
-        if (prop === 'temperature') {
-          this.homeKitAccessory.context.device_params.temperature = Math.round(properties[prop])
-        } else if (prop == 'cool_sp'){
-          this.homeKitAccessory.context.device_params.cool_sp = Math.round(properties[prop])
-        } else if (prop == 'heat_sp'){
-          this.homeKitAccessory.context.device_params.heat_sp = Math.round(properties[prop])
-        } else if (prop == 'working_state'){
-          this.homeKitAccessory.context.device_params.working_state = properties[prop]
-        } else if (prop == 'temp_unit'){
-          this.homeKitAccessory.context.device_params.temp_unit = properties[prop]
-        } else if (prop == 'mode_sys'){
-          this.homeKitAccessory.context.device_params.mode_sys = properties[prop]
-        } else if (prop == 'iot_state') {
-          this.homeKitAccessory.context.conn_state = properties[prop]
-        } else if (prop == 'time2temp_val') {
-          this.homeKitAccessory.context.device_params.thermostatTime2Temp = properties[prop]
+        switch (prop) {
+          case 'temperature': 
+            this.homeKitAccessory.context.device_params.temperature = Math.round(properties[prop])
+            continue
+          case 'cool_sp':
+            this.homeKitAccessory.context.device_params.cool_sp = Math.round(properties[prop])
+            continue
+          case 'heat_sp':
+            this.homeKitAccessory.context.device_params.heat_sp = Math.round(properties[prop])
+            continue
+          case 'working_state':
+            this.homeKitAccessory.context.device_params.working_state = properties[prop]
+            continue
+          case 'temp_unit':
+            this.homeKitAccessory.context.device_params.temp_unit = properties[prop]
+            continue
+          case 'mode_sys':
+            this.homeKitAccessory.context.device_params.mode_sys = properties[prop]
+            continue
+          case 'iot_state':
+            this.homeKitAccessory.context.conn_state = properties[prop]
+            continue
+          case 'time2temp_val':
+            this.homeKitAccessory.context.device_params.thermostatTime2Temp = properties[prop]
+            continue
         }
       }
-      this.lastTimestamp = response.ts
-
+        this.lastTimestamp = response.ts
     } catch(e) {
       this.plugin.log.debug("Error in thermostat: " + e)
     } finally {
