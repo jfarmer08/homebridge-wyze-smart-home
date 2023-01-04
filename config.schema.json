@@ -2,8 +2,6 @@
   "pluginAlias": "WyzeSmartHome",
   "pluginType": "platform",
   "singular": true,
-  "customUi": true,
-  "customUiDevServer": "http://localhost:4200",
   "headerDisplay": "Wyze plug-in for Homebridge. This is a custom component to allow control of various Wyze devices using the unofficial API. Please note this mimics the Wyze app and therefore access may be cut off at anytime.",
   "footerDisplay": "For documentation please see GitHub repository",
   "schema": {
@@ -47,13 +45,7 @@
   "default": "",
   "required": false
   },
-  "smsCode": {
-    "title": "One-time Password (for two-factor authentication)",
-    "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
-    "type": "string",
-    "default": "",
-    "required": false
-    },
+  
   "showAdvancedOptions": {
   "title": "Advance Options",
   "default": false,
@@ -99,8 +91,7 @@
   "TemperatureHumidity",
   "LeakSensor",
   "Camera",
-  "Common",
-  "S1Gateway"
+  "Common"
   ]
   },
   "condition": {"functionBody": "return model.excludedeviceType === true;"}

@@ -1,4 +1,4 @@
-config.json
+
 .DS_Store
 .uix-dashboard.json
 .uix-secrets
@@ -12,4 +12,3 @@ backups/
 accessories/.cachedAccessories.bak
 *.bak
 accessories/cachedAccessories
-output.json

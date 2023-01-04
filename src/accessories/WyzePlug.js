@@ -15,10 +15,10 @@ module.exports = class WyzePlug extends WyzeAccessory {
 
   updateCharacteristics (device) {
     this.plugin.log.debug(`[WyzePlug] Updating status of "${this.display_name}"`)
-    if (this.homeKitAccessory.context.conn_state === 0) {
+    if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
-      this.getOnCharacteristic().updateValue(this.homeKitAccessory.context.device_params.switch_state)
+      this.getOnCharacteristic().updateValue(device.device_params.switch_state)
     }
   }
 
