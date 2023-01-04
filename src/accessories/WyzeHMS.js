@@ -1,20 +1,6 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
-const homebridgeCharacteristic = {
-  'home' : Characteristic.SecuritySystemTargetState.STAY_ARM,
-  nightArm : Characteristic.SecuritySystemTargetState.NIGHT_ARM,
-  'away' :Characteristic.SecuritySystemTargetState.AWAY_ARM,
-  'disarm' : Characteristic.SecuritySystemTargetState.DISARM
-}
-
-const HmsToHomebridge = {
-  'CHANGING' : 'changing',
-  'disarm': Characteristic.SecuritySystemTargetState.DISARM,
-  'away': Characteristic.SecuritySystemTargetState.AWAY_ARM,
-  'home': Characteristic.SecuritySystemTargetState.STAY_ARM,
-}
-
 module.exports = class WyzeHMS extends WyzeAccessory {
   constructor (plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory)
@@ -33,7 +19,7 @@ module.exports = class WyzeHMS extends WyzeAccessory {
   }
 
   async updateCharacteristics (device) {
-    this.plugin.log.debug(`[HMS] Updating Current State of "${this.display_name}"`)
+    this.plugin.log.debug(`[HMS] Updating Current State of "${this.display_name}" is "${this.hmsStatus}"`)
     if (device.conn_state === 0) {
       this.getCharacteristic(Characteristic.On).updateValue(noResponse)
     } else {
@@ -52,16 +38,28 @@ module.exports = class WyzeHMS extends WyzeAccessory {
    * Handle requests to get the current value of the "Security System Current State" characteristic
    */
   handleSecuritySystemCurrentStateGet() {
-    this.plugin.log.debug(`[HMS] Fetching Current State of "${this.display_name}"`)
+    this.plugin.log.debug(`[HMS] Fetching Current State of "${this.display_name}": "${this.hmsStatus}"`)
     return this.convertHmsStateToHomeKitState(this.hmsStatus);
   }
-
 
   /**
    * Handle requests to get the current value of the "Security System Target State" characteristic
    */
-  handleSecuritySystemTargetStateGet() {
-    this.plugin.log.debug(`[HMS] Fetching Target State of "${this.display_name}"`)
+  async handleSecuritySystemTargetStateGet() {
+    this.plugin.log.debug(`[HMS] Fetching Target State of "${this.display_name}": "${this.hmsStatus}"`)
+  //   if(this.plugin.config.hasOwnProperty('entryExitDelay')){
+  //   while(this.hmsStatus == "changing") {
+  //     if (this.hmsHmsID == null) {
+  //       await this.getHmsID()
+  //       await this.getHmsUpdate(this.hmsHmsID)
+  //       this.sleep(this.plugin.config.entryExitDelay)
+  //     }else {
+  //       await this.getHmsUpdate(this.hmsHmsID)
+  //       this.sleep(this.plugin.config.entryExitDelay)
+  //     }
+  //   }
+  // }
+    
     // set this to a valid value for SecuritySystemTargetState
     return this.convertHmsStateToHomeKitState(this.hmsStatus);
   }
@@ -70,7 +68,7 @@ module.exports = class WyzeHMS extends WyzeAccessory {
    * Handle requests to set the "Security System Target State" characteristic
    */
   async handleSecuritySystemTargetStateSet(value) {
-    this.plugin.log.debug(`[HMS] Target State Set of "${this.display_name}"`)
+    this.plugin.log.debug(`[HMS] Target State Set "${this.display_name}": "${this.convertHomeKitStateToHmsState(value)}"`)
     await this.setHMSState(this.hmsHmsID,this.convertHomeKitStateToHmsState(value))
   }
 
@@ -99,10 +97,13 @@ module.exports = class WyzeHMS extends WyzeAccessory {
         case Characteristic.SecuritySystemTargetState.DISARM:
             return "off";
             break;
+        case Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED:
+          return ""
+          break;
     }
   }
 
   sleep (ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise(resolve => setTimeout(resolve, ms * 1000))
   }
 }

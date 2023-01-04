@@ -443,12 +443,13 @@ module.exports = class WyzeAPI {
 
   async disableRemeAlarm(hms_id) {
     await this.maybeLogin()
-
+    let result
     let config = {
       headers: {
-        'Authorization': this.access_token
+        'Authorization': this.access_token,
+        'User-Agent': this.userAgent,
       },
-      payload: {
+      params: {
         'hms_id': hms_id,
         'remediation_id': 'emergency'
       }
@@ -456,11 +457,12 @@ module.exports = class WyzeAPI {
     try {
       const url = 'https://hms.api.wyze.com/api/v1/reme-alarm';
       this.log.debug(`Performing request: ${url}`)
-      result = await axios.get(url, config)
+      result = await axios.delete(url, config)
+      console.log(result)
       this.log.debug(`API response disable: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
-
+      console.log(e)
       if (e.response) {
         this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
@@ -539,12 +541,10 @@ module.exports = class WyzeAPI {
     return result.data
   }
 
-  //Needs worked on
   async monitoringProfileActive(hms_id, home, away) {
     await this.maybeLogin()
     let result
     const payload = payloadFactory.oliveCreateHmsPatchPayload(hms_id);
-    console.log(payload)
     const signature = crypto.oliveCreateSignature(payload, this.access_token)
     
     const config = {
@@ -560,8 +560,7 @@ module.exports = class WyzeAPI {
       params: payload
     }
     
-    const data = {
-       data: [
+    const data =  [
         {
             "state": "home",
             "active": home
@@ -571,13 +570,11 @@ module.exports = class WyzeAPI {
             "active": away
         }
      ]
-    }
-
+    
     try {
       const url = "https://hms.api.wyze.com/api/v1/monitoring/v1/profile/active";
       this.log.debug(`Performing request: ${url}`)
       result = await axios.patch(url, data, config)
-      console.log(result)
       this.log.debug(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)

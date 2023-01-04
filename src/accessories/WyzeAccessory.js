@@ -511,20 +511,24 @@ module.exports = class WyzeAccessory {
   }
   
   async setHMSState(hms_id, mode) {
-    let responseDisable
-    let response
     console.log(hms_id)
     console.log(mode)
+    let responseDisable
+    let response
       if(mode == "off") {
-      responseDisable = await this.plugin.client.disableRemeAlarm(hms_id)
-      console.log(responseDisable)
-      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
+        console.log(hms_id)
+        console.log(mode)
+        responseDisable = await this.plugin.client.disableRemeAlarm(hms_id)
+        response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
       } else if( mode === "away" ) {
-      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
+        console.log(hms_id)
+        console.log(mode)
+        response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
       }  else if( mode === "home" ) {
-      response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
+        console.log(hms_id)
+        console.log(mode)
+        response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
       }
-      console.log(response)
       return response
   }
 
@@ -549,13 +553,12 @@ module.exports = class WyzeAccessory {
     async getHmsID() {
       //need to phrase out HMSID from devices-deviceList and return that
       const response = await this.plugin.client.getPlanBindingListByUser()
-        console.log(response.data[0].deviceList[0].device_id)
          this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
     }
   
     async setHMSState(hms_id, mode) {
       let response
-       if(mode == "disarm") {
+       if(mode == "off") {
         response = await this.plugin.client.disableRemeAlarm(hms_id)
         response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
        } else if( mode === "away" ) {
