@@ -9,8 +9,8 @@ const constants = require('./constants')
     function fordCreateSignature(url_path, request_method, data) {
         var body = request_method + url_path;
         var keys = Object.keys(data).sort()
-        for (var i = 0; i < keys.length; i++) { // now lets iterate in sort order
-            var key = keys[i];
+        for (const element of keys) { // now lets iterate in sort order
+            var key = element;
             var value = data[key];
             body += key + '=' + value + '&';
         }
