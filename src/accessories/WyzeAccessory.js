@@ -50,6 +50,10 @@ module.exports = class WyzeAccessory {
   get cameraSiren ()        { return this.homeKitAccessory.context.device_params?.cameraSiren}
   get cameraFloodLight ()        { return this.homeKitAccessory.context.device_params?.floodLight}
 
+  // from HMS
+  get hmsHmsID ()        { return this.homeKitAccessory.context.device_params?.hmsId}
+  get hmsStatus ()        {return this.homeKitAccessory.context.device_params?.hmsStatus}
+
   // from thermostat
   get thermostatTemperature()     { return this.homeKitAccessory.context.device_params?.temperature }
   set thermostatTemperature(value){ this.homeKitAccessory.context.device_params.temperature = value }
@@ -290,7 +294,7 @@ module.exports = class WyzeAccessory {
           }        
         }
         break
-      case "Thermostat":
+       case "Thermostat":
         this.homeKitAccessory.context = {
           mac: device.mac,
           product_type: device.product_type,
@@ -308,6 +312,23 @@ module.exports = class WyzeAccessory {
             time2temp_val: this.thermostatTime2Temp
           }        
         }
+        break
+      case "S1Gateway":
+        this.homeKitAccessory.context = {
+          mac: device.mac,
+          product_type: device.product_type,
+          product_model: device.product_model,
+          nickname: device.nickname,
+          device_params: device.device_params = {
+            battery: device.device_params.battery,
+            indicator_light_switch: device.device_params.indicator_light_switch,
+            power_source: device.device_params.power_source,
+            ssid: device.device_params.ssid,
+            ip: device.device_params.ip,
+            rssi: device.device_params.rssi,
+            hmsID: this.hmsHmsID,
+            hmsStatus: this.hmsStatus
+          } 
         break
       default:
         this.homeKitAccessory.context = {
@@ -523,6 +544,39 @@ module.exports = class WyzeAccessory {
   async lightTurnOff() { await this.setProperty(this.mac, this.product_model, "P3", "1")}
   async lightSetBrightness(value) { await this.setProperty(this.mac, this.product_model, "P1501", value)}
   async setColorTemperature(value) { await this.setProperty(this.mac, this.product_model, "P1502", value)}
+
+  //HMS
+  async getHmsID() {
+    const response = await this.plugin.client.getPlanBindingListByUser()
+        this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
+  }
+  
+  async setHMSState(hms_id, mode) {
+    console.log(hms_id)
+    console.log(mode)
+    let responseDisable
+    let response
+      if(mode == "off") {
+        console.log(hms_id)
+        console.log(mode)
+        responseDisable = await this.plugin.client.disableRemeAlarm(hms_id)
+        response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
+      } else if( mode === "away" ) {
+        console.log(hms_id)
+        console.log(mode)
+        response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
+      }  else if( mode === "home" ) {
+        console.log(hms_id)
+        console.log(mode)
+        response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
+      }
+      return response
+  }
+
+  async getHmsUpdate(hms_id) {
+    const response = await this.plugin.client.monitoringProfileStateStatus(hms_id)
+      this.homeKitAccessory.context.device_params.hmsStatus = response.message
+  }
   
   async setProperty (property, value) {
     try {
@@ -536,6 +590,31 @@ module.exports = class WyzeAccessory {
     }
   }
 
+    //HMS
+  async getHmsID() {
+    //need to phrase out HMSID from devices-deviceList and return that
+    const response = await this.plugin.client.getPlanBindingListByUser()
+        this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
+  }
+  
+  async setHMSState(hms_id, mode) {
+    let response
+      if(mode == "off") {
+      response = await this.plugin.client.disableRemeAlarm(hms_id)
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
+      } else if( mode === "away" ) {
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
+      }  else if( mode === "home" ) {
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
+      }
+      return response
+  }
+  
+  async getHmsUpdate(hms_id) {
+    const response = await this.plugin.client.monitoringProfileStateStatus(hms_id)
+      this.homeKitAccessory.context.device_params.hmsStatus = response.message
+  }
+    
   async runActionList (property, value) {
     try {
       this.updating = true
