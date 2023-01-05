@@ -9,6 +9,7 @@ const WyzeMotionSensor = require('./accessories/WyzeMotionSensor')
 const WyzeTemperatureHumidity = require('./accessories/WyzeTemperatureHumidity')
 const WyzeLeakSensor = require('./accessories/WyzeLeakSensor')
 const WyzeCamera = require('./accessories/WyzeCamera')
+const WyzeSwitch = require('./accessories/WyzeSwitch')
 const WyzeHMS = require('./accessories/WyzeHMS')
 const WyzeThermostat = require('./accessories/WyzeThermostat')
 
@@ -52,7 +53,6 @@ module.exports = class WyzeSmartHome {
 
   async runLoop() {
     const interval = this.config.refreshInterval || DEFAULT_REFRESH_INTERVAL
-
     // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
@@ -153,6 +153,9 @@ module.exports = class WyzeSmartHome {
       case 'Camera':
         if (model === 'WYZEDB3') return
         return WyzeCamera
+      case 'Common':
+        if (model === 'JA_HP') return
+        return WyzeSwitch
       case 'S1Gateway':
         return WyzeHMS
       case 'Thermostat':

@@ -1,6 +1,25 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.25-dev.0
+- Support for Thermostat
+- Support for Wall Switch
+- Support for HMS
+### v0.5.25-beta.3
+- Wall Switch Status update
+- HMS
+- Lock support is broken
+### v0.5.25-beta.2
+- Wall Switch was not status being followed
+- Unable to turn Wall Switch On or Off.
+- LOCK support is broken for this release
+### v0.5.25-beta.1
+- Wall Switch Support
+- Lock changes - Reduce calls to wyze platform 
+- Major Changes to SDK
+- Initial support for Thermostat in SDK
+- Initial support for HMS in SDK.
+
 ### v0.5.24
 - Release
 

@@ -294,25 +294,25 @@ module.exports = class WyzeAccessory {
           }        
         }
         break
-       case "Thermostat":
-        this.homeKitAccessory.context = {
-          mac: device.mac,
-          product_type: device.product_type,
-          product_model: device.product_model,
-          nickname: device.nickname,
-          conn_state: device.conn_state,
-          push_switch: device.push_switch,
-          device_params: device.device_params = {
-            temperature: this.thermostatTemperature,
-            cool_sp: this.thermostatCoolSetpoint,
-            heat_sp: this.thermostatHeatSetpoint,
-            working_state: this.thermostatWorkingState,
-            temp_unit: this.thermostatTempUnit,
-            mode_sys: this.thermostatModeSys,
-            time2temp_val: this.thermostatTime2Temp
-          }        
-        }
-        break
+      case "Thermostat":
+      this.homeKitAccessory.context = {
+        mac: device.mac,
+        product_type: device.product_type,
+        product_model: device.product_model,
+        nickname: device.nickname,
+        conn_state: device.conn_state,
+        push_switch: device.push_switch,
+        device_params: device.device_params = {
+          temperature: this.thermostatTemperature,
+          cool_sp: this.thermostatCoolSetpoint,
+          heat_sp: this.thermostatHeatSetpoint,
+          working_state: this.thermostatWorkingState,
+          temp_unit: this.thermostatTempUnit,
+          mode_sys: this.thermostatModeSys,
+          time2temp_val: this.thermostatTime2Temp
+        }        
+      }
+      break
       case "S1Gateway":
         this.homeKitAccessory.context = {
           mac: device.mac,
@@ -328,7 +328,8 @@ module.exports = class WyzeAccessory {
             rssi: device.device_params.rssi,
             hmsID: this.hmsHmsID,
             hmsStatus: this.hmsStatus
-          } 
+          }
+        }
         break
       default:
         this.homeKitAccessory.context = {
