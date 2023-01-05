@@ -1,4 +1,3 @@
-const { clearCaches } = require('@typescript-eslint/parser')
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
