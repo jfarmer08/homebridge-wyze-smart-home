@@ -28,8 +28,7 @@
   "dependencies": {
     "axios": "^0.21.1",
     "colorsys": "^1.0.22",
-    "crypto-js": "4.1.1",
-    "homebridge": "^1.6.0",
+    "crypto-js": "4.1.1"
     "md5": "^2.2.1",
     "utf8": "^3.0.0",
     "uuid": "8.3.2"
