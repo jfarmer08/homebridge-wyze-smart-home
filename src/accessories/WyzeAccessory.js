@@ -550,29 +550,29 @@ module.exports = class WyzeAccessory {
   }
 
     //HMS
-    async getHmsID() {
-      //need to phrase out HMSID from devices-deviceList and return that
-      const response = await this.plugin.client.getPlanBindingListByUser()
-         this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
-    }
+  async getHmsID() {
+    //need to phrase out HMSID from devices-deviceList and return that
+    const response = await this.plugin.client.getPlanBindingListByUser()
+        this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
+  }
   
-    async setHMSState(hms_id, mode) {
-      let response
-       if(mode == "off") {
-        response = await this.plugin.client.disableRemeAlarm(hms_id)
-        response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
-       } else if( mode === "away" ) {
-        response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
-       }  else if( mode === "home" ) {
-        response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
-       }
-       return response
-    }
+  async setHMSState(hms_id, mode) {
+    let response
+      if(mode == "off") {
+      response = await this.plugin.client.disableRemeAlarm(hms_id)
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
+      } else if( mode === "away" ) {
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
+      }  else if( mode === "home" ) {
+      response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
+      }
+      return response
+  }
   
-    async getHmsUpdate(hms_id) {
-      const response = await this.plugin.client.monitoringProfileStateStatus(hms_id)
-        this.homeKitAccessory.context.device_params.hmsStatus = response.message
-    }
+  async getHmsUpdate(hms_id) {
+    const response = await this.plugin.client.monitoringProfileStateStatus(hms_id)
+      this.homeKitAccessory.context.device_params.hmsStatus = response.message
+  }
     
   async runActionList (property, value) {
     try {

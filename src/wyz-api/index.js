@@ -449,7 +449,7 @@ module.exports = class WyzeAPI {
         'Authorization': this.access_token,
         'User-Agent': this.userAgent,
       },
-      params: {
+      data: {
         'hms_id': hms_id,
         'remediation_id': 'emergency'
       }
