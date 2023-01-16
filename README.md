@@ -25,6 +25,8 @@ After you have done that if you feel like my work has been valuable to you I wel
 - Leak Sensor (Status / Battery)
 - Lock (Battery / Door Status / Control)
 - Camera v2, v3, Outdoor Cam, PamCam (on/off)
+- Wall Switch
+- HMS
 
 For more information about our version updates, please check our [change log](CHANGELOG.md).
 
