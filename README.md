@@ -11,7 +11,7 @@ This plugin adds support for Wyze Smart Home devices to [Homebridge](https://git
 # Funding   [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/AllenFarmer)
 If you like what I have done here and want to help I would recommend that you firstly look into supporting Homebridge. None of this could happen without them.
 
-After you have done that if you feel like my work has been valuable to you I welcome your support through Paypal. All funding goes back into product purchases. I would love to support all products that Wyze has under their portfolio along with other product that gets rebranded for other companys.  
+After you have done that if you feel like my work has been valuable to you I welcome your support through Paypal. All funding goes back into product purchases. I would love to support all products that Wyze has under their portfolio along with other product that gets rebranded for other companies.  
 
 ## Supported Devices
 - Light Bulb
