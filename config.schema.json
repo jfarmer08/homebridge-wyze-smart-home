@@ -38,6 +38,16 @@
   "multipleOf": 10000,
   "required": false
   },
+  "entryExitDelay": {
+    "title": "HMS entry \\ exit delay",
+    "description": "Specify the number of seconds to wait for entry \\ exit delay, default 30 seconds",
+    "type": "integer",
+    "default": 30,
+    "minimum": 0,
+    "maximum": 180,
+    "multipleOf": 1,
+    "required": false
+    },
   "mfaCode": {
   "title": "One-time Password (for two-factor authentication)",
   "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
@@ -51,7 +61,7 @@
   "default": false,
   "type": "boolean"
   },
-  "excludeMacAdress": {
+  "excludeMacAddress": {
   "title": "Exlcude by Mac Address",
   "default": false,
   "type": "boolean",
@@ -64,7 +74,7 @@
   "title": "Device Mac Address",
   "type": "string"},
   "condition": {
-  "functionBody": "return model.excludeMacAdress === true;"}
+  "functionBody": "return model.excludeMacAddress === true;"}
   },
   "excludedeviceType": {
   "title": "Exlcude Device by Type",
@@ -90,7 +100,9 @@
   "Lock",
   "TemperatureHumidity",
   "LeakSensor",
-  "Camera"
+  "Camera",
+  "Common",
+  "S1Gateway"
   ]
   },
   "condition": {"functionBody": "return model.excludedeviceType === true;"}

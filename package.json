@@ -1,16 +1,17 @@
 {
   "name": "homebridge-wyze-smart-home",
-  "version": "0.5.24.1",
+  "version": "0.5.25.0",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {
     "lint": "eslint src/**.js --max-warnings=0",
-    "start": "homebridge -I -D -P . -U ."
+    "start": "homebridge -I -D -P . -U ~/Work/homebridge-wyze-api"
   },
   "keywords": [
     "homebridge-plugin",
-    "Wyze", "Hoobs"
+    "Wyze",
+    "Hoobs"
   ],
   "homepage": "http://github.com/jfarmer08/homebridge-wyze-smart-home",
   "repository": {
@@ -27,7 +28,9 @@
   "dependencies": {
     "axios": "^0.21.1",
     "colorsys": "^1.0.22",
+    "crypto-js": "4.1.1",
     "md5": "^2.2.1",
+    "utf8": "^3.0.0",
     "uuid": "8.3.2"
   },
   "devDependencies": {
@@ -38,8 +41,8 @@
   },
   "funding": [
     {
-    "type" : "paypal",
-    "url" : "https://paypal.me/AllenFarmer"
-  }
+      "type": "paypal",
+      "url": "https://paypal.me/AllenFarmer"
+    }
   ]
 }

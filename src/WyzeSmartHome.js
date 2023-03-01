@@ -1,5 +1,5 @@
 const { homebridge, Accessory, UUIDGen } = require('./types')
-const WyzeAPI = require('./WyzeAPI')
+const WyzeAPI = require('./wyz-api')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
@@ -9,6 +9,9 @@ const WyzeMotionSensor = require('./accessories/WyzeMotionSensor')
 const WyzeTemperatureHumidity = require('./accessories/WyzeTemperatureHumidity')
 const WyzeLeakSensor = require('./accessories/WyzeLeakSensor')
 const WyzeCamera = require('./accessories/WyzeCamera')
+const WyzeSwitch = require('./accessories/WyzeSwitch')
+const WyzeHMS = require('./accessories/WyzeHMS')
+const WyzeThermostat = require('./accessories/WyzeThermostat')
 
 const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
@@ -50,7 +53,6 @@ module.exports = class WyzeSmartHome {
 
   async runLoop() {
     const interval = this.config.refreshInterval || DEFAULT_REFRESH_INTERVAL
-
     // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
@@ -105,11 +107,11 @@ module.exports = class WyzeSmartHome {
     }
 
     if (this.config.filterByMacAddressList?.find(d => d === device.mac)) {
-      this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
+      this.log.debug(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
       return
     }
     if (this.config.filterDeviceTypeList?.find(d => d === device.product_type)) {
-      this.log.info(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
+      this.log.debug(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
       return
     }
 
@@ -119,7 +121,7 @@ module.exports = class WyzeSmartHome {
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
-      this.log.info(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
+      this.log.debug(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
       accessory.update(device, timestamp)    
 
@@ -151,6 +153,13 @@ module.exports = class WyzeSmartHome {
       case 'Camera':
         if (model === 'WYZEDB3') return
         return WyzeCamera
+      case 'Common':
+        if (model === 'JA_HP') return
+        return WyzeSwitch
+      case 'S1Gateway':
+        return WyzeHMS
+      case 'Thermostat':
+        return WyzeThermostat
     }
   }
 
