@@ -34,6 +34,20 @@ module.exports = class WyzeHMS extends WyzeAccessory {
     }
   }
 
+  getService () {
+    let service = this.homeKitAccessory.getService(Service.SecuritySystem)
+
+    if (!service) {
+      service = this.homeKitAccessory.addService(Service.SecuritySystem)
+    }
+
+    return service
+  }
+
+  getCharacteristic (characteristic) {
+    return this.getService().getCharacteristic(characteristic)
+  }
+
   /**
    * Handle requests to get the current value of the "Security System Current State" characteristic
    */
