@@ -11,8 +11,8 @@ const HOMEBRIDGE_BATTERY_CHARACTERISTIC = Characteristic.BatteryLevel
 const HOMEBRIDGE_CONTACT_SENSOR_SERVICE = Service.ContactSensor
 const HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC = Characteristic.ContactSensorState.CurrentDoorState
 
-//const noResponse = new Error('No Response')
-//noResponse.toString = () => { return noResponse.message }
+const noResponse = new Error('No Response')
+noResponse.toString = () => { return noResponse.message }
 
 module.exports = class WyzeLock extends WyzeAccessory {
   constructor (plugin, homeKitAccessory) {
