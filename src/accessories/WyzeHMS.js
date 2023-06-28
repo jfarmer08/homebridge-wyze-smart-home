@@ -1,6 +1,9 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
+const noResponse = new Error('No Response')
+noResponse.toString = () => { return noResponse.message }
+
 module.exports = class WyzeHMS extends WyzeAccessory {
   constructor (plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory)
