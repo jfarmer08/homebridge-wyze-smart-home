@@ -1,6 +1,10 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.28
+- Correction for No-Response
+### v0.5.26
+- Release of Beta
 ### v0.5.25-beta.5
 - Support for Thermostat
 - Support for Wall Switch
