@@ -419,28 +419,30 @@ module.exports = class WyzeAccessory {
       }
     } 
     let lockKeypadProperties = propertyList.device.keypad
-    const prop_keypad = Object.keys(lockKeypadProperties)
-    for (const element of prop_keypad) {
-      const prop = element
-      switch (prop ) {
-        case "power":
-          this.homeKitAccessory.context.device_params.keypadPower = lockKeypadProperties[prop]
-          continue
-        case "onoff_line":
-          this.homeKitAccessory.context.device_params.keypadOnoff_line = lockKeypadProperties[prop]
-          continue
-      }
-    } 
-    let lockKeypadProp = propertyList.device.keypad.hardware_info
-    const prop_keypadProp = Object.keys(lockKeypadProp)
-    for (const element of prop_keypadProp) {
-      const prop = element
-      switch (prop ) {
-        case "mac":
-          this.homeKitAccessory.context.device_params.keypadMac = lockKeypadProp[prop]
-          continue
-      }
-    } 
+    if (lockKeypadProperties != null) {
+      const prop_keypad = Object.keys(lockKeypadProperties)
+      for (const element of prop_keypad) {
+        const prop = element
+        switch (prop ) {
+          case "power":
+            this.homeKitAccessory.context.device_params.keypadPower = lockKeypadProperties[prop]
+            continue
+          case "onoff_line":
+            this.homeKitAccessory.context.device_params.keypadOnoff_line = lockKeypadProperties[prop]
+            continue
+        }
+      } 
+      let lockKeypadProp = propertyList.device.keypad.hardware_info
+      const prop_keypadProp = Object.keys(lockKeypadProp)
+      for (const element of prop_keypadProp) {
+        const prop = element
+        switch (prop ) {
+          case "mac":
+            this.homeKitAccessory.context.device_params.keypadMac = lockKeypadProp[prop]
+            continue
+        }
+      } 
+    }
     this.updating = false
   }
   // Wall Switch Can we move this to its own class - wallSwitch

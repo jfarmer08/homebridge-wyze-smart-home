@@ -1,6 +1,9 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
+const noResponse = new Error('No Response')
+noResponse.toString = () => { return noResponse.message }
+
 module.exports = class WyzeHMS extends WyzeAccessory {
   constructor (plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory)
@@ -32,6 +35,20 @@ module.exports = class WyzeHMS extends WyzeAccessory {
         await this.handleSecuritySystemCurrentStateGet()
       }
     }
+  }
+
+  getService () {
+    let service = this.homeKitAccessory.getService(Service.SecuritySystem)
+
+    if (!service) {
+      service = this.homeKitAccessory.addService(Service.SecuritySystem)
+    }
+
+    return service
+  }
+
+  getCharacteristic (characteristic) {
+    return this.getService().getCharacteristic(characteristic)
   }
 
   /**
