@@ -119,8 +119,8 @@ module.exports = class WyzeAPI {
     return result
   }
 
-  _performLoginRequest (data = {}) {
-    const url = 'user/login'
+  _performLoginRequest(data = {}) {
+    let url = 'user/login'
 
     data = {
       email: this.username,
@@ -131,6 +131,11 @@ module.exports = class WyzeAPI {
     const config = {
       baseURL: this.authBaseUrl,
       headers: { 'x-api-key': this.authApiKey, 'User-Agent': this.userAgent }
+    }
+
+    if (this.apiKey && this.keyId) {
+      url = 'api/user/login'
+      config.headers = { 'apikey': this.apiKey, 'keyid': this.keyId, 'User-Agent': 'homebridge-wyze-smart-home' };
     }
 
     return this._performRequest(url, data, config)
