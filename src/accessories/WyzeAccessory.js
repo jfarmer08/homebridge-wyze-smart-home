@@ -146,7 +146,7 @@ module.exports = class WyzeAccessory {
         break
       }
       case "Camera":
-        if(productModel == "WYZEC1-JZ" || productModel == "WYZEDB3" || productModel == "WYZE_CAKP2JFUS") {
+        if(productModel == "WYZEC1-JZ" || productModel == "WYZEDB3" || productModel == "WYZE_CAKP2JFUS" || productModel == "WYZECP1_JEF") {
         this.homeKitAccessory.context = {
           mac: device.mac,
           product_type: device.product_type,

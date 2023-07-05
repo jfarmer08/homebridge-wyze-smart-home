@@ -1,6 +1,10 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+
+### v0.5.29
+- Support for API Key and Key ID
+- Support for WYZECP1_JEF 
 ### v0.5.28
 - Correction for No-Response
 ### v0.5.26
