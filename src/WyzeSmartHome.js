@@ -42,6 +42,8 @@ module.exports = class WyzeSmartHome {
     return new WyzeAPI({
       username: this.config.username,
       password: this.config.password,
+      keyId: this.config.keyId,
+      apiKey: this.config.apiKey,
       phoneId: this.config.phoneId,
       mfaCode: this.config.mfaCode
     }, this.log)

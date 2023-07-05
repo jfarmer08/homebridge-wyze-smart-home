@@ -28,6 +28,16 @@
   "default": "",
   "required": true
   },
+  "keyId": {
+  "title": "Key ID",
+  "description": "API Key/ID available from the official Wyze Portal",
+  "type": "string"
+  },
+  "apiKey": {
+  "title": "API Key",
+  "description": "API Key/ID available from the official Wyze Portal",
+  "type": "string"
+  },
   "refreshInterval": {
   "title": "Refresh Interval",
   "description": "Specify the number of milliseconds to wait between updates, default is 60000 ms (60 seconds)",
