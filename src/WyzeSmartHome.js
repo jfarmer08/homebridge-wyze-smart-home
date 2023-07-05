@@ -153,7 +153,7 @@ module.exports = class WyzeSmartHome {
       case 'LeakSensor':
         return WyzeLeakSensor
       case 'Camera':
-        if (model === 'WYZEDB3') return
+        //if (model === 'WYZEDB3') return
         return WyzeCamera
       case 'Common':
         if (model === 'JA_HP') return

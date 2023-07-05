@@ -23,13 +23,13 @@ module.exports = class WyzeAPI {
 
     // App emulation constants
     this.authApiKey = options.authApiKey || 'WMXHYf79Nr5gIlt3r0r7p9Tcw5bvs6BB4U8O8nGJ'
-    this.phoneId = options.phoneId || 'bc151f39-787b-4871-be27-5a20fd0a1937'
+    this.phoneId = options.phoneId || 'wyze_developer_api'
     this.appName = options.appName || 'com.hualai.WyzeCam'
-    this.appVer = options.appVer || 'com.hualai.WyzeCam___2.18.44'
-    this.appVersion = options.appVersion || '2.18.44'
+    this.appVer = options.appVer || 'wyze_developer_api'
+    this.appVersion = options.appVersion || 'wyze_developer_api'
     this.appInfo = 'wyze_android_2.19.14' // Required for the thermostat
-    this.sc = '9f275790cab94a72bd206c8876429f3c'
-    this.sv = '9d74946e652647e9b6c9d59326aef104'
+    this.sc = 'wyze_developer_api'
+    this.sv = 'wyze_developer_api'
     this.userAgent = options.userAgent || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15'
 
     // Login tokens

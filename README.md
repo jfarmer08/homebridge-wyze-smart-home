@@ -43,6 +43,8 @@ Use the settings UI in Homebridge Config UI X to configure your Wyze account, or
       "name": "Wyze",
       "username": "YOUR_EMAIL",
       "password": "YOUR_PASSWORD",
+      "keyId": "",
+      "apiKey": "",
       "mfaCode": "YOUR_2FA_AUTHENTICATION_PIN",
       "filterDeviceTypeList": ["OutdoorPlug","Plug"],
       "filterByMacAddressList": ["MAC_ADDRESS_1","MAC_ADDRESS_2"]}
@@ -57,6 +59,13 @@ Supported devices will be discovered and added to Homebridge automatically.
 * **`mfaCode`** &ndash; Only required for the initial login if you have two-factor authentication enabled for your account. This is typically a 6-digit code provided by your authenticator app.
 * **`refreshInterval`** &ndash; Defines how often the status of the devices will be polled in milliseconds (e.g., `"refreshInterval": 5000` will check the status of your devices' status every 5 seconds). Defaults to 10 seconds.
 * **`phoneId`** &ndash; The phone id used by the Wyze App. This value is just found by intercepting your phone's traffic. If no `phoneId` is specified, a default value will be used.
+* **`API key`** &ndash; Navigate to [this portal](https://developer-api-console.wyze.com/), and click Login to sign in to your Wyze account.
+Note: Ensure that the login info you are using matches the info you use when logging into the Wyze app.
+Once you’ve signed in, you’ll be automatically redirected back to the developer page.
+Click Create an API key for your API key to be created.
+Once created, you can click view to see the entire key.
+You should receive an email that a new API key has been generated.
+Once you have the API key, you can use it in your script to get the access token and refresh token.
 
 ## Other Info
 
