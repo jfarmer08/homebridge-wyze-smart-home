@@ -75,7 +75,7 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
       this.plugin.log.debug(`[LeakSensor] Updating status of "${this.display_name}"`)
-      this.getOnCharacteristic().updateValue(device.device_params.ws_detect_state)
+      this.getOnCharacteristic().updateValue(this.getDeviceState(device.device_params.ws_detect_state))
       this.getBatteryCharacteristic().updateValue(this.getBatteryVoltage(device.device_params.voltage))
       this.getIsBatteryLowCharacteristic().updateValue(device.device_params.is_low_battery)
     }
@@ -85,5 +85,10 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
     if (deviceVoltage >= 100) {
       return 100
     } else { return deviceVoltage }
+  }
+  getDeviceState (deviceState) {
+    if (deviceState == 2) {
+      return 1
+    } else { return deviceState}
   }
 }
