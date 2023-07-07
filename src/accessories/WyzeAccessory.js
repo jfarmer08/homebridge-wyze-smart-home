@@ -166,7 +166,8 @@ module.exports = class WyzeAccessory {
         Wyze Cam OG Telephoto 3x | GW_GC2
       */
       case "Camera":
-        if(productModel == "WYZEC1-JZ" || productModel == "WYZEDB3" || productModel == "WYZE_CAKP2JFUS" || productModel == "WYZECP1_JEF") {
+        if(productModel == "WYZEC1-JZ" || productModel == "WYZEDB3" || productModel == "WYZE_CAKP2JFUS" || productModel == "WYZECP1_JEF" ||
+           productModel == "HL_PAN3") {
         this.homeKitAccessory.context = {
           mac: device.mac,
           product_type: device.product_type,
