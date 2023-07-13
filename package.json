@@ -7,7 +7,6 @@
   "scripts": {
     "lint": "eslint src/**.js --max-warnings=0",
     "start": "homebridge -I -D -P . -U ~/Work/homebridge-wyze-api"
-    "start": "homebridge -I -D -P . -U /Users/allenfarmer/Work/homebridge-wyze-api"
   },
   "keywords": [
     "homebridge-plugin",
