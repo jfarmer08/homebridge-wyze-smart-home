@@ -1,0 +1,51 @@
+{
+    "bridge": {
+        "name": "Home Test",
+        "username": "0E:D1:4B:32:A8:65",
+        "port": 56666,
+        "pin": "935-15-250",
+        "advertiser": "bonjour-hap",
+        "bind": [
+            "en0"
+        ]
+    },
+    "accessories": [],
+    "platforms": [
+        {
+            "name": "Config",
+            "port": 8581,
+            "auth": "form",
+            "theme": "auto",
+            "tempUnits": "f",
+            "lang": "auto",
+            "platform": "config"
+        },
+        {
+            "name": "Wyze",
+            "username": "email",
+            "password": "password",
+            "keyId": "keyID",
+            "apiKey": "apiKey",
+            "refreshInterval": 20000,
+            "entryExitDelay": 30,
+            "showAdvancedOptions": true,
+            "excludeMacAddress": false,
+            "excludedeviceType": true,
+            "filterDeviceTypeList": [
+                "OutdoorPlug",
+                "Plug",
+                "Light",
+                "MeshLight",
+                "LightStrip",
+                "ContactSensor",
+                "MotionSensor",
+                "Lock",
+                "TemperatureHumidity",
+                "LeakSensor",
+                "S1Gateway",
+                "Common"
+            ],
+            "platform": "WyzeSmartHome"
+        }
+    ]
+}

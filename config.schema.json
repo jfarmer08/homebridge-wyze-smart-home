@@ -28,6 +28,13 @@
   "default": "",
   "required": true
   },
+    "mfaCode": {
+  "title": "One-time Password (for two-factor authentication)",
+  "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
+  "type": "string",
+  "default": "",
+  "required": false
+  },
   "keyId": {
   "title": "Key ID",
   "description": "API Key/ID available from the official Wyze Portal",
@@ -58,14 +65,6 @@
     "multipleOf": 1,
     "required": false
     },
-  "mfaCode": {
-  "title": "One-time Password (for two-factor authentication)",
-  "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
-  "type": "string",
-  "default": "",
-  "required": false
-  },
-  
   "showAdvancedOptions": {
   "title": "Advance Options",
   "default": false,

@@ -145,29 +145,8 @@ module.exports = class WyzeAccessory {
         }
         break
       }
-      /*
-        Wyze Cam v1 [HD only] | WYZEC1 |
-        Wyze Cam V2 | WYZEC1-JZ |
-        Wyze Cam V3 | WYZE_CAKP2JFUS |
-        Wyze Cam V3 Pro [2K] | HL_CAM3P |
-        Wyze Cam Floodlight | WYZE_CAKP2JFUS |
-        Wyze Cam Pan | WYZECP1_JEF |
-        Wyze Cam Pan v2 | HL_PAN2 |
-        Wyze Cam Pan v3 | HL_PAN3 |
-        Wyze Cam Pan Pro [2K] | HL_PANP |
-        Wyze Cam Outdoor | WVOD1 |
-        Wyze Cam Outdoor v2 | HL_WCO2 |
-        Wyze Cam Doorbell | WYZEDB3 |
-        Wyze Battery Cam Pro | AN_RSCW |
-        Wyze Cam Doorbell Pro 2 | AN_RDB1 |
-        Wyze Cam Flood Light Pro [2K] | LD_CFP |
-        Wyze Cam Doorbell Pro | GW_BE1 |
-        Wyze Cam OG | GW_GC1 |
-        Wyze Cam OG Telephoto 3x | GW_GC2
-      */
+
       case "Camera":
-        if(productModel == "WYZEC1-JZ" || productModel == "WYZEDB3" || productModel == "WYZE_CAKP2JFUS" || productModel == "WYZECP1_JEF" ||
-           productModel == "HL_PAN3") {
         this.homeKitAccessory.context = {
           mac: device.mac,
           product_type: device.product_type,
@@ -186,7 +165,6 @@ module.exports = class WyzeAccessory {
           },
         }
         break
-      }
       case "LightStrip":
       case "Light":
       case "MeshLight":
@@ -599,6 +577,7 @@ module.exports = class WyzeAccessory {
 
   async getHmsUpdate(hms_id) {
     const response = await this.plugin.client.monitoringProfileStateStatus(hms_id)
+      console.log("FARMER "+response)
       this.homeKitAccessory.context.device_params.hmsStatus = response.message
   }
   

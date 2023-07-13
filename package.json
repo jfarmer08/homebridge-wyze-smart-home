@@ -1,12 +1,13 @@
 {
   "name": "homebridge-wyze-smart-home",
-  "version": "0.5.30",
+  "version": "0.5.31",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {
     "lint": "eslint src/**.js --max-warnings=0",
     "start": "homebridge -I -D -P . -U ~/Work/homebridge-wyze-api"
+    "start": "homebridge -I -D -P . -U /Users/allenfarmer/Work/homebridge-wyze-api"
   },
   "keywords": [
     "homebridge-plugin",

@@ -1,6 +1,9 @@
 # homebridge-wyze-smart-home
 ## Releases
 
+### v0.5.31
+- Improve Camera support - https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/92
+
 ### v0.5.30
 - HMS Code Clean up
 - Update ReadME

@@ -64,19 +64,6 @@ module.exports = class WyzeHMS extends WyzeAccessory {
    */
   async handleSecuritySystemTargetStateGet() {
     this.plugin.log.debug(`[HMS] Fetching Target State of "${this.display_name}": "${this.hmsStatus}"`)
-  //   if(this.plugin.config.hasOwnProperty('entryExitDelay')){
-  //   while(this.hmsStatus == "changing") {
-  //     if (this.hmsHmsID == null) {
-  //       await this.getHmsID()
-  //       await this.getHmsUpdate(this.hmsHmsID)
-  //       this.sleep(this.plugin.config.entryExitDelay)
-  //     }else {
-  //       await this.getHmsUpdate(this.hmsHmsID)
-  //       this.sleep(this.plugin.config.entryExitDelay)
-  //     }
-  //   }
-  // }
-    
     // set this to a valid value for SecuritySystemTargetState
     return this.convertHmsStateToHomeKitState(this.hmsStatus);
   }
@@ -91,6 +78,8 @@ module.exports = class WyzeHMS extends WyzeAccessory {
 
   convertHmsStateToHomeKitState(hmsState) {
     switch (hmsState) {
+        case "changing":
+            return Characteristic.SecuritySystemTargetState.DISARM;
         case "home":
             return Characteristic.SecuritySystemTargetState.STAY_ARM;
             break;

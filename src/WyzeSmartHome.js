@@ -12,6 +12,7 @@ const WyzeCamera = require('./accessories/WyzeCamera')
 const WyzeSwitch = require('./accessories/WyzeSwitch')
 const WyzeHMS = require('./accessories/WyzeHMS')
 const WyzeThermostat = require('./accessories/WyzeThermostat')
+const { cameraModel } = require('./enums')
 
 const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
@@ -153,8 +154,7 @@ module.exports = class WyzeSmartHome {
       case 'LeakSensor':
         return WyzeLeakSensor
       case 'Camera':
-        //if (model === 'WYZEDB3') return
-        return WyzeCamera
+        if(Object.values(cameraModel).includes(model)){return WyzeCamera} else return
       case 'Common':
         if (model === 'JA_HP') return
         return WyzeSwitch
