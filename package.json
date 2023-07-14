@@ -5,7 +5,7 @@
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {
-    "lint": "eslint src/**.js --max-warnings=0",
+    "lint": "eslint src/**.js --max-warnings=0"
   },
   "keywords": [
     "homebridge-plugin",
