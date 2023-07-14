@@ -59,19 +59,19 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   updateBrightness (value) {
-    this.plugin.log.debug(`Updating brightness record for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}: ${JSON.stringify(value)}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Updating brightness record for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}: ${JSON.stringify(value)}`)
     this.getCharacteristic(Characteristic.Brightness).updateValue(value)
   }
 
   updateColorTemp (value) {
-    this.plugin.log.debug(`Updating color Temp record for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}: ${JSON.stringify(this._kelvinToMired(value))}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Updating color Temp record for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}: ${JSON.stringify(this._kelvinToMired(value))}`)
     this.getCharacteristic(Characteristic.ColorTemperature).updateValue(this._kelvinToMired(value))
   }
 
   updateColor (value) {
     // Convert a Hex color from Wyze into the HSL values recognized by HomeKit.
     const hslValue = colorsys.hex2Hsv(value)
-    this.plugin.log.debug(`Updating color record for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}: ${JSON.stringify(hslValue)}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Updating color record for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}: ${JSON.stringify(hslValue)}`)
 
     // Update Hue
     this.updateHue(hslValue.h)
@@ -109,7 +109,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   async setOn (value, callback) {
-    this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
 
     try {
       await this.runActionList(WYZE_API_POWER_PROPERTY, (value) ? 1 : 0)
@@ -121,7 +121,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   async setBrightness (value, callback) {
     await this.sleep(250)
-    this.plugin.log.debug(`Setting brightness for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Setting brightness for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
 
     try {
       await this.runActionList(WYZE_API_BRIGHTNESS_PROPERTY, value)
@@ -136,7 +136,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
     const floatValue = this._rangeToFloat(value, HOMEKIT_COLOR_TEMP_MIN, HOMEKIT_COLOR_TEMP_MAX)
     const wyzeValue = this._floatToRange(floatValue, WYZE_COLOR_TEMP_MIN, WYZE_COLOR_TEMP_MAX)
 
-    this.plugin.log.debug(`Setting color temperature for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value} (${wyzeValue})`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Setting color temperature for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value} (${wyzeValue})`)
 
     try {
       await this.runActionList(WYZE_API_COLOR_TEMP_PROPERTY, wyzeValue)
@@ -148,15 +148,15 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   async setHue (value, callback) {
     await this.sleep(750)
-    this.plugin.log.debug(`Setting hue (color) for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
-    this.plugin.log.debug(`(H)S Values: ${value}, ${this.cache.saturation}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Setting hue (color) for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`(H)S Values: ${value}, ${this.cache.saturation}`)
 
     try {
       this.cache.hue = value
       if (this.cacheUpdated) {
         let hexValue = colorsys.hsv2Hex(this.cache.hue, this.cache.saturation, 100)
         hexValue = hexValue.replace('#', '')
-        this.plugin.log.debug(hexValue)
+        if(this.plugin.config.logging == "debug") this.plugin.log(hexValue)
 
         await this.runActionList(WYZE_API_COLOR_PROPERTY, hexValue)
         this.cacheUpdated = false
@@ -171,16 +171,14 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   async setSaturation (value, callback) {
     await this.sleep(1000)
-    this.plugin.log.debug(`Setting saturation (color) for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
-    this.plugin.log.debug(`H(S) Values: ${this.cache.saturation}, ${value}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Setting saturation (color) for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`H(S) Values: ${this.cache.saturation}, ${value}`)
 
     try {
       this.cache.saturation = value
       if (this.cacheUpdated) {
         let hexValue = colorsys.hsv2Hex(this.cache.hue, this.cache.saturation, 100)
         hexValue = hexValue.replace('#', '')
-        this.plugin.log.debug(hexValue)
-
         await this.runActionList(WYZE_API_COLOR_PROPERTY, hexValue)
         this.cacheUpdated = false
       } else {

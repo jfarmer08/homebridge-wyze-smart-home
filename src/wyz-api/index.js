@@ -11,30 +11,42 @@ const constants = require('./constants')
 module.exports = class WyzeAPI {
   constructor (options, log) {
     this.log = log
-
     // User login parameters
     this.username = options.username
     this.password = options.password
     this.mfaCode = options.mfaCode
+    this.apiKey = options.apiKey
+    this.keyId = options.keyId
+
+    // Logging
+    this.logging = options.logging
 
     // URLs
-    this.authBaseUrl = options.authBaseUrl || 'https://auth-prod.api.wyze.com'
-    this.apiBaseUrl = options.apiBaseUrl || options.baseUrl || 'https://api.wyzecam.com'
+    this.authBaseUrl = options.authBaseUrl || constants.authBaseUrl
+    this.apiBaseUrl = options.apiBaseUrl || options.baseUrl || constants.apiBaseUrl
 
     // App emulation constants
-    this.authApiKey = options.authApiKey || 'WMXHYf79Nr5gIlt3r0r7p9Tcw5bvs6BB4U8O8nGJ'
-    this.phoneId = options.phoneId || 'wyze_developer_api'
-    this.appName = options.appName || 'com.hualai.WyzeCam'
-    this.appVer = options.appVer || 'wyze_developer_api'
-    this.appVersion = options.appVersion || 'wyze_developer_api'
-    this.appInfo = 'wyze_android_2.19.14' // Required for the thermostat
-    this.sc = 'wyze_developer_api'
-    this.sv = 'wyze_developer_api'
-    this.userAgent = options.userAgent || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15'
+    this.authApiKey = options.authApiKey || constants.authApiKey
+    this.phoneId = options.phoneId || constants.phoneId
+    this.appName = options.appName || constants.appName
+    this.appVer = options.appVer || constants.appVer
+    this.appVersion = options.appVersion || constants.appVersion
+    this.userAgent = options.userAgent || constants.userAgent
+    this.sc = options.sc || constants.sc
+    this.sv = options.sv || constants.sv
+
+    // Crypto Secrets
+    this.fordAppKey = options.fordAppKey || constants.fordAppKey // Required for Locks
+    this.fordAppSecret = options.fordAppSecret || constants.fordAppSecret // Required for Locks
+    this.oliveSigningSecret = options.oliveSigningSecret || constants.oliveSigningSecret // Required for the thermostat
+    this.oliveAppId = options.oliveAppId || constants.oliveAppId //  Required for the thermostat
+    this.appInfo = options.appInfo || constants.appInfo // Required for the thermostat
 
     // Login tokens
     this.access_token = ''
     this.refresh_token = ''
+
+ 
 
     this.dumpData = false // Set this to true to log the Wyze object data blob one time at startup.
     // Token is good for 216,000 seconds (60 hours) but 48 hours seems like a reasonable refresh interval 172800
@@ -90,16 +102,16 @@ module.exports = class WyzeAPI {
       ...config
     }
 
-    this.log.debug(`Performing request: ${url}`)
-    this.log.debug(`Request config: ${JSON.stringify(config)}`)
+    if(this.logging == "info") this.log(`Performing request: ${url}`)
+    if(this.logging == "debug") this.log(`Request config: ${JSON.stringify(config)}`)
 
     let result
 
     try {
       result = await axios(config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
       if (this.dumpData) {
-        this.log.info(`API response: ${JSON.stringify(result.data)}`)
+        if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
         this.dumpData = false // Only want to do this once at start-up
       }
     } catch (e) {
@@ -121,7 +133,6 @@ module.exports = class WyzeAPI {
 
   _performLoginRequest(data = {}) {
     let url = 'user/login'
-
     data = {
       email: this.username,
       password: md5(md5(md5(this.password))),
@@ -135,7 +146,7 @@ module.exports = class WyzeAPI {
 
     if (this.apiKey && this.keyId) {
       url = 'api/user/login'
-      config.headers = { 'apikey': this.apiKey, 'keyid': this.keyId, 'User-Agent': 'homebridge-wyze-smart-home' };
+      config.headers = { 'apikey': this.apiKey, 'keyid': this.keyId, 'User-Agent': this.userAgent };
     }
 
     return this._performRequest(url, data, config)
@@ -161,7 +172,7 @@ module.exports = class WyzeAPI {
 
     await this._updateTokens(result.data)
 
-    this.log.info('Successfully logged into Wyze API')
+    if(this.logging == "info"|"debug") this.log('Successfully logged into Wyze API')
   }
 
   async maybeLogin () {
@@ -280,7 +291,7 @@ module.exports = class WyzeAPI {
     const data = {
       action_list: actionList
     }
-    this.log.debug(`run_action_list Data Body: ${JSON.stringify(data)}`)
+    if(this.logging == "debug") this.log(`run_action_list Data Body: ${JSON.stringify(data)}`)
 
     const result = await this.request('app/v2/auto/run_action_list', data)
 
@@ -303,12 +314,12 @@ module.exports = class WyzeAPI {
 
       var urlPath = 'https://yd-saas-toc.wyzecam.com/openapi/lock/v1/control'
       result = await axios.post(urlPath, payload)
-      this.log.debug(`API response: ${result.data}`)
+      if(this.logging == "debug") this.log(`API response: ${result.data}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "info"|"debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -333,11 +344,11 @@ module.exports = class WyzeAPI {
 
       const url = 'https://yd-saas-toc.wyzecam.com/openapi/lock/v1/info'
       result = await axios.get(url, config)
-      this.log.debug(`API response: ${result.data}`)
+      if(this.logging == "debug") this.log(`API response: ${result.data}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "info"|"debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -354,7 +365,7 @@ module.exports = class WyzeAPI {
         'Accept-Encoding': 'gzip',
         'User-Agent': this.userAgent,
         'appid': constants.oliveAppId,
-        'appinfo': this.appInfo,
+        'appinfo': constants.appInfo,
         'phoneid': this.phoneId,
         'access_token': this.access_token,
         'signature2': signature
@@ -363,14 +374,14 @@ module.exports = class WyzeAPI {
     }
     try {
       var url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/get_iot_prop'
-      this.log.debug(`Performing request: ${url}`)
+      if(this.logging == "debug") this.log(`Performing request: ${url}`)
       result = await axios.get(url, config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "info"|"debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -389,7 +400,7 @@ module.exports = class WyzeAPI {
           'Content-Type': 'application/json',
           'User-Agent': 'myapp',
           'appid': constants.oliveAppId,
-          'appinfo': this.appInfo,
+          'appinfo': constants.appInfo,
           'phoneid': this.phoneId,
           'access_token': this.access_token,
           'signature2': signature
@@ -399,12 +410,12 @@ module.exports = class WyzeAPI {
     try {
       const url = 'https://wyze-sirius-service.wyzecam.com/plugin/sirius/set_iot_prop_by_topic'
       result = await axios.post(url, JSON.stringify(payload), config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "info"|"debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -422,7 +433,7 @@ module.exports = class WyzeAPI {
         'Accept-Encoding': 'gzip',
         'User-Agent': 'myapp',
         'appid': constants.oliveAppId,
-        'appinfo': this.appInfo,
+        'appinfo': constants.appInfo,
         'phoneid': this.phoneId,
         'access_token': this.access_token,
         'signature2': signature
@@ -432,14 +443,14 @@ module.exports = class WyzeAPI {
     }
     try {
       var url = 'https://wyze-platform-service.wyzecam.com/app/v2/platform/get_user_profile';
-      this.log.debug(`Performing request: ${url}`)
+      if(this.logging == "debug") this.log(`Performing request: ${url}`)
       result = await axios.get(url, config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "info"|"debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -461,15 +472,13 @@ module.exports = class WyzeAPI {
     }
     try {
       const url = 'https://hms.api.wyze.com/api/v1/reme-alarm';
-      this.log.debug(`Performing request: ${url}`)
+      if(this.logging == "debug") this.log(`Performing request: ${url}`)
       result = await axios.delete(url, config)
-      console.log(result)
-      this.log.debug(`API response disable: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response disable: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
-      console.log(e)
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -486,7 +495,7 @@ module.exports = class WyzeAPI {
         'Accept-Encoding': 'gzip',
         'User-Agent': this.userAgent,
         'appid': constants.oliveAppId,
-        'appinfo': this.appInfo,
+        'appinfo': constants.appInfo,
         'phoneid': this.phoneId,
         'access_token': this.access_token,
         'signature2': signature
@@ -496,14 +505,14 @@ module.exports = class WyzeAPI {
 
     try {
       const url = 'https://wyze-membership-service.wyzecam.com/platform/v2/membership/get_plan_binding_list_by_user';
-      this.log.debug(`Performing request: ${url}`)
+      if(this.logging == "debug") this.log(`Performing request: ${url}`)
       result = await axios.get(url, config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -520,7 +529,7 @@ module.exports = class WyzeAPI {
       headers: {
         'User-Agent': this.userAgent,
         'appid': constants.oliveAppId,
-        'appinfo': this.appInfo,
+        'appinfo': constants.appInfo,
         'phoneid': this.phoneId,
         'access_token': this.access_token,
         'signature2': signature,
@@ -532,14 +541,14 @@ module.exports = class WyzeAPI {
 
     try {
       const url = 'https://hms.api.wyze.com/api/v1/monitoring/v1/profile/state-status'
-      this.log.debug(`Performing request: ${url}`)
+      if(this.logging == "debug") this.log(`Performing request: ${url}`)
       result = await axios.get(url, config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -554,9 +563,9 @@ module.exports = class WyzeAPI {
     
     const config = {
       headers: {
-        'User-Agent': 'myapp',
+        'User-Agent': this.userAgent,
         'appid': constants.oliveAppId,
-        'appinfo': 'wyze_android_2.19.14',
+        'appinfo': constants.appInfo,
         'phoneid': constants.phoneId,
         'access_token': this.access_token,
         'signature2': signature,
@@ -578,14 +587,14 @@ module.exports = class WyzeAPI {
     
     try {
       const url = "https://hms.api.wyze.com/api/v1/monitoring/v1/profile/active";
-      this.log.debug(`Performing request: ${url}`)
+      if(this.logging == "debug") this.log(`Performing request: ${url}`)
       result = await axios.patch(url, data, config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
-      console.log(e)
+
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -600,7 +609,7 @@ module.exports = class WyzeAPI {
     let config = {
       headers: {
         'Accept-Encoding': 'gzip',
-        'User-Agent': constants.userAgent,
+        'User-Agent': this.userAgent,
         'appid': constants.oliveAppId,
         'appinfo': constants.appInfo,
         'phoneid': constants.phoneId,
@@ -611,14 +620,14 @@ module.exports = class WyzeAPI {
     }
     try {
       var url = 'https://wyze-earth-service.wyzecam.com/plugin/earth/get_iot_prop'
-      this.log.debug(`Performing request: ${url}`)
+      if(this.logging == "debug") this.log(`Performing request: ${url}`)
       result = await axios.get(url, config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }
@@ -636,7 +645,7 @@ module.exports = class WyzeAPI {
         'Content-Type': 'application/json',
         'User-Agent': 'myapp',
         'appid': constants.oliveAppId,
-        'appinfo': this.appInfo,
+        'appinfo': constants.appInfo,
         'phoneid': this.phoneId,
         'access_token': this.access_token,
         'signature2': signature
@@ -646,12 +655,12 @@ module.exports = class WyzeAPI {
     try {
       const url = 'https://wyze-earth-service.wyzecam.com/plugin/earth/set_iot_prop_by_topic';
       result = await axios.post(url, JSON.stringify(payload), config)
-      this.log.debug(`API response: ${JSON.stringify(result.data)}`)
+      if(this.logging == "debug") this.log(`API response: ${JSON.stringify(result.data)}`)
     } catch (e) {
       this.log.error(`Request failed: ${e}`)
 
       if (e.response) {
-        this.log.info(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
+        if(this.logging == "debug") this.log(`Response (${e.response.statusText}): ${JSON.stringify(e.response.data, null, '\t')}`)
       }
       throw e
     }

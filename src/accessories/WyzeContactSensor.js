@@ -20,11 +20,11 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getSensorService () {
-    this.plugin.log.debug(`[ContactSensor] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensor] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_SERVICE)
 
     if (!service) {
-      this.plugin.log.debug(`[ContactSensor] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensor] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_SERVICE)
     }
 
@@ -32,10 +32,10 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getBatterySensorService () {
-    this.plugin.log.debug(`[ContactSensorBattery] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensorBattery] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
     if (!service) {
-      this.plugin.log.debug(`[ContactSensorBattery] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensorBattery] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_BATTERY_SERVICE)
     }
 
@@ -43,11 +43,11 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getIsBatteryLowSensorService () {
-    this.plugin.log.debug(`[ContactSensorIsBatteryLow] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensorIsBatteryLow] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
 
     if (!service) {
-      this.plugin.log.debug(`[ContactSensorIsBatteryLow] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensorIsBatteryLow] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_BATTERY_SERVICE)
     }
 
@@ -55,22 +55,22 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getOnCharacteristic () {
-    this.plugin.log.debug(`[ContactSensor] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensor] Fetching status of "${this.display_name}"`)
     return this.getSensorService().getCharacteristic(HOMEBRIDGE_CHARACTERISTIC)
   }
 
   getBatteryCharacteristic () {
-    this.plugin.log.debug(`[ContactSensorBattery] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensorBattery] Fetching status of "${this.display_name}"`)
     return this.getBatterySensorService().getCharacteristic(HOMEBRIDGE_BATTERY_CHARACTERISTIC)
   }
 
   getIsBatteryLowCharacteristic () {
-    this.plugin.log.debug(`[ContactSensorBattery] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensorBattery] Fetching status of "${this.display_name}"`)
     return this.getIsBatteryLowSensorService().getCharacteristic(HOMEBRIDGE_IS_BATTERY_LOW_CHARACTERISTIC)
   }
 
   updateCharacteristics (device) {
-    this.plugin.log.debug(`[ContactSensor] Updating status of "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[ContactSensor] Updating status of "${this.display_name}"`)
 
     if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse)

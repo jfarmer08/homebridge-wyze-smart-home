@@ -19,7 +19,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
 
   updateCharacteristics () {
     this.wallSwitchGetIotProp()
-    this.plugin.log.debug(`[WyzeSwitch] Updating status of "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[WyzeSwitch] Updating status of "${this.display_name}"`)
     if (this.iot_state == "disconnected") {
         this.getOnCharacteristic().updateValue(noResponse)
     } else {
@@ -28,11 +28,11 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   }
 
   getSwitchService () {
-    this.plugin.log.debug(`[WyzeSwitch] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[WyzeSwitch] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(Service.Switch)
 
     if (!service) {
-      this.plugin.log.debug(`[WyzeSwitch] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logging == "debug") this.plugin.log(`[WyzeSwitch] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(Service.Switch)
     }
 
@@ -40,12 +40,12 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   }
 
   getOnCharacteristic () {
-    this.plugin.log.debug(`[WyzeSwitch] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[WyzeSwitch] Fetching status of "${this.display_name}"`)
     return this.getSwitchService().getCharacteristic(Characteristic.On)
   }
 
   async set (value, callback) {
-    this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
     try {
       if ( this.single_press_type == SinglePressType.IOT){
         await this.iot_onoff((value) ? true : false)

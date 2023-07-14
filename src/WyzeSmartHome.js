@@ -1,4 +1,5 @@
 const { homebridge, Accessory, UUIDGen } = require('./types')
+const { cameraModel } = require('./enums')
 const WyzeAPI = require('./wyz-api')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
@@ -12,7 +13,6 @@ const WyzeCamera = require('./accessories/WyzeCamera')
 const WyzeSwitch = require('./accessories/WyzeSwitch')
 const WyzeHMS = require('./accessories/WyzeHMS')
 const WyzeThermostat = require('./accessories/WyzeThermostat')
-const { cameraModel } = require('./enums')
 
 const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
@@ -41,12 +41,32 @@ module.exports = class WyzeSmartHome {
 
   getClient() {
     return new WyzeAPI({
+      // User login parameters
       username: this.config.username,
       password: this.config.password,
+      mfaCode: this.config.mfaCode,
       keyId: this.config.keyId,
       apiKey: this.config.apiKey,
+      //Logging
+      logging: this.config.logging,
+      //URLs
+      authBaseUrl: this.config.authBaseUrl,
+      apiBaseUrl: this.config.apiBaseUrl,
+      // App emulation constants
+      authApiKey: this.config.authApiKey,
       phoneId: this.config.phoneId,
-      mfaCode: this.config.mfaCode
+      appName: this.config.appName,
+      appVer: this.config.appVer,
+      appVersion: this.config.appVersion,
+      userAgent: this.config.userAgent,
+      sc: this.config.sc,
+      sv: this.config.sv,
+    // Crypto Secrets
+      fordAppKey: this.config.fordAppKey, // Required for Locks
+      fordAppSecret: this.config.fordAppSecret, // Required for Locks
+      oliveSigningSecret: this.config.oliveSigningSecret, // Required for the thermostat
+      oliveAppId: this.config.oliveAppId, //  Required for the thermostat
+      appInfo: this.config.appInfo // Required for the thermostat
     }, this.log)
   }
 
@@ -67,14 +87,14 @@ module.exports = class WyzeSmartHome {
   }
 
   async refreshDevices() {
-    this.log.debug('Refreshing devices...')
+    if(this.config.logging == "debug") this.log('Refreshing devices...')
 
     try {
       const objectList = await this.client.getObjectList()
       const timestamp = objectList.ts
       const devices = objectList.data.device_list
 
-      this.log.debug(`Found ${devices.length} device(s)`)
+      if(this.config.logging == "debug") this.log(`Found ${devices.length} device(s)`)
       await this.loadDevices(devices, timestamp)
     } catch (e) {
       this.log.error(`Error getting devices: ${e}`)
@@ -94,7 +114,7 @@ module.exports = class WyzeSmartHome {
 
     const removedAccessories = this.accessories.filter(a => !foundAccessories.includes(a))
     if (removedAccessories.length > 0) {
-      this.log.info(`Removing ${removedAccessories.length} device(s)`)
+      if(this.config.logging == "info" || "debug") this.log(`Removing ${removedAccessories.length} device(s)`)
       const removedHomeKitAccessories = removedAccessories.map(a => a.homeKitAccessory)
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, removedHomeKitAccessories)
     }
@@ -105,16 +125,16 @@ module.exports = class WyzeSmartHome {
   async loadDevice(device, timestamp) {
     const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model)
     if (!accessoryClass) {
-      this.log.debug(`Unsupported device type or device is ignored: ${device.product_type} (Model: ${device.product_model})`)
+      if(this.config.logging == "debug") this.log(`Unsupported device type or device is ignored: ${device.product_type} (Model: ${device.product_model})`)
       return
     }
 
     if (this.config.filterByMacAddressList?.find(d => d === device.mac)) {
-      this.log.debug(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
+      if(this.config.logging == "debug") this.log(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
       return
     }
     if (this.config.filterDeviceTypeList?.find(d => d === device.product_type)) {
-      this.log.debug(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
+      if(this.config.logging == "debug") this.log(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
       return
     }
 
@@ -124,7 +144,7 @@ module.exports = class WyzeSmartHome {
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
-      this.log.debug(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
+      if(this.config.logging == "debug") this.log(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
       accessory.update(device, timestamp)    
 

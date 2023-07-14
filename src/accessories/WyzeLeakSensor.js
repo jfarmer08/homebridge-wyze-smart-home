@@ -20,11 +20,11 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getSensorService () {
-    this.plugin.log.debug(`[LeakSensor] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[LeakSensor] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_SERVICE)
 
     if (!service) {
-      this.plugin.log.debug(`[LeakSensor] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logging == "debug") this.plugin.log(`[LeakSensor] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_SERVICE)
     }
 
@@ -32,11 +32,11 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getBatterySensorService () {
-    this.plugin.log.debug(`[LeakSensorBattery] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[LeakSensorBattery] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
 
     if (!service) {
-      this.plugin.log.debug(`[LeakSensorBattery] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logging == "debug") this.plugin.log(`[LeakSensorBattery] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_BATTERY_SERVICE)
     }
 
@@ -44,11 +44,11 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getIsBatteryLowSensorService () {
-    this.plugin.log.debug(`[LeakSensorBatteryLow] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[LeakSensorBatteryLow] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
 
     if (!service) {
-      this.plugin.log.debug(`[LeakSensorIsBatteryLow] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logging == "debug") this.plugin.log(`[LeakSensorIsBatteryLow] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_BATTERY_SERVICE)
     }
 
@@ -56,25 +56,25 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getOnCharacteristic () {
-    this.plugin.log.debug(`[LeakSensor] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[LeakSensor] Fetching status of "${this.display_name}"`)
     return this.getSensorService().getCharacteristic(HOMEBRIDGE_CHARACTERISTIC)
   }
 
   getBatteryCharacteristic () {
-    this.plugin.log.debug(`[LeakSensorBattery] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[LeakSensorBattery] Fetching status of "${this.display_name}"`)
     return this.getBatterySensorService().getCharacteristic(HOMEBRIDGE_BATTERY_CHARACTERISTIC)
   }
 
   getIsBatteryLowCharacteristic () {
-    this.plugin.log.debug(`[LeakSensorBattery] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug")  this.plugin.log(`[LeakSensorBattery] Fetching status of "${this.display_name}"`)
     return this.getIsBatteryLowSensorService().getCharacteristic(HOMEBRIDGE_IS_BATTERY_LOW_CHARACTERISTIC)
   }
 
   async updateCharacteristics (device) {
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[LeakSensor] Updating status of "${this.display_name}"`)
     if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
-      this.plugin.log.debug(`[LeakSensor] Updating status of "${this.display_name}"`)
       this.getOnCharacteristic().updateValue(this.getDeviceState(device.device_params.ws_detect_state))
       this.getBatteryCharacteristic().updateValue(this.getBatteryVoltage(device.device_params.voltage))
       this.getIsBatteryLowCharacteristic().updateValue(device.device_params.is_low_battery)

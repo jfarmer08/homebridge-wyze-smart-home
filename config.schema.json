@@ -70,6 +70,13 @@
   "default": false,
   "type": "boolean"
   },
+  "logging": {
+  "title": "Log Level",
+  "description": "Log Level info/debug/none",
+  "type": "string",
+  "default": "none",
+  "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
+  },
   "excludeMacAddress": {
   "title": "Exlcude by Mac Address",
   "default": false,
@@ -82,8 +89,7 @@
   "items": {
   "title": "Device Mac Address",
   "type": "string"},
-  "condition": {
-  "functionBody": "return model.excludeMacAddress === true;"}
+  "condition": {"functionBody": "return model.excludeMacAddress === true;"}
   },
   "excludedeviceType": {
   "title": "Exlcude Device by Type",
@@ -98,21 +104,7 @@
   "items": {
   "title": "Device Type",
   "type": "string",
-  "enum": [
-  "OutdoorPlug",
-  "Plug",
-  "Light",
-  "MeshLight",
-  "LightStrip",
-  "ContactSensor",
-  "MotionSensor",
-  "Lock",
-  "TemperatureHumidity",
-  "LeakSensor",
-  "Camera",
-  "Common",
-  "S1Gateway"
-  ]
+  "enum": ["OutdoorPlug","Plug","Light","MeshLight","LightStrip","ContactSensor","MotionSensor","Lock","TemperatureHumidity","LeakSensor","Camera","Common","S1Gateway"]
   },
   "condition": {"functionBody": "return model.excludedeviceType === true;"}
   }

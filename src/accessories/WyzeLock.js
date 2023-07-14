@@ -62,7 +62,7 @@ module.exports = class WyzeLock extends WyzeAccessory {
 
   async getLockCurrentState () {
 
-    this.plugin.log.debug(`[Lock] getLockCurrentState "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] getLockCurrentState "${this.display_name}"`)
     if (this.lockLockerStatusHardlock === 2) {
       return HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.UNSECURED
     } else {
@@ -71,7 +71,7 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async getLockTargetState () {
-    this.plugin.log.debug(`[Lock] getLockTargetState "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] getLockTargetState "${this.display_name}"`)
     if (this.lockLockerStatusHardlock === 2) {
       return HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.UNSECURED
     } else {
@@ -80,7 +80,7 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async getDoorStatus () {
-    this.plugin.log.debug(`[Lock] LockDoorStatus "${this.display_name}"`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] LockDoorStatus "${this.display_name}"`)
     if (this.lockDoorOpenStatus === 2) {
       return HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC.CLOSED
     } else {
@@ -89,12 +89,12 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async getBatteryStatus () {
-        this.plugin.log.debug(`[Lock] LockBattery "${this.display_name}"`)
-        return this.checkBatteryVoltage(this.lockPower)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] LockBattery "${this.display_name}"`)
+    return this.checkBatteryVoltage(this.lockPower)
   }
 
   async setLockTargetState (targetState) {
-    this.plugin.log.debug(`[Lock] setLockTargetSate "${targetState}"`) // this is zero or 1 
+    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] setLockTargetSate "${targetState}"`) // this is zero or 1 
     await this.plugin.client.controlLock(this.mac, this.product_model, (targetState === HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED ? 'remoteLock' : 'remoteUnlock'))
 
     // Takes a few seconds for the lock command to actually update lock state property
