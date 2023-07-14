@@ -554,22 +554,15 @@ module.exports = class WyzeAccessory {
   }
 
   async setHMSState(hms_id, mode) {
-    console.log(hms_id)
-    console.log(mode)
+    if(this.plugin.config.logging == "debug") this.plugin.log("HMSID = "+hms_id + " Mode = " + mode)
     let responseDisable
     let response
       if(mode == "off") {
-        console.log(hms_id)
-        console.log(mode)
         responseDisable = await this.plugin.client.disableRemeAlarm(hms_id)
         response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
       } else if( mode === "away" ) {
-        console.log(hms_id)
-        console.log(mode)
         response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
       }  else if( mode === "home" ) {
-        console.log(hms_id)
-        console.log(mode)
         response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
       }
       return response
@@ -577,7 +570,6 @@ module.exports = class WyzeAccessory {
 
   async getHmsUpdate(hms_id) {
     const response = await this.plugin.client.monitoringProfileStateStatus(hms_id)
-      console.log("FARMER "+response)
       this.homeKitAccessory.context.device_params.hmsStatus = response.message
   }
   
@@ -607,7 +599,7 @@ module.exports = class WyzeAccessory {
   async runActionListOnOff (property, value, actionKey) {
     try {
       this.updating = true
-      this.plugin.log.debug(`Setting runActionList Power State ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+      if(this.plugin.config.logging == "debug") this.plugin.log(`Setting runActionList Power State ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
       const response = await this.plugin.client.runActionList(this.mac, this.product_model, property, value, actionKey)
 
       this.lastTimestamp = response.ts
@@ -656,7 +648,7 @@ module.exports = class WyzeAccessory {
       }
         this.lastTimestamp = response.ts
     } catch(e) {
-      this.plugin.log.debug("Error in thermostat: " + e)
+      this.plugin.log.error("Error in thermostat: " + e)
     } finally {
       this.updating = false
       return response

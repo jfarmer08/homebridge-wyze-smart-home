@@ -6,7 +6,6 @@
   "main": "src/index.js",
   "scripts": {
     "lint": "eslint src/**.js --max-warnings=0",
-    "start": "homebridge -I -D -P . -U ~/Work/homebridge-wyze-api"
   },
   "keywords": [
     "homebridge-plugin",

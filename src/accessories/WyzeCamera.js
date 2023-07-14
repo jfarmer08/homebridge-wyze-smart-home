@@ -36,7 +36,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async set (value, callback) {
-    this.plugin.log.debug(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logging == "debug") this.plugin.log(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
 
     try {
       if (value === true) {
