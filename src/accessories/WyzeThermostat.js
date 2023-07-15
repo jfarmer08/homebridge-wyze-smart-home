@@ -119,11 +119,11 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
                 if(this.plugin.config.logging == "debug") this.plugin.log(`[Thermostat] WARNING: handleTargetTemperatureSet cannot set value since system is in AUTO`)
                 break
             case this.Wyze2HomekitStates.cool:
-                if(this.plugin.config.logging == "debug") this.plugin.log(`[Thermostat] WARNING: handleTargetTemperatureSet for COOLING`)
+                if(this.plugin.config.logging == "debug") this.plugin.log(`[Thermostat] handleTargetTemperatureSet for COOLING`)
                 this.handleCoolingThresholdTemperatureSet(value)
                 break
             case this.Wyze2HomekitStates.heat:
-                if(this.plugin.config.logging == "debug") this.plugin.log(`[Thermostat] WARNING: handleTargetTemperatureSet for HEATING`)
+                if(this.plugin.config.logging == "debug") this.plugin.log(`[Thermostat] handleTargetTemperatureSet for HEATING`)
                 this.handleHeatingThresholdTemperatureSet(value)
                 break
             case this.Wyze2HomekitStates.off:
