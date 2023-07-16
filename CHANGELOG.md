@@ -2,8 +2,7 @@
 ## Releases
 
 ### v0.5.33
-- @carTloyal123 Updated Thermostat behavior for single mode usage (heat/cool) - https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/111
-
+- Updated Thermostat behavior for single mode usage (heat/cool) (Thanks https://github.com/carTloyal123) - https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/111
 ### v0.5.32
 - Improve logging - https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/117
 ### v0.5.31
