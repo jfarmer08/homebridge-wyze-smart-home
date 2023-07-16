@@ -2,7 +2,7 @@
   "pluginAlias": "WyzeSmartHome",
   "pluginType": "platform",
   "singular": true,
-  "headerDisplay": "Wyze plug-in for Homebridge. This is a custom component to allow control of various Wyze devices using the unofficial API. Please note this mimics the Wyze app and therefore access may be cut off at anytime.",
+  "headerDisplay": "Wyze plug-in for Homebridge. This is a custom component to allow control of various Wyze devices using the unofficial API. Please note this mimics the Wyze app and therefore access may be cut off at anytime. If you feel like my work has been valuable to you I welcome your support through Paypal. All funding goes back into product purchases. [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/AllenFarmer)",
   "footerDisplay": "For documentation please see GitHub repository",
   "schema": {
   "type": "object",
