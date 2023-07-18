@@ -89,7 +89,6 @@ module.exports = class WyzeAccessory {
 
     switch (productType) {
       case "OutdoorPlug":
-        if(productModel == "WLPPO-SUB") {
           this.homeKitAccessory.context = {
             mac: device.mac,
             product_type: device.product_type,
@@ -106,9 +105,7 @@ module.exports = class WyzeAccessory {
             }, 
           }
           break
-        }
       case "Plug":
-        if(productModel == "WLPP1") {
         this.homeKitAccessory.context = {
           mac: device.mac,
           product_type: device.product_type,
@@ -124,9 +121,7 @@ module.exports = class WyzeAccessory {
             },
         }
         break
-      }
       case "Common":
-        if(productModel == "LD_SS1") {
         this.homeKitAccessory.context = {
           mac: device.mac,
           product_type: device.product_type,
@@ -144,8 +139,6 @@ module.exports = class WyzeAccessory {
           },
         }
         break
-      }
-
       case "Camera":
         this.homeKitAccessory.context = {
           mac: device.mac,
@@ -181,23 +174,6 @@ module.exports = class WyzeAccessory {
             ip : device.device_params.ip,
             rssi : device.device_params.rssi,
           }
-        }
-        break
-      case "OutdoorPlug":
-        this.homeKitAccessory.context = {
-          mac: device.mac,
-          product_type: device.product_type,
-          product_model: device.product_model,
-          nickname: device.nickname,
-          conn_state: device.conn_state,
-          push_switch: device.push_switch,
-          device_params: device.device_params = {
-            switch_state : device.device_params.switch_state,
-            photosensitive_switch: device.device_params.photosensitive_switch,
-            ssid : device.device_params.ssid,
-            ip : device.device_params.ip,
-            rssi : device.device_params.rssi,
-          },
         }
         break
       case "TemperatureHumidity":

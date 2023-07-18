@@ -1,5 +1,8 @@
 const { homebridge, Accessory, UUIDGen } = require('./types')
-const { cameraModel } = require('./enums')
+const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, NotSupportedModels ,LeakSensorModels, 
+      TemperatureHumidityModels, LockModels, MotionSensorModels, ContactSensorModels, LightModels, 
+      LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels } = require('./enums')
+
 const WyzeAPI = require('./wyz-api')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
@@ -154,34 +157,59 @@ module.exports = class WyzeSmartHome {
   getAccessoryClass(type, model) {
     switch (type) {
       case 'OutdoorPlug':
-        if (model == 'WLPPO') return;  // Discard entry for main unit. Only include the 2 electrical outlets.
+        if(Object.values(OutdoorPlugModels).includes(model)){ return WyzePlug } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzePlug } 
       case 'Plug':
-        return WyzePlug
+        if(Object.values(PlugModels).includes(model)){ return WyzePlug } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzePlug } 
       case 'Light':
-        return WyzeLight
+        if(Object.values(LightModels).includes(model)){ return WyzeLight } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeLight} 
       case 'MeshLight':
-        return WyzeMeshLight
+        if(Object.values(MeshLightModels).includes(model)){ return WyzeMeshLight } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeMeshLight} 
       case 'LightStrip':
-        return WyzeMeshLight
+        if(Object.values(LightStripModels).includes(model)){ return WyzeMeshLight } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeMeshLight} 
       case 'ContactSensor':
-        return WyzeContactSensor
+        if(Object.values(ContactSensorModels).includes(model)){ return WyzeContactSensor } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeContactSensor} 
       case 'MotionSensor':
-        return WyzeMotionSensor
+        if(Object.values(MotionSensorModels).includes(model)){ return WyzeMotionSensor } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeMotionSensor} 
       case 'Lock':
-        return WyzeLock
+        if(Object.values(LockModels).includes(model)){ return WyzeLock } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeLock} 
       case 'TemperatureHumidity':
-        return WyzeTemperatureHumidity
+        if(Object.values(TemperatureHumidityModels).includes(model)){ return WyzeTemperatureHumidity } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeTemperatureHumidity} 
       case 'LeakSensor':
-        return WyzeLeakSensor
+        if(Object.values(LeakSensorModels).includes(model)){ return WyzeLeakSensor } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeLeakSensor} 
       case 'Camera':
-        if(Object.values(cameraModel).includes(model)){return WyzeCamera} else return
+        if(Object.values(CameraModels).includes(model)){ return WyzeCamera } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeCamera} 
       case 'Common':
-        if (model === 'JA_HP') return
-        return WyzeSwitch
+        if(Object.values(CommonModels).includes(model)){ return WyzeSwitch } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
+          return WyzeSwitch} 
       case 'S1Gateway':
         return WyzeHMS
       case 'Thermostat':
-        return WyzeThermostat
+        if(Object.values(ThermostatModels).includes(model)){ return WyzeThermostat } else if (Object.values(NotSupportedModels).includes(model)){return}
+        else { this.log.error(`${type} (Model: ${model}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added.`) 
+          return WyzeThermostat} 
     }
   }
 

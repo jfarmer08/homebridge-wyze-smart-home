@@ -6,6 +6,9 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.34
+- Allow all sub models.
+
 ### v0.5.33
 - Updated Thermostat behavior for single mode usage (heat/cool) (Thanks https://github.com/carTloyal123) - https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/111
 ### v0.5.32
