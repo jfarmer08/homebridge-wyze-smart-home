@@ -6,6 +6,9 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.35
+- Add loging to sub models
+
 ### v0.5.34
 - Allow all sub models.
 

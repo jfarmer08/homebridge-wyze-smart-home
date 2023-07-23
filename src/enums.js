@@ -31,7 +31,7 @@ exports.PlugModels = PlugModels
 const LightModels = {BULB_WHITE:"WLPA19", BULB_WHITE_V2:"HL_HWB2"}
 exports.LightModels = LightModels
 
-const MeshLightModels = {MESH_BULB:"WLPA19C"}
+const MeshLightModels = {MESH_BULB:"WLPA19C", HL_BR30C:"HL_BR30C"}
 exports.MeshLightModels = MeshLightModels
 
 const LightStripModels = {LIGHT_STRIP:"HL_LSL", LIGHT_STRIP_PRO:"HL_LSLP"}
@@ -64,13 +64,14 @@ exports.ThermostatModels = ThermostatModels
 const ThermostatRoomSensor = {CO_TH1:"CO_TH1"}
 exports.ThermostatRoomSensor = ThermostatRoomSensor
 
-const NotSupportedModels = {"OutdoorPlugMain" : "WLPPO", "CHIME" : "CHIME", "HeadPhones":"JA_HP","YDGW1":"YD.GW1"}
+const NotSupportedModels = {"OutdoorPlugMain" : "WLPPO", "ChimeSensor" : "CHIME", "HeadPhones":"JA_HP","YDGW1":"YD.GW1",
+                            "Scale_S":"WL_SC3","WL_SC2":"WL_SC2", "JA_RO2":"JA_RO2"}
 exports.NotSupportedModels = NotSupportedModels
 
 
 //VACUUM = ['JA_RO2']
-//SCALE_ = ['JA.SC', 'JA.SC2']
+//WyzeScale = ['JA.SC', 'JA.SC2']
 //SCALE_S = ['WL_SC2']
 //SCALE_X = ['WL_SC22135']
 //WATCH = ['RA.WP1', 'RY.WA1']
-//BAND = ['RY.HP1']
+//Wrist = ['RY.HP1']
