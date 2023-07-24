@@ -28,23 +28,25 @@
   "default": "",
   "required": true
   },
-    "mfaCode": {
-  "title": "One-time Password (for two-factor authentication)",
-  "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
-  "type": "string",
-  "default": "",
-  "required": false
-  },
   "keyId": {
   "title": "Key ID",
-  "description": "API Key/ID available from the official Wyze Portal",
-  "type": "string"
+  "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com",
+  "type": "string",
+  "required": true
   },
   "apiKey": {
   "title": "API Key",
-  "description": "API Key/ID available from the official Wyze Portal",
-  "type": "string"
+  "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com/)",
+  "type": "string",
+  "required": true
   },
+  "mfaCode": {
+    "title": "One-time Password (for two-factor authentication)",
+    "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
+    "type": "string",
+    "default": "",
+    "required": false
+    },
   "refreshInterval": {
   "title": "Refresh Interval",
   "description": "Specify the number of milliseconds to wait between updates, default is 60000 ms (60 seconds)",
