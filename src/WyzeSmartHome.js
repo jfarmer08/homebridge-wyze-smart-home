@@ -3,7 +3,7 @@ const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, NotSupportedM
       TemperatureHumidityModels, LockModels, MotionSensorModels, ContactSensorModels, LightModels, 
       LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels } = require('./enums')
 
-const WyzeAPI = require('./wyz-api')
+const WyzeAPI = require('wyze-api')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
@@ -52,6 +52,8 @@ module.exports = class WyzeSmartHome {
       apiKey: this.config.apiKey,
       //Logging
       logging: this.config.logging,
+      //Storage Path
+      persistPath: this.config.persistPath,
       //URLs
       authBaseUrl: this.config.authBaseUrl,
       apiBaseUrl: this.config.apiBaseUrl,

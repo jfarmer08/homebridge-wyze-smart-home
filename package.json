@@ -5,7 +5,8 @@
   "license": "MIT",
   "main": "src/index.js",
   "scripts": {
-    "lint": "eslint src/**.js --max-warnings=0"
+    "lint": "eslint src/**.js --max-warnings=0",
+    "start": "homebridge -I -D -P . -U ~/Work/homebridge-wyze-api"
   },
   "keywords": [
     "homebridge-plugin",
@@ -30,7 +31,8 @@
     "crypto-js": "4.1.1",
     "md5": "^2.2.1",
     "utf8": "^3.0.0",
-    "uuid": "8.3.2"
+    "uuid": "8.3.2",
+    "wyze-api": "^1.0.5"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.27.1",
