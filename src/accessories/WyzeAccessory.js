@@ -356,6 +356,10 @@ module.exports = class WyzeAccessory {
     this.updating = true
     const propertyList = await this.plugin.client.getLockInfo(this.mac, this.product_model)
     let lockProperties = propertyList.device
+    if (lockProperties == null) {
+      this.updating = false
+      return
+    }
     const prop_key = Object.keys(lockProperties)
     for (const element of prop_key) {
       const prop = element;

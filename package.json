@@ -1,5 +1,5 @@
 {
-  "name": "homebridge-wyze-smart-home",
+  "name": "@zswuwing/homebridge-wyze-smart-home",
   "version": "0.5.36",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
@@ -45,5 +45,6 @@
       "type": "paypal",
       "url": "https://paypal.me/AllenFarmer"
     }
-  ]
+  ],
+  "author": ""
 }
