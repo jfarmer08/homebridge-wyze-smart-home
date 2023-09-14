@@ -13,3 +13,4 @@ accessories/.cachedAccessories.bak
 *.bak
 accessories/cachedAccessories
 testing/
+accessories/uiAccessoriesLayout.json
