@@ -49,7 +49,7 @@ module.exports = class WyzeAccessory {
   get cameraAvailable ()        { return this.homeKitAccessory.context.device_params?.available}
   get cameraSiren ()        { return this.homeKitAccessory.context.device_params?.cameraSiren}
   get cameraFloodLight ()        { return this.homeKitAccessory.context.device_params?.floodLight}
-
+  get cameraGarageDoor ()        { return this.homeKitAccessory.context.device_params?.garageDoor}
   // from HMS
   get hmsHmsID ()        { return this.homeKitAccessory.context.device_params?.hmsId}
   get hmsStatus ()        {return this.homeKitAccessory.context.device_params?.hmsStatus}
@@ -140,6 +140,7 @@ module.exports = class WyzeAccessory {
         }
         break
       case "Camera":
+        this.getCameraPropertyList()
         this.homeKitAccessory.context = {
           mac: device.mac,
           product_type: device.product_type,
@@ -155,6 +156,7 @@ module.exports = class WyzeAccessory {
             available : this.cameraAvailable,
             siren : this.cameraSiren,
             floodLight : this.cameraFloodLight,
+            garageDoor : this.cameraGarageDoor,
           },
         }
         break
@@ -492,28 +494,35 @@ module.exports = class WyzeAccessory {
   async turnOffNotifications() { await this.setProperty(this.mac, this.product_model, "P1", "0")}
 
   async getCameraPropertyList () {
-
     const cameraProperty = {  
       NOTIFICATION : "P1",
       ON : "P3",
       AVAILABLE : "P5",
-      CAMERA_SIREN : "P1049",
-      FLOOD_LIGHT : "P1056",
+      CAMERA_SIREN : 'P1049',
+      FLOOD_LIGHT : 'P1056',
+      GARAGE_DOOR : 'P1058'
     }
-
-    const propertyList = await this.getPropertyList(this.mac, this.product_model)
+    const propertyList = await this.plugin.client.getDevicePID(this.mac, this.product_model)
     for (const property of propertyList.data.property_list) {
       switch (property.pid) {
         case cameraProperty.NOTIFICATION:
           this.homeKitAccessory.context.device_params.notification = property.value
+          break
         case cameraProperty.ON:
           this.homeKitAccessory.context.device_params.on = property.value
+          break
         case cameraProperty.AVAILABLE:
           this.homeKitAccessory.context.device_params.available = property.value
+          break
         case cameraProperty.CAMERA_SIREN:
           this.homeKitAccessory.context.device_params.cameraSiren = property.value
+          break
         case cameraProperty.FLOOD_LIGHT:
-          this.homeKitAccessory.context.device_params.floodLight = property.value
+         this.homeKitAccessory.context.device_params.floodLight = property.value
+         break
+         case cameraProperty.GARAGE_DOOR:
+          this.homeKitAccessory.context.device_params.garageDoor = property.value
+          break
       }
     }
   }

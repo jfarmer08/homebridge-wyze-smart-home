@@ -79,6 +79,30 @@
   "default": "none",
   "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
   },
+  "garageDoorAccessory": {
+  "type": "array",
+  "title": "Wyze Garage Door Controller",
+  "items": {
+  "title": "Device Mac Address with accessory attached",
+  "type": "string"},
+  "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
+  },
+  "spotLightAccessory": {
+  "type": "array",
+  "title": "Wyze Spotlight",
+  "items": {
+  "title": "Device Mac Address with accessory attached",
+  "type": "string"},
+  "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
+  },
+  "alarmAccessory": {
+    "type": "array",
+    "title": "Wyze Alarm",
+    "items": {
+    "title": "Device Mac Address with accessory attached",
+    "type": "string"},
+    "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
+    },
   "excludeMacAddress": {
   "title": "Exlcude by Mac Address",
   "default": false,
@@ -106,8 +130,7 @@
   "items": {
   "title": "Device Type",
   "type": "string",
-  "enum": ["OutdoorPlug","Plug","Light","MeshLight","LightStrip","ContactSensor","MotionSensor","Lock","TemperatureHumidity","LeakSensor","Camera","Common","S1Gateway"]
-  },
+  "enum": ["OutdoorPlug","Plug","Light","MeshLight","LightStrip","ContactSensor","MotionSensor","Lock","TemperatureHumidity","LeakSensor","Camera","Common","S1Gateway"]},
   "condition": {"functionBody": "return model.excludedeviceType === true;"}
   }
   }
