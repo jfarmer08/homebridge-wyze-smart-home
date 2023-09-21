@@ -48,7 +48,10 @@ Use the settings UI in Homebridge Config UI X to configure your Wyze account, or
       "apiKey": "",
       "mfaCode": "YOUR_2FA_AUTHENTICATION_PIN",
       "filterDeviceTypeList": ["OutdoorPlug","Plug"],
-      "filterByMacAddressList": ["MAC_ADDRESS_1","MAC_ADDRESS_2"]}
+      "filterByMacAddressList": ["MAC_ADDRESS_1","MAC_ADDRESS_2"],
+      "garageDoorAccessory": ["MAC_ADDRESS_1","MAC_ADDRESS_2"],
+      "spotLightAccessory": ["MAC_ADDRESS_1","MAC_ADDRESS_2"],
+      "alarmAccessory": ["MAC_ADDRESS_1","MAC_ADDRESS_2"]}
   ]
 }
 ```
