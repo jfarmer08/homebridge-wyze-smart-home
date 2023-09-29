@@ -1,8 +1,6 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
-const WYZE_API_POWER_PROPERTY = 'P3'
-
 const noResponse = new Error('No Response')
 noResponse.toString = () => { return noResponse.message }
 
@@ -14,7 +12,7 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   updateCharacteristics (device) {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[WyzePlug] Updating status of "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzePlug] Updating status of "${this.display_name}"`)
     if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
@@ -23,11 +21,11 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   getOutletService () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[WyzePlug] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzePlug] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(Service.Outlet)
 
     if (!service) {
-      if(this.plugin.config.logging == "debug") this.plugin.log(`[WyzePlug] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzePlug] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(Service.Outlet)
     }
 
@@ -35,15 +33,15 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   getOnCharacteristic () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[WyzePlug] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzePlug] Fetching status of "${this.display_name}"`)
     return this.getOutletService().getCharacteristic(Characteristic.On)
   }
 
   async set (value, callback) {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logLevellll == "debug") this.plugin.log(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
 
     try {
-      await this.setProperty(WYZE_API_POWER_PROPERTY, (value) ? 1 : 0)
+      await this.plugin.client.plugPower(this.mac, this.product_model, (value) ? '1' : '0')
       callback()
     } catch (e) {
       callback(e)

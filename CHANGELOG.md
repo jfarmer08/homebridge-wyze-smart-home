@@ -6,6 +6,12 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.37-alpha.2
+- Add check box for HMS Subscription
+- Removed MFA Support
+- Correct Door State for Garage Door
+- Code clean up
+
 ### v0.5.37-alpha.1
 - Support for Siren
 - Support for Garage Door

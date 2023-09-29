@@ -7,16 +7,7 @@ const CameraModels = {
   WyzeCamPan: "WYZECP1_JEF",
   WyzeCamPanv2: "HL_PAN2",
   WyzeCamPanv3: "HL_PAN3",
-  //WyzeCamPanPro: "HL_PANP",
   WyzeCamOutdoor: "WVOD1",
-  //WyzeCamOutdoov2: "HL_WCO2",
-  WyzeCamDoorbell: "WYZEDB3",
-  //WyzeBatteryCamPro: "AN_RSCW",
-  //WyzeCamDoorbellPro2: "AN_RDB1",
-  //WyzeCamFloodLightPro: "LD_CFP",
-  //WyzeCamDoorbellPro: "GW_BE1",
-  //WyzeCamOG: "GW_GC1",
-  //WyzeCamOGTelephoto3x: "GW_GC"
 }
 exports.CameraModels = CameraModels;
 
@@ -65,10 +56,19 @@ const ThermostatRoomSensor = {CO_TH1:"CO_TH1"}
 exports.ThermostatRoomSensor = ThermostatRoomSensor
 
 const NotSupportedModels = {"OutdoorPlugMain" : "WLPPO", "ChimeSensor" : "CHIME", "HeadPhones":"JA_HP","YDGW1":"YD.GW1",
-                            "Scale_S":"WL_SC3","WL_SC2":"WL_SC2", "JA_RO2":"JA_RO2"}
+                            "Scale_S":"WL_SC3","WL_SC2":"WL_SC2", "JA_RO2":"JA_RO2", "Sprinkler":"BS_WK1", "ThermostatRoomSensor":"CO_TH1",
+                            "BLE_Lock":"YD_BT1","JA_SL10":"JA_SL10"}
 exports.NotSupportedModels = NotSupportedModels
 
-
+  //WyzeCamPanPro: "HL_PANP",
+  //WyzeCamOutdoov2: "HL_WCO2",
+  //WyzeCamDoorbell: "WYZEDB3",
+  //WyzeBatteryCamPro: "AN_RSCW",
+  //WyzeCamDoorbellPro2: "AN_RDB1",
+  //WyzeCamFloodLightPro: "LD_CFP",
+  //WyzeCamDoorbellPro: "GW_BE1",
+  //WyzeCamOG: "GW_GC1",
+  //WyzeCamOGTelephoto3x: "GW_GC"
 //VACUUM = ['JA_RO2']
 //WyzeScale = ['JA.SC', 'JA.SC2']
 //SCALE_S = ['WL_SC2']

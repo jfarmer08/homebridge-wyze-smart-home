@@ -21,19 +21,12 @@ module.exports = class WyzeHMS extends WyzeAccessory {
       .onSet(this.handleSecuritySystemTargetStateSet.bind(this)) 
   }
 
-  async updateCharacteristics (device) {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[HMS] Updating Current State of "${this.display_name}" is "${this.hmsStatus}"`)
-    if (device.conn_state === 0) {
+  async updateCharacteristics () {
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[HMS] Updating Current State of "${this.display_name}" is "${this.homeKitAccessory.context.device_params.hmsStatus}"`)
+    if (this.homeKitAccessory.context.conn_state === 0) {
       this.getCharacteristic(Characteristic.On).updateValue(noResponse)
     } else {
-      if (this.hmsHmsID == null) {
-        await this.getHmsID()
-        await this.getHmsUpdate(this.hmsHmsID)
         this.handleSecuritySystemCurrentStateGet()
-      }else {
-        await this.getHmsUpdate(this.hmsHmsID)
-        await this.handleSecuritySystemCurrentStateGet()
-      }
     }
   }
 
@@ -55,25 +48,25 @@ module.exports = class WyzeHMS extends WyzeAccessory {
    * Handle requests to get the current value of the "Security System Current State" characteristic
    */
   handleSecuritySystemCurrentStateGet() {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[HMS] Fetching Current State of "${this.display_name}": "${this.hmsStatus}"`)
-    return this.convertHmsStateToHomeKitState(this.hmsStatus);
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[HMS] Fetching Current State of "${this.display_name}": "${this.homeKitAccessory.context.device_params.hmsStatus}"`)
+    return this.convertHmsStateToHomeKitState(this.homeKitAccessory.context.device_params.hmsStatus);
   }
 
   /**
    * Handle requests to get the current value of the "Security System Target State" characteristic
    */
   async handleSecuritySystemTargetStateGet() {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[HMS] Fetching Target State of "${this.display_name}": "${this.hmsStatus}"`)
+    if(this.plugin.config.logLevell == "debug") this.plugin.log(`[HMS] Fetching Target State of "${this.display_name}": "${this.homeKitAccessory.context.device_params.hmsStatus}"`)
     // set this to a valid value for SecuritySystemTargetState
-    return this.convertHmsStateToHomeKitState(this.hmsStatus);
+    return this.convertHmsStateToHomeKitState(this.homeKitAccessory.context.device_params.hmsStatus);
   }
 
   /**
    * Handle requests to set the "Security System Target State" characteristic
    */
   async handleSecuritySystemTargetStateSet(value) {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[HMS] Target State Set "${this.display_name}": "${this.convertHomeKitStateToHmsState(value)}"`)
-    await this.setHMSState(this.hmsHmsID,this.convertHomeKitStateToHmsState(value))
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[HMS] Target State Set "${this.display_name}": "${this.convertHomeKitStateToHmsState(value)}"`)
+    await this.plugin.client.setHMSState(this.homeKitAccessory.context.device_params.hmsId,this.convertHomeKitStateToHmsState(value))
   }
 
   convertHmsStateToHomeKitState(hmsState) {

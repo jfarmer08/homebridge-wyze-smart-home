@@ -23,11 +23,11 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getHumiditySensorService () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidity] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidity] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_HUMIDITY_SERVICE)
 
     if (!service) {
-      if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidity] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidity] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_HUMIDITY_SERVICE)
     }
 
@@ -35,11 +35,11 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getTemperatureSensorService () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidity] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidity] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_TEMPERATURE_SERVICE)
 
     if (!service) {
-      if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidity] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidity] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_TEMPERATURE_SERVICE)
     }
 
@@ -47,11 +47,11 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getBatterySensorService () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidityBattery] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidityBattery] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
 
     if (!service) {
-      if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidityBattery] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidityBattery] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_BATTERY_SERVICE)
     }
 
@@ -59,11 +59,11 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getIsBatteryLowSensorService () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidityIsBatteryLow] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidityIsBatteryLow] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
 
     if (!service) {
-      if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidityIsBatteryLow] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidityIsBatteryLow] Adding service for "${this.display_name}"`)
       service = this.homeKitAccessory.addService(HOMEBRIDGE_BATTERY_SERVICE)
     }
 
@@ -71,40 +71,34 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getHumidityCharacteristic () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidity] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidity] Fetching status of "${this.display_name}"`)
     return this.getHumiditySensorService().getCharacteristic(HOMEBRIDGE_HUMIDITY_CHARACTERISTIC)
   }
 
   getTemperatureCharacteristic () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidity] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidity] Fetching status of "${this.display_name}"`)
     return this.getTemperatureSensorService().getCharacteristic(HOMEBRIDGE_TEMPERATURE_CHARACTERISTIC)
   }
 
   getBatteryCharacteristic () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidityBattery] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidityBattery] Fetching status of "${this.display_name}"`)
     return this.getBatterySensorService().getCharacteristic(HOMEBRIDGE_BATTERY_CHARACTERISTIC)
   }
 
   getIsBatteryLowCharacteristic () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidityBattery] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidityBattery] Fetching status of "${this.display_name}"`)
     return this.getIsBatteryLowSensorService().getCharacteristic(HOMEBRIDGE_IS_BATTERY_LOW_CHARACTERISTIC)
   }
 
   updateCharacteristics (device) {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[TemperatureHumidity] Updating status of "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[TemperatureHumidity] Updating status of "${this.display_name}"`)
     if (device.conn_state === 0) {
       this.getHumidityCharacteristic().updateValue(noResponse)
     } else {
-      this.getHumidityCharacteristic().updateValue(device.device_params.th_sensor_humidity)
-      this.getTemperatureCharacteristic().updateValue((device.device_params.th_sensor_temperature - 32.0) / 1.8)
-      this.getBatteryCharacteristic().updateValue(this.getBatteryVoltage(device.device_params.voltage))
-      this.getIsBatteryLowCharacteristic().updateValue(device.device_params.is_low_battery)
+      this.getHumidityCharacteristic().updateValue(this.homeKitAccessory.context.device_params.th_sensor_humidity)
+      this.getTemperatureCharacteristic().updateValue((this.homeKitAccessory.context.device_params.th_sensor_temperature - 32.0) / 1.8)
+      this.getBatteryCharacteristic().updateValue(this.plugin.client.checkBatteryVoltage(this.homeKitAccessory.context.device_params.voltage))
+      this.getIsBatteryLowCharacteristic().updateValue(this.homeKitAccessory.context.device_params.is_low_battery)
     }
-  }
-
-  getBatteryVoltage (deviceVoltage) {
-    if (deviceVoltage >= 100) {
-      return 100
-    } else { return deviceVoltage }
   }
 }

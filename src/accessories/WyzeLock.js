@@ -1,16 +1,6 @@
 const {Service,Characteristic,} = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
-const HOMEBRIDGE_LOCK_MECHANISM_SERVICE = Service.LockMechanism
-const HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC = Characteristic.LockCurrentState
-const HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC = Characteristic.LockTargetState
-
-const HOMEBRIDGE_BATTERY_SERVICE = Service.Battery
-const HOMEBRIDGE_BATTERY_CHARACTERISTIC = Characteristic.BatteryLevel
-
-const HOMEBRIDGE_CONTACT_SENSOR_SERVICE = Service.ContactSensor
-const HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC = Characteristic.ContactSensorState.CurrentDoorState
-
 const noResponse = new Error('No Response')
 noResponse.toString = () => { return noResponse.message }
 
@@ -18,42 +8,43 @@ module.exports = class WyzeLock extends WyzeAccessory {
   constructor (plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory)
 
-    this.lockService = this.homeKitAccessory.getService(HOMEBRIDGE_LOCK_MECHANISM_SERVICE)
-    this.contactService = this.homeKitAccessory.getService(HOMEBRIDGE_CONTACT_SENSOR_SERVICE)
-    this.batteryService = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
+    this.lockService = this.homeKitAccessory.getService(Service.LockMechanism)
+    this.contactService = this.homeKitAccessory.getService(Service.ContactSensor)
+    this.batteryService = this.homeKitAccessory.getService(Service.Battery)
 
     if (!this.lockService) {
-      this.lockService = this.homeKitAccessory.addService(HOMEBRIDGE_LOCK_MECHANISM_SERVICE)
+      this.lockService = this.homeKitAccessory.addService(Service.LockMechanism)
     }
 
     if (!this.contactService) {
-      this.contactService = this.homeKitAccessory.addService(HOMEBRIDGE_CONTACT_SENSOR_SERVICE)
+      this.contactService = this.homeKitAccessory.addService(Service.ContactSensor)
     }
 
     if (!this.batteryService) {
-      this.batteryService = this.homeKitAccessory.addService(HOMEBRIDGE_BATTERY_SERVICE)
+      this.batteryService = this.homeKitAccessory.addService(Service.Battery)
     }
 
-    this.batteryService.getCharacteristic(HOMEBRIDGE_BATTERY_CHARACTERISTIC)
+    this.batteryService.getCharacteristic(Characteristic.BatteryLevel)
       .onGet(this.getBatteryStatus.bind(this))
 
-    this.contactService.getCharacteristic(HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC)
+    this.contactService.getCharacteristic(Characteristic.ContactSensorState)
       .onGet(this.getDoorStatus.bind(this))
 
-    this.lockService.getCharacteristic(HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC)
+    this.lockService.getCharacteristic(Characteristic.LockCurrentState)
       .onGet(this.getLockCurrentState.bind(this))
 
-    this.lockService.getCharacteristic(HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC)
+    this.lockService.getCharacteristic(Characteristic.LockTargetState)
       .onGet(this.getLockTargetState.bind(this))
       .onSet(this.setLockTargetState.bind(this))
-      this.lockGetProperty()
+      
   }
 
-  async updateCharacteristics () {
-    this.lockGetProperty()
-    if (this.lockOnoffLine === 0) {
+  async updateCharacteristics (device) {
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Lock] Update Lock Characteristics "${this.display_name}"`)
+    if (device.conn_state === 0) {
       this.getLockCurrentState().updateValue(noResponse)
     } else {
+      this.getLockProperty()
       this.getLockCurrentState()
       this.getDoorStatus()
       this.getBatteryStatus()
@@ -62,45 +53,47 @@ module.exports = class WyzeLock extends WyzeAccessory {
 
   async getLockCurrentState () {
 
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] getLockCurrentState "${this.display_name}"`)
-    if (this.lockLockerStatusHardlock === 2) {
-      return HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.UNSECURED
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Lock] Getting Lock Current State "${this.display_name}"`)
+    console.log('getLockCurrentState'+ this.homeKitAccessory.context.device_params.hardlock)
+    if (this.homeKitAccessory.context.device_params.hardlock === 2) {
+      return Characteristic.LockTargetState.UNSECURED
     } else {
-      return HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED
-    }  
+      return Characteristic.LockTargetState.SECURED
+    }
   }
 
   async getLockTargetState () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] getLockTargetState "${this.display_name}"`)
-    if (this.lockLockerStatusHardlock === 2) {
-      return HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.UNSECURED
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Lock] Getting Lock Target State "${this.display_name}"`)
+
+    if (this.homeKitAccessory.context.device_params.hardlock === 2) {
+      return Characteristic.LockTargetState.UNSECURED
     } else {
-      return HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.SECURED
+      return Characteristic.LockTargetState.SECURED
     }
   }
 
   async getDoorStatus () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] LockDoorStatus "${this.display_name}"`)
-    if (this.lockDoorOpenStatus === 2) {
-      return HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC.CLOSED
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Lock] Getting Door Status "${this.display_name}"`)
+    if (this.homeKitAccessory.context.device_params.door_open_status === 1) {
+      return Characteristic.ContactSensorState.CONTACT_NOT_DETECTED
     } else {
-      return HOMEBRIDGE_CONTACT_SENSOR_CHARACTERISTIC.OPEN
+      return Characteristic.ContactSensorState.CONTACT_DETECTED
     }
   }
 
   async getBatteryStatus () {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] LockBattery "${this.display_name}"`)
-    return this.checkBatteryVoltage(this.lockPower)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Lock] Getting Lock Battery "${this.display_name}"`)
+    return this.plugin.client.checkBatteryVoltage(this.homeKitAccessory.context.device_params.power)
   }
 
   async setLockTargetState (targetState) {
-    if(this.plugin.config.logging == "debug") this.plugin.log(`[Lock] setLockTargetSate "${targetState}"`) // this is zero or 1 
-    await this.plugin.client.controlLock(this.mac, this.product_model, (targetState === HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED ? 'remoteLock' : 'remoteUnlock'))
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Lock] Setting Lock Target State "${targetState}"`) // this is zero or 1 
+    await this.plugin.client.controlLock(this.mac, this.product_model, (targetState === Characteristic.LockCurrentState.SECURED ? 'remoteLock' : 'remoteUnlock'))
 
     // Takes a few seconds for the lock command to actually update lock state property
     // Poll every second to see if the lock state has changed to what we expect, or time out after 30 attempts
-   // await this.poll(async () => await this.getLockCurrentState(), this.locker_status ? 1 : 0 , this.locker_status ? 1 : 0 === targetState, 1000, 10)
-    this.lockService.setCharacteristic(Characteristic.LockCurrentState, targetState === HOMEBRIDGE_LOCK_MECHANISM_TARGET_STATE_CHARACTERISTIC.SECURED ? HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.SECURED : HOMEBRIDGE_LOCK_MECHANISM_CURRENT_STATE_CHARACTERISTIC.UNSECURED)
+    //await this.poll(async () => await this.getLockCurrentState(), currentState => currentState === targetState, 1000, 10)
+    this.lockService.setCharacteristic(Characteristic.LockCurrentState, targetState === Characteristic.LockTargetState.SECURED ? Characteristic.LockCurrentState.SECURED : Characteristic.LockCurrentState.UNSECURED)
   }
 
   async poll (fn, validate, interval, maxAttempts) {
@@ -121,7 +114,4 @@ module.exports = class WyzeLock extends WyzeAccessory {
 
     return new Promise(executePoll)
   }
-
-  checkBatteryVoltage (deviceVoltage) {
-    if (deviceVoltage >= 100) { return 100 } else if ( deviceVoltage == "undefined") { return 100 } else { return deviceVoltage }}
 }

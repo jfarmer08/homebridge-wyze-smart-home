@@ -17,6 +17,11 @@ module.exports = class WyzeAccessory {
   get mac ()                      { return this.homeKitAccessory.context.mac }
   get product_type ()             { return this.homeKitAccessory.context.product_type }
   get product_model ()            { return this.homeKitAccessory.context.product_model }
+
+ // From Device List
+  get switch_state ()             { return this.homeKitAccessory.context.device_params.switch_state }
+  get open_close_state ()         { return this.homeKitAccessory.context.device_params.open_close_state }
+  
   // Wall Switch Prop
   get single_press_type ()        { return this.homeKitAccessory.context.device_params?.single_press_type }
   get double_press_type ()        { return this.homeKitAccessory.context.device_params?.double_press_type }
@@ -24,35 +29,49 @@ module.exports = class WyzeAccessory {
   get long_press_type ()          { return this.homeKitAccessory.context.device_params?.long_press_type }
   get iot_state ()                { return this.homeKitAccessory.context.device_params?.iot_state } //Device online / offline
   get switch_power ()             { return this.homeKitAccessory.context.device_params?.switch_power } //Power on / Power off
-  // Lock Prop - only add get if you need to access them
-  // From Device List
-  get switch_state ()             { return this.homeKitAccessory.context.device_params.switch_state }
-  get open_close_state ()         { return this.homeKitAccessory.context.device_params.open_close_state }
-  // from lockInfo
-  get lockPower ()                { return this.homeKitAccessory.context.device_params?.power }
-  get lockDoorOpenStatus ()       { return this.homeKitAccessory.context.device_params?.door_open_status }
-  get lockOnoffLine ()            { return this.homeKitAccessory.context.device_params?.onoff_line }
-  get lockTrashMode ()            { return this.homeKitAccessory.context.device_params?.trash_mode }
-  get lockKeypadEnableStatus ()   { return this.homeKitAccessory.context.device_params?.keypad_enable_status }
-  get lockDoorSensor ()           { return this.homeKitAccessory.context.device_params?.door_sensor }
-  get lockKeypadPower ()          { return this.homeKitAccessory.context.device_params?.keypadPower }
-  get lockKeypadOnoffLine ()      { return this.homeKitAccessory.context.device_params?.keypadOnoff_line }
-  get lockKeypadMac ()            { return this.homeKitAccessory.context.device_params?.keypadMac }
-  get lockLockerStatusDoor ()     { return this.homeKitAccessory.context.device_params?.door }
-  get lockLockerStatusHardlock () { return this.homeKitAccessory.context.device_params?.hardlock }
-  
-  // from Camera
+  get switch_iot()                { return this.homeKitAccessory.context.device_params?.switch_iot}
+
+  // Wall Switch Prop
+  set single_press_type (value)        {  this.homeKitAccessory.context.device_params.single_press_type = value }
+  set double_press_type (value)        {  this.homeKitAccessory.context.device_params.double_press_type = value }
+  set triple_press_type (value)        {  this.homeKitAccessory.context.device_params.triple_press_type = value }
+  set long_press_type (value)          {  this.homeKitAccessory.context.device_params.long_press_type = value }
+  set iot_state (value)                {  this.homeKitAccessory.context.device_params.iot_state = value } //Device online / offline
+  set switch_power (value)             {  this.homeKitAccessory.context.device_params.switch_power = value} //Power on / Power off
+  set switch_iot(value)                {  this.homeKitAccessory.context.device_params.switch_iot = value}
+
   get cameraPowerSwitch ()        { return this.homeKitAccessory.context.device_params.power_switch}
   get cameraMotionSwitch ()       { return this.homeKitAccessory.context.device_params.motion_alarm_switch}
-  get cameraNotification ()        { return this.homeKitAccessory.context.device_params?.notification}
-  get cameraOn ()        { return this.homeKitAccessory.context.device_params?.on}
-  get cameraAvailable ()        { return this.homeKitAccessory.context.device_params?.available}
-  get cameraSiren ()        { return this.homeKitAccessory.context.device_params?.cameraSiren}
-  get cameraFloodLight ()        { return this.homeKitAccessory.context.device_params?.floodLight}
-  get cameraGarageDoor ()        { return this.homeKitAccessory.context.device_params?.garageDoor}
+  get cameraNotification ()       { return this.homeKitAccessory.context.device_params?.notification}
+  get cameraOn ()                 { return this.homeKitAccessory.context.device_params?.on}
+  get cameraAvailable ()          { return this.homeKitAccessory.context.device_params?.available}
+  get cameraSiren ()              { return this.homeKitAccessory.context.device_params?.cameraSiren}
+  get cameraFloodLight ()         { return this.homeKitAccessory.context.device_params?.floodLight}
+  get cameraGarageDoor ()         { return this.homeKitAccessory.context.device_params?.garageDoor}
+
+  set cameraPowerSwitch (value)        {  this.homeKitAccessory.context.device_params.power_switch = value}
+  set cameraMotionSwitch (value)       {  this.homeKitAccessory.context.device_params.motion_alarm_switch = value}
+  set cameraNotification (value)       {  this.homeKitAccessory.context.device_params.notification = value}
+  set cameraOn (value)                 {  this.homeKitAccessory.context.device_params.on = value}
+  set cameraAvailable (value)          {  this.homeKitAccessory.context.device_params.available = value}
+  set cameraSiren (value)              {  this.homeKitAccessory.context.device_params.cameraSiren = value}
+  set cameraFloodLight (value)         {  this.homeKitAccessory.context.device_params.floodLight = value}
+  set cameraGarageDoor (value)         {  this.homeKitAccessory.context.device_params.garageDoor = value}
+
+  // Lock
+  get lockOnoff_line() {return this.homeKitAccessory.context.device_params.onoff_line}
+  get lockPower() {return this.homeKitAccessory.context.device_params.power}
+  get lockDoor_open_status() {return this.homeKitAccessory.context.device_params.door_open_status}
+  get lockHardlock() {return this.homeKitAccessory.context.device_params.hardlock}
+
+  set lockcOnoff_line(value) { this.homeKitAccessory.context.device_params.onoff_line = value}
+  set lockPower(value) { this.homeKitAccessory.context.device_params.power = value}
+  set lockDoor_open_status(value) { this.homeKitAccessory.context.device_params.door_open_status = value}
+  set lockHardlock(value) { this.homeKitAccessory.context.device_params.hardlock = value}
+
   // from HMS
-  get hmsHmsID ()        { return this.homeKitAccessory.context.device_params?.hmsId}
-  get hmsStatus ()        {return this.homeKitAccessory.context.device_params?.hmsStatus}
+  get hmsHmsID ()                 { return this.homeKitAccessory.context.device_params?.hmsId}
+  get hmsStatus ()                { return this.homeKitAccessory.context.device_params?.hmsStatus}
 
   // from thermostat
   get thermostatTemperature()     { return this.homeKitAccessory.context.device_params?.temperature }
@@ -85,7 +104,6 @@ module.exports = class WyzeAccessory {
 
   async update (device, timestamp) {
     const productType = device.product_type
-    const productModel = device.product_model
 
     switch (productType) {
       case "OutdoorPlug":
@@ -136,11 +154,13 @@ module.exports = class WyzeAccessory {
             iot_state: this.iot_state,
             double_press_type: this.double_press_type,
             single_press_type: this.single_press_type,
+            triple_press_type: this.triple_press_type,
+            long_press_type: this.long_press_type,
+            switch_iot: this.switch_iot,
           },
         }
         break
       case "Camera":
-        this.getCameraPropertyList()
         this.homeKitAccessory.context = {
           mac: device.mac,
           product_type: device.product_type,
@@ -256,18 +276,7 @@ module.exports = class WyzeAccessory {
           push_switch: device.push_switch,
           device_params: device.device_params = {
             switch_state : device.device_params.switch_state,
-            open_close_state: device.device_params.open_close_state,
-            onoff_line: this.lockOnoffLine,
-            power: this.lockPower,
-            door_open_status: this.lockDoorOpenStatus,
-            trash_mode: this.lockTrashMode,
-            keypad_enable_status: this.lockKeypadEnableStatus,
-            door_sensor: this.lockDoorSensor,
-            keypadPower: this.lockKeypadPower,
-            keypadOnoff_line: this.lockKeypadOnoffLine,
-            keypadMac: this.lockKeypadMac,
-            door: this.lockLockerStatusDoor,
-            hardlock: this.lockLockerStatusHardlock,
+            open_close_state: device.device_params.open_close_state
           }        
         }
         break
@@ -291,6 +300,7 @@ module.exports = class WyzeAccessory {
       }
       break
       case "S1Gateway":
+        this.getHmsUpdate()
         this.homeKitAccessory.context = {
           mac: device.mac,
           product_type: device.product_type,
@@ -302,9 +312,7 @@ module.exports = class WyzeAccessory {
             power_source: device.device_params.power_source,
             ssid: device.device_params.ssid,
             ip: device.device_params.ip,
-            rssi: device.device_params.rssi,
-            hmsID: this.hmsHmsID,
-            hmsStatus: this.hmsStatus
+            rssi: device.device_params.rssi
           }
         }
         break
@@ -344,18 +352,13 @@ module.exports = class WyzeAccessory {
     //
   }
 
-  async getPropertyList () {
-    const response = await this.plugin.client.getPropertyList(this.mac, this.product_model)
+  async getLockProperty() {
+    // Set Defaults
+    this.lockcOnoff_line = 0
+    this.lockPower = 0
+    this.lockDoor_open_status = 0
+    this.lockHardlock = 0
 
-    return response
-  }
-
-  async getLockInfo () {
-    const response = await this.plugin.client.getLockInfo(this.mac, this.product_model)
-    return response
-  }
-  async lockGetProperty() {
-    this.updating = true
     const propertyList = await this.plugin.client.getLockInfo(this.mac, this.product_model)
     let lockProperties = propertyList.device
     const prop_key = Object.keys(lockProperties)
@@ -363,23 +366,23 @@ module.exports = class WyzeAccessory {
       const prop = element;
       switch (prop) {
         case "onoff_line":
-          this.homeKitAccessory.context.device_params.onoff_line = lockProperties[prop]
-          continue
+          this.lockcOnoff_line = lockProperties[prop]
+          break
         case "power":
-          this.homeKitAccessory.context.device_params.power = lockProperties[prop]
-          continue
+          this.lockPower = lockProperties[prop]
+          break
         case "door_open_status":
-          this.homeKitAccessory.context.device_params.door_open_status = lockProperties[prop]
-          continue
+          this.lockDoor_open_status = lockProperties[prop]
+          break
         case "trash_mode":
           this.homeKitAccessory.context.device_params.trash_mode = lockProperties[prop]
-          continue
+          break
         case "keypad_enable_status":
           this.homeKitAccessory.context.device_params.keypad_enable_status = lockProperties[prop]
-          continue
+          break
         case "door_sensor":
           this.homeKitAccessory.context.device_params.door_sensor = lockProperties[prop]
-          continue
+          break
       }
     }
     let lockerStatusProperties = propertyList.device.locker_status
@@ -389,118 +392,68 @@ module.exports = class WyzeAccessory {
       switch (prop){
         case "door":
           this.homeKitAccessory.context.device_params.door = lockerStatusProperties[prop]
-          continue
+          break
         case "hardlock":
           this.homeKitAccessory.context.device_params.hardlock = lockerStatusProperties[prop]
-          continue
+          break
       }
-    } 
-    let lockKeypadProperties = propertyList.device.keypad
-    if (lockKeypadProperties != null) {
-      const prop_keypad = Object.keys(lockKeypadProperties)
-      for (const element of prop_keypad) {
-        const prop = element
-        switch (prop ) {
-          case "power":
-            this.homeKitAccessory.context.device_params.keypadPower = lockKeypadProperties[prop]
-            continue
-          case "onoff_line":
-            this.homeKitAccessory.context.device_params.keypadOnoff_line = lockKeypadProperties[prop]
-            continue
-        }
-      } 
-      let lockKeypadProp = propertyList.device.keypad.hardware_info
-      const prop_keypadProp = Object.keys(lockKeypadProp)
-      for (const element of prop_keypadProp) {
-        const prop = element
-        switch (prop ) {
-          case "mac":
-            this.homeKitAccessory.context.device_params.keypadMac = lockKeypadProp[prop]
-            continue
-        }
-      } 
-    }
-    this.updating = false
-  }
-  // Wall Switch Can we move this to its own class - wallSwitch
-  async wallSwitchSetIotProp(deviceMac, productModel, prop, value) {
-    let response
-    try {
-      this.updating = true
-      response = await this.plugin.client.setIotProp(deviceMac, productModel, prop, value)
-      this.lastTimestamp = response.ts
-    } finally {
-      this.updating = false
-      return response
     }
   }
 
   async wallSwitchGetIotProp() {
+    // Set Defaults
+    this.switch_power = false
+    this.switch_iot = false
+    this.iot_state = "connected"
+    this.double_press_type = 1
+    this.single_press_type = 1
+    this.triple_press_type = 1
+    this.long_press_type = false
+
     let keys = "iot_state,switch-power,switch-iot,single_press_type, double_press_type, triple_press_type, long_press_type"
-    let response
-    try {
-      this.updating = true
-      response = await this.plugin.client.getIotProp(this.mac, keys)
-      let properties = response.data.props
-      const prop_key = Object.keys(properties);
-      for (const element of prop_key) {
-        const prop = element;
-        if (prop === 'iot_state') {
-          this.homeKitAccessory.context.device_params.iot_state = properties[prop]
-            } else if (prop == 'single_press_type') {
-              this.homeKitAccessory.context.device_params.single_press_type = properties[prop]
-            } else if (prop == 'double_press_type') {
-              this.homeKitAccessory.context.device_params.double_press_type = properties[prop]
-            } else if (prop == 'triple_press_type') {
-              this.homeKitAccessory.context.device_params.triple_press_type = properties[prop]
-            } else if (prop == 'long_press_type') {
-              this.homeKitAccessory.context.device_params.long_press_type = properties[prop]
-            } else if (prop == 'switch-power'){
-              this.homeKitAccessory.context.device_params.switch_power = properties[prop]
-            }
+      const propertyList = await this.plugin.client.getIotProp(this.mac, keys)
+      for (const prop of Object.keys(propertyList.data.props)) {
+        switch (prop) {
+          case 'iot_state':
+            this.homeKitAccessory.context.device_params.iot_state = propertyList.data.props[prop]
+            break
+          case 'single_press_type':
+            this.homeKitAccessory.context.device_params.single_press_type = propertyList.data.props[prop]
+            break
+          case 'double_press_type':
+            this.homeKitAccessory.context.device_params.double_press_type = propertyList.data.props[prop]
+          case 'triple_press_type':
+            this.homeKitAccessory.context.device_params.triple_press_type = propertyList.data.props[prop]
+            break
+          case 'long_press_type':
+            this.homeKitAccessory.context.device_params.long_press_type = propertyList.data.props[prop]
+            break
+          case 'switch-power':
+            this.homeKitAccessory.context.device_params.switch_power = propertyList.data.props[prop]
+            break
+          case 'switch-iot':
+            this.homeKitAccessory.context.device_params.switch_iot = propertyList.data.props[prop]
+            break
+        }
       }
-      this.lastTimestamp = response.ts
-    } finally {
-      this.updating = false
-      return response
-     }
   }
-
-  async power_onoff(value) {
-    const response = await this.wallSwitchSetIotProp(this.mac, this.product_model, 'switch-power', value)
-    return response
-  }
-
-  async iot_onoff(value) {
-    const response = await this.wallSwitchSetIotProp(this.mac, this.product_model, 'switch-iot', value)
-    return response
-  }
-
-  //Camera
-  async cameraTurnOn() { await this.runActionList(this.mac, this.product_model, "P3", 'power_on')}
-
-  async cameraTurnOff() { await this.runActionList(this.mac, this.product_model, "P3", 'power_off')}
-
-  async cameraSirenOn() { await this.runActionList(this.mac, this.product_model, "P1049", 'siren_on')}
-
-  async cameraSirenOff() { await this.runActionList(this.mac, this.product_model, "P1049", 'siren_off')}
-
-  async cameraFloodLightOn() { await this.setProperty(this.mac, this.product_model, "P1049", "1")}
-
-  async cameraFloodLightOff() { await this.setProperty(this.mac, this.product_model, "P1049", "2")}
-
-  async turnOnNotifications() { await this.setProperty(this.mac, this.product_model, "P1", "1")}
-
-  async turnOffNotifications() { await this.setProperty(this.mac, this.product_model, "P1", "0")}
-
+  
   async getCameraPropertyList () {
+    // Set Default
+    this.cameraNotification = 0
+    this.cameraOn = 0
+    this.cameraAvailable = 0
+    this.cameraSiren = 0
+    this.cameraFloodLight = 0
+    this.cameraGarageDoor = 0
+
     const cameraProperty = {  
       NOTIFICATION : "P1",
       ON : "P3",
       AVAILABLE : "P5",
       CAMERA_SIREN : 'P1049',
       FLOOD_LIGHT : 'P1056',
-      GARAGE_DOOR : 'P1058'
+      GARAGE_DOOR : 'P1301'
     }
     const propertyList = await this.plugin.client.getDevicePID(this.mac, this.product_model)
     for (const property of propertyList.data.property_list) {
@@ -515,86 +468,44 @@ module.exports = class WyzeAccessory {
           this.homeKitAccessory.context.device_params.available = property.value
           break
         case cameraProperty.CAMERA_SIREN:
-          this.homeKitAccessory.context.device_params.cameraSiren = property.value
+          this.homeKitAccessory.context.device_params.siren = property.value
           break
         case cameraProperty.FLOOD_LIGHT:
          this.homeKitAccessory.context.device_params.floodLight = property.value
          break
-         case cameraProperty.GARAGE_DOOR:
-          this.homeKitAccessory.context.device_params.garageDoor = property.value
-          break
+        case cameraProperty.GARAGE_DOOR:
+        this.homeKitAccessory.context.device_params.garageDoor = property.value
+        break
       }
     }
   }
-  //WyzeLight
-  async lightTurnOn() { await this.setProperty(this.mac, this.product_model, "P3", "0")}
-  async lightTurnOff() { await this.setProperty(this.mac, this.product_model, "P3", "1")}
-  async lightSetBrightness(value) { await this.setProperty(this.mac, this.product_model, "P1501", value)}
-  async setColorTemperature(value) { await this.setProperty(this.mac, this.product_model, "P1502", value)}
 
   //HMS
   async getHmsID() {
-    const response = await this.plugin.client.getPlanBindingListByUser()
-        this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
+    const response = this.plugin.client.getPlanBindingListByUser()
+    this.homeKitAccessory.context.device_params.hmsId = response.data[0].deviceList[0].device_id
   }
 
-  async setHMSState(hms_id, mode) {
-    if(this.plugin.config.logging == "debug") this.plugin.log("HMSID = "+hms_id + " Mode = " + mode)
-    let responseDisable
-    let response
-      if(mode == "off") {
-        responseDisable = await this.plugin.client.disableRemeAlarm(hms_id)
-        response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 0)
-      } else if( mode === "away" ) {
-        response = await this.plugin.client.monitoringProfileActive(hms_id, 0, 1)
-      }  else if( mode === "home" ) {
-        response = await this.plugin.client.monitoringProfileActive(hms_id, 1, 0)
-      }
-      return response
-  }
+  async getHmsUpdate() {
 
-  async getHmsUpdate(hms_id) {
-    const response = await this.plugin.client.monitoringProfileStateStatus(hms_id)
-      this.homeKitAccessory.context.device_params.hmsStatus = response.message
-  }
-  
-  async setProperty (property, value) {
-    try {
-      this.updating = true
+    const hmsID = await this.plugin.client.getPlanBindingListByUser()
+    this.homeKitAccessory.context.device_params.hmsId = hmsID.data[0].deviceList[0].device_id
 
-      const response = await this.plugin.client.setProperty(this.mac, this.product_model, property, value)
+    const response = await this.plugin.client.monitoringProfileStateStatus(hmsID.data[0].deviceList[0].device_id)
 
-      this.lastTimestamp = response.ts
-    } finally {
-      this.updating = false
-    }
-  }
-  
-  async runActionList (property, value) {
-    try {
-      this.updating = true
-      const response = await this.plugin.client.runActionList(this.mac, this.product_model, property, value, 'set_mesh_property')
-
-      this.lastTimestamp = response.ts
-    } finally {
-      this.updating = false
-    }
-  }
-
-  async runActionListOnOff (property, value, actionKey) {
-    try {
-      this.updating = true
-      if(this.plugin.config.logging == "debug") this.plugin.log(`Setting runActionList Power State ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
-      const response = await this.plugin.client.runActionList(this.mac, this.product_model, property, value, actionKey)
-
-      this.lastTimestamp = response.ts
-    } finally {
-      this.updating = false
-    }
+    this.homeKitAccessory.context.device_params.hmsStatus = response.message
   }
 
   // Thermostat Methods
   async thermostatGetIotProp() {
+    // Set Defaults
+    this.thermostatTemperature = 69.0
+    this.thermostatCoolSetpoint = 65.0
+    this.thermostatHeatSetpoint = 72.0
+    this.thermostatModeSys = "auto"
+    this.thermostatWorkingState = "idle"
+    this.thermostatTempUnit = "F"
+
     let keys = "trigger_off_val,emheat,temperature,humidity,time2temp_val,protect_time,mode_sys,heat_sp,cool_sp, current_scenario,config_scenario,temp_unit,fan_mode,iot_state,w_city_id,w_lat,w_lon,working_state, dev_hold,dev_holdtime,asw_hold,app_version,setup_state,wiring_logic_id,save_comfort_balance, kid_lock,calibrate_humidity,calibrate_temperature,fancirc_time,query_schedule"
     let response
     try {
@@ -665,5 +576,12 @@ module.exports = class WyzeAccessory {
   async setCoolPoint(value) {
     const response = await this.plugin.client.thermostatSetIotProp(this.mac, this.product_model, 'cool_sp', value)
     return response
+  }
+
+  cameraAccessoryAttached() {
+    if(this.plugin.config.garageDoorAccessory?.find(d => d === this.mac) || this.plugin.config.spotLightAccessory?.find(d => d === this.mac) ||
+    this.plugin.config.alarmAccessory?.find(d => d === this.mac) || this.plugin.config.floodLightAccessory?.find(d => d === this.mac)){
+      return true
+    } else return false
   }
 }
