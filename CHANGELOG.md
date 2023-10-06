@@ -6,6 +6,9 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.37-alpha.3
+- Fix issue with Light
+
 ### v0.5.37-alpha.2
 - Add check box for HMS Subscription
 - Removed MFA Support

@@ -26,7 +26,7 @@ module.exports = class WyzeLight extends WyzeAccessory {
     } else {
       this.getCharacteristic(Characteristic.On).updateValue(this.homeKitAccessory.context.device_params.switch_state)
 
-      const propertyList = await this.this.plugin.client.getDevicePID(this.mac, this.product_model)
+      const propertyList = await this.plugin.client.getDevicePID(this.mac, this.product_model)
       for (const property of propertyList.data.property_list) {
         switch (property.pid) {
           case WYZE_API_BRIGHTNESS_PROPERTY:
