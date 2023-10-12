@@ -131,18 +131,20 @@ module.exports = class WyzeSmartHome {
   async loadDevice(device, timestamp) {
     const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model, device.mac, device.nickname)
     if (!accessoryClass) {
-      if(this.config.logLevel == "debug") this.log(`Unsupported device type or device is ignored: ${device.product_type} (Model: ${device.product_model})`)
+      if(this.config.logLevel == "debug") this.log(`[${device.product_type}] Unsupported device type: (Name: ${device.nickname}) (MAC: ${device.mac}) (Model: ${device.product_model})`)
       return
-    }
-
-    if (this.config.filterByMacAddressList?.find(d => d === device.mac)) {
-      if(this.config.logLevel == "debug") this.log(`Ignoring ${device.nickname} (MAC: ${device.mac}) because it is in the Ignore Devices list`)
-      return
-    }
-    if (this.config.filterDeviceTypeList?.find(d => d === device.product_type)) {
-      if(this.config.logLevel == "debug") this.log(`Ignoring ${device.nickname} (MAC: ${device.mac} (Type: ${device.product_type}) because it is in the Ignore Devices list`)
-      return
-    }
+    } 
+    else if (this.config.filterByMacAddressList?.find(d => d === device.mac) || this.config.filterDeviceTypeList?.find(d => d === device.product_type)) 
+      {
+        if(this.config.logLevel == "debug") this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is in the Ignore Device list`)
+        return
+      } 
+    else if (device.product_type == 'S1Gateway' && this.config.hms == false)
+      { 
+        if(this.config.logLevel == "debug") this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is not enabled`)
+        return
+      }
+      
 
     let accessory = this.accessories.find(a => a.matches(device))
     if (!accessory) {
@@ -150,69 +152,43 @@ module.exports = class WyzeSmartHome {
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
-      if(this.config.logLevel == "debug") this.log(`Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
+      if(this.config.logLevel == "debug") this.log(`[${device.product_type}] Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
       accessory.update(device, timestamp)    
 
     return accessory
   }
 
-  getAccessoryClass(type, model, mac, nickname) {
+  getAccessoryClass(type, model) {
     switch (type) {
       case 'OutdoorPlug':
-        if(Object.values(OutdoorPlugModels).includes(model)){ return WyzePlug } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return} 
+        if(Object.values(OutdoorPlugModels).includes(model)){ return WyzePlug } 
       case 'Plug':
-        if(Object.values(PlugModels).includes(model)){ return WyzePlug } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(PlugModels).includes(model)){ return WyzePlug }
       case 'Light':
-        if(Object.values(LightModels).includes(model)){ return WyzeLight } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(LightModels).includes(model)){ return WyzeLight }
       case 'MeshLight':
-        if(Object.values(MeshLightModels).includes(model)){ return WyzeMeshLight } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(MeshLightModels).includes(model)){ return WyzeMeshLight }
       case 'LightStrip':
-        if(Object.values(LightStripModels).includes(model)){ return WyzeMeshLight } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(LightStripModels).includes(model)){ return WyzeMeshLight } 
       case 'ContactSensor':
-        if(Object.values(ContactSensorModels).includes(model)){ return WyzeContactSensor } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(ContactSensorModels).includes(model)){ return WyzeContactSensor }
       case 'MotionSensor':
-        if(Object.values(MotionSensorModels).includes(model)){ return WyzeMotionSensor } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(MotionSensorModels).includes(model)){ return WyzeMotionSensor }
       case 'Lock':
-        if(Object.values(LockModels).includes(model)){ return WyzeLock } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(LockModels).includes(model)){ return WyzeLock }
       case 'TemperatureHumidity':
-        if(Object.values(TemperatureHumidityModels).includes(model)){ return WyzeTemperatureHumidity } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(TemperatureHumidityModels).includes(model)){ return WyzeTemperatureHumidity } 
       case 'LeakSensor':
-        if(Object.values(LeakSensorModels).includes(model)){ return WyzeLeakSensor } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(LeakSensorModels).includes(model)){ return WyzeLeakSensor } 
       case 'Camera':
-        if(Object.values(CameraModels).includes(model)){ return WyzeCamera } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(CameraModels).includes(model)){ return WyzeCamera }
       case 'Common':
-        if(Object.values(CommonModels).includes(model)){ return WyzeSwitch } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added. If no issues are found`) 
-          return } 
+        if(Object.values(CommonModels).includes(model)){ return WyzeSwitch }
       case 'S1Gateway':
-        if(this.config.hms == true) { return WyzeHMS}
+        if(Object.values(S1GatewayModels).includes(model)){return WyzeHMS }
       case 'Thermostat':
-        if(Object.values(ThermostatModels).includes(model)){ return WyzeThermostat } else if (Object.values(NotSupportedModels).includes(model)){return}
-        else { if(this.config.logLevel == "info" || "debug") this.log.warn(`${type} (Model: ${model} (Mac: ${mac} (Name: ${nickname}) not supported submit a request to https://github.com/jfarmer08/homebridge-wyze-smart-home/issues to have it added.`) 
-          return } 
+        if(Object.values(ThermostatModels).includes(model)){ return WyzeThermostat } 
     }
   }
 
@@ -245,7 +221,11 @@ module.exports = class WyzeSmartHome {
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
+      try {
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
+      } catch (error) {
+        this.log.error(`[${device.product_type}] Error removing accessory ${homeKitAccessory.context.nickname} (MAC: ${homeKitAccessory.context.mac}) : ${error}`)
+      }
     }
   }
 }

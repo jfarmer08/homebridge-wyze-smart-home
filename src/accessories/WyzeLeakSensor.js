@@ -44,7 +44,7 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getIsBatteryLowSensorService () {
-    if(this.plugin.config.logLevellllll == "debug") this.plugin.log(`[LeakSensorBatteryLow] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[LeakSensorBatteryLow] Retrieving previous service for "${this.display_name}"`)
     let service = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
 
     if (!service) {

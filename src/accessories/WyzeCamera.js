@@ -97,9 +97,14 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.handleOnGetFloodlight()}
       if (this.plugin.config.spotLightAccessory?.find(d => d === this.mac)){if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Camera SpotLight] Updating status of "${this.display_name}"`)
       this.handleOnGetSpotlight()}
-      if (this.plugin.config.garageDoorAccessory?.find(d => d === this.mac)){if(this.plugin.config.logLevel == "debug") { this.plugin.log(`[Camera Garage Door] Updating status of "${this.display_name}"`)}
+      if (this.plugin.config.garageDoorAccessory?.find(d => d === this.mac))
+      {
+        if(this.plugin.config.logLevel == "debug") { this.plugin.log(`[Camera Garage Door] Updating status of "${this.display_name}"`)}
       this.getGarageCurrentState()
-      this.getGarageTargetState()}}
+      this.getGarageTargetState()
+
+    }
+    }
   }
    /**
    * Handle requests to get the current value of the "Current Door State" characteristic
@@ -121,9 +126,11 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Camera Garage Door] Getting Target Garage Door State for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname})`)
 
     let currentValue
+
     if( this.homeKitAccessory.context.device_params.garageDoor == 1) {
        currentValue = Characteristic.TargetDoorState.OPEN
     } else currentValue = Characteristic.TargetDoorState.CLOSED
+
     return currentValue;
   }
 
@@ -151,6 +158,10 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     const currentValue = 0
 
     return false;
+  }
+
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   async handleOnGetPrivacySwitch() {
@@ -192,9 +203,5 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   async handleOnSetAlarmSwitch(value) {
     if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Camera Siren] Setting Alarm Switch for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
     this.plugin.client.cameraSiren(this.mac,this.product_model, (value) ? 'siren_on' : 'siren_off')
-  }
-
-  sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
   }
 }

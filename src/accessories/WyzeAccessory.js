@@ -40,8 +40,8 @@ module.exports = class WyzeAccessory {
   set switch_power (value)             {  this.homeKitAccessory.context.device_params.switch_power = value} //Power on / Power off
   set switch_iot(value)                {  this.homeKitAccessory.context.device_params.switch_iot = value}
 
-  get cameraPowerSwitch ()        { return this.homeKitAccessory.context.device_params.power_switch}
-  get cameraMotionSwitch ()       { return this.homeKitAccessory.context.device_params.motion_alarm_switch}
+  get cameraPowerSwitch ()        { return this.homeKitAccessory.context.device_params?.power_switch}
+  get cameraMotionSwitch ()       { return this.homeKitAccessory.context.device_params?.motion_alarm_switch}
   get cameraNotification ()       { return this.homeKitAccessory.context.device_params?.notification}
   get cameraOn ()                 { return this.homeKitAccessory.context.device_params?.on}
   get cameraAvailable ()          { return this.homeKitAccessory.context.device_params?.available}
@@ -440,12 +440,12 @@ module.exports = class WyzeAccessory {
   
   async getCameraPropertyList () {
     // Set Default
-    this.cameraNotification = 0
-    this.cameraOn = 0
-    this.cameraAvailable = 0
-    this.cameraSiren = 0
-    this.cameraFloodLight = 0
-    this.cameraGarageDoor = 0
+    //this.cameraNotification = 0
+    //this.cameraOn = 0
+   // this.cameraAvailable = 0
+    //this.cameraSiren = 0
+   // this.cameraFloodLight = 0
+  //  this.cameraGarageDoor = 0
 
     const cameraProperty = {  
       NOTIFICATION : "P1",

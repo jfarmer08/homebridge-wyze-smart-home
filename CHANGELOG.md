@@ -6,6 +6,10 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.37-alpha.4
+- Add HL_A19C2
+- Code clean up
+
 ### v0.5.37-alpha.3
 - Fix issue with Light
 

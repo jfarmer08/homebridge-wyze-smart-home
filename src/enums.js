@@ -22,7 +22,7 @@ exports.PlugModels = PlugModels
 const LightModels = {BULB_WHITE:"WLPA19", BULB_WHITE_V2:"HL_HWB2"}
 exports.LightModels = LightModels
 
-const MeshLightModels = {MESH_BULB:"WLPA19C", HL_BR30C:"HL_BR30C"}
+const MeshLightModels = {MESH_BULB:"WLPA19C", HL_BR30C:"HL_BR30C", HL_A19C2:'HL_A19C2'}
 exports.MeshLightModels = MeshLightModels
 
 const LightStripModels = {LIGHT_STRIP:"HL_LSL", LIGHT_STRIP_PRO:"HL_LSLP"}
@@ -46,7 +46,7 @@ exports.LeakSensorModels = LeakSensorModels
 const CommonModels = { "LightSwitch": "LD_SS1" }
 exports.CommonModels = CommonModels
 
-const S1GatewayModels = {}
+const S1GatewayModels = { 'GW3U': 'GW3U'}
 exports.S1GatewayModels = S1GatewayModels
 
 const ThermostatModels = {CO_EA1:"CO_EA1"}
@@ -55,11 +55,9 @@ exports.ThermostatModels = ThermostatModels
 const ThermostatRoomSensor = {CO_TH1:"CO_TH1"}
 exports.ThermostatRoomSensor = ThermostatRoomSensor
 
-const NotSupportedModels = {"OutdoorPlugMain" : "WLPPO", "ChimeSensor" : "CHIME", "HeadPhones":"JA_HP","YDGW1":"YD.GW1",
-                            "Scale_S":"WL_SC3","WL_SC2":"WL_SC2", "JA_RO2":"JA_RO2", "Sprinkler":"BS_WK1", "ThermostatRoomSensor":"CO_TH1",
-                            "BLE_Lock":"YD_BT1","JA_SL10":"JA_SL10"}
-exports.NotSupportedModels = NotSupportedModels
-
+//"OutdoorPlugMain" : "WLPPO", "ChimeSensor" : "CHIME", "HeadPhones":"JA_HP","YDGW1":"YD.GW1",
+//"Scale_S":"WL_SC3","WL_SC2":"WL_SC2", "JA_RO2":"JA_RO2", "Sprinkler":"BS_WK1", "ThermostatRoomSensor":"CO_TH1",
+  //"BLE_Lock":"YD_BT1","JA_SL10":"JA_SL10"}
   //WyzeCamPanPro: "HL_PANP",
   //WyzeCamOutdoov2: "HL_WCO2",
   //WyzeCamDoorbell: "WYZEDB3",

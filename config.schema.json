@@ -133,7 +133,7 @@
   "items": {
   "title": "Device Type",
   "type": "string",
-  "enum": ["OutdoorPlug","Plug","Light","MeshLight","LightStrip","ContactSensor","MotionSensor","Lock","TemperatureHumidity","LeakSensor","Camera","Common","S1Gateway"]},
+  "enum": ["OutdoorPlug","Plug","Light","MeshLight","LightStrip","ContactSensor","MotionSensor","Lock","TemperatureHumidity","LeakSensor","Camera","Common"]},
   "condition": {"functionBody": "return model.excludedeviceType === true;"}
   }
   }

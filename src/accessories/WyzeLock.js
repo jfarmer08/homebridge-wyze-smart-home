@@ -54,7 +54,6 @@ module.exports = class WyzeLock extends WyzeAccessory {
   async getLockCurrentState () {
 
     if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Lock] Getting Lock Current State "${this.display_name}"`)
-    console.log('getLockCurrentState'+ this.homeKitAccessory.context.device_params.hardlock)
     if (this.homeKitAccessory.context.device_params.hardlock === 2) {
       return Characteristic.LockTargetState.UNSECURED
     } else {
