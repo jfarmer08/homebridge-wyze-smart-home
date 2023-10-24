@@ -53,6 +53,8 @@ module.exports = class WyzeSmartHome {
       //Logging
       logLevel: this.config.logLevel,
       apiLogEnabled: this.config.apiLogEnabled,
+      //App Config
+      lowBatteryPercentage: this.config.lowBatteryPercentage,
       //Storage Path
       persistPath: homebridge.user.persistPath(),
       //URLs

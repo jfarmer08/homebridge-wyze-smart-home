@@ -9,79 +9,62 @@ module.exports = class WyzeHMS extends WyzeAccessory {
     super(plugin, homeKitAccessory)
 
     // create a new Security System service
-    let securityService = this.homeKitAccessory.getService(Service.SecuritySystem) ||
-      this.homeKitAccessory.addService(Service.SecuritySystem)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[HMS] Retrieving previous service for "${this.display_name}"`)
+    this.securityService = this.homeKitAccessory.getService(Service.SecuritySystem)
 
-    // create handlers for required characteristics
-    securityService.getCharacteristic(Characteristic.SecuritySystemCurrentState)
+    if (!this.securityService) {
+      if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[HMS] Adding service for "${this.display_name}"`)
+      this.securityService = this.homeKitAccessory.addService(Service.SecuritySystem)
+    }
+
+    this.securityService.getCharacteristic(Characteristic.SecuritySystemCurrentState)
       .onGet(this.handleSecuritySystemCurrentStateGet.bind(this));
 
-    securityService.getCharacteristic(Characteristic.SecuritySystemTargetState)
+    this.securityService.getCharacteristic(Characteristic.SecuritySystemTargetState)
       .onGet(this.handleSecuritySystemTargetStateGet.bind(this))
       .onSet(this.handleSecuritySystemTargetStateSet.bind(this)) 
   }
 
-  async updateCharacteristics () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[HMS] Updating Current State of "${this.display_name}" is "${this.homeKitAccessory.context.device_params.hmsStatus}"`)
-    if (this.homeKitAccessory.context.conn_state === 0) {
+  async updateCharacteristics (device) {
+    if (device.conn_state === 0) {
+      if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[HMS] Updating status ${this.mac} (${this.display_name}) to noResponse`)
       this.getCharacteristic(Characteristic.On).updateValue(noResponse)
     } else {
-        this.handleSecuritySystemCurrentStateGet()
+      if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[HMS] Updating Current State of "${this.display_name}"`)
+      await this.getHmsID()
+      const response = await this.plugin.client.monitoringProfileStateStatus(this.hmsId)
+      this.hmsStatus = response.message
+      this.securityService.getCharacteristic(Characteristic.SecuritySystemCurrentState).updateValue(this.convertHmsStateToHomeKitState(this.hmsStatus))
     }
   }
 
-  getService () {
-    let service = this.homeKitAccessory.getService(Service.SecuritySystem)
-
-    if (!service) {
-      service = this.homeKitAccessory.addService(Service.SecuritySystem)
-    }
-
-    return service
+  async handleSecuritySystemCurrentStateGet() {
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[HMS] Getting Current State of "${this.display_name}" : "${this.hmsStatus}"`)
+    if(this.hmsStatus === 'undefined' || this.hmsStatus == null) {return 0} else
+    return this.convertHmsStateToHomeKitState(this.hmsStatus)
   }
 
-  getCharacteristic (characteristic) {
-    return this.getService().getCharacteristic(characteristic)
-  }
-
-  /**
-   * Handle requests to get the current value of the "Security System Current State" characteristic
-   */
-  handleSecuritySystemCurrentStateGet() {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[HMS] Fetching Current State of "${this.display_name}": "${this.homeKitAccessory.context.device_params.hmsStatus}"`)
-    return this.convertHmsStateToHomeKitState(this.homeKitAccessory.context.device_params.hmsStatus);
-  }
-
-  /**
-   * Handle requests to get the current value of the "Security System Target State" characteristic
-   */
   async handleSecuritySystemTargetStateGet() {
-    if(this.plugin.config.logLevell == "debug") this.plugin.log(`[HMS] Fetching Target State of "${this.display_name}": "${this.homeKitAccessory.context.device_params.hmsStatus}"`)
-    // set this to a valid value for SecuritySystemTargetState
-    return this.convertHmsStateToHomeKitState(this.homeKitAccessory.context.device_params.hmsStatus);
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[HMS] Getting Target State of "${this.display_name}" : "${this.hmsStatus}"`)
+    if(this.hmsStatus === 'undefined' || this.hmsStatus == null) {return 0} else
+    return this.convertHmsStateToHomeKitState(this.hmsStatus);
   }
 
-  /**
-   * Handle requests to set the "Security System Target State" characteristic
-   */
   async handleSecuritySystemTargetStateSet(value) {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[HMS] Target State Set "${this.display_name}": "${this.convertHomeKitStateToHmsState(value)}"`)
-    await this.plugin.client.setHMSState(this.homeKitAccessory.context.device_params.hmsId,this.convertHomeKitStateToHmsState(value))
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[HMS] Target State Set "${this.display_name}" : "${this.convertHomeKitStateToHmsState(value)}"`)
+    await this.plugin.client.setHMSState(this.hmsId,this.convertHomeKitStateToHmsState(value))
   }
 
   convertHmsStateToHomeKitState(hmsState) {
     switch (hmsState) {
         case "changing":
-            return Characteristic.SecuritySystemTargetState.DISARM;
+            return Characteristic.SecuritySystemTargetState.DISARM
         case "home":
-            return Characteristic.SecuritySystemTargetState.STAY_ARM;
-            break;
+            return Characteristic.SecuritySystemTargetState.STAY_ARM
         case "away":
-            return Characteristic.SecuritySystemTargetState.AWAY_ARM;
-            break;
+            return Characteristic.SecuritySystemTargetState.AWAY_ARM
         case "disarm":
-            return Characteristic.SecuritySystemTargetState.DISARM;
-            break;
+            return Characteristic.SecuritySystemTargetState.DISARM
     }
   }
   convertHomeKitStateToHmsState(homeKitState) {
@@ -89,20 +72,20 @@ module.exports = class WyzeHMS extends WyzeAccessory {
         case Characteristic.SecuritySystemTargetState.STAY_ARM:
         case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
             return "home";
-            break;
         case Characteristic.SecuritySystemTargetState.AWAY_ARM :
             return "away";
-            break;
         case Characteristic.SecuritySystemTargetState.DISARM:
             return "off";
-            break;
         case Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED:
           return ""
-          break;
     }
   }
 
-  sleep (ms) {
-    return new Promise(resolve => setTimeout(resolve, ms * 1000))
+  async getHmsID() {
+    if(this.hmsId == null || this.hmsId == 'undefined') {   
+      const response = await this.plugin.client.getPlanBindingListByUser()
+      this.hmsId = response.data[0].deviceList[0].device_id
+      return this.hmsId
+    } else return this.hmsId
   }
 }

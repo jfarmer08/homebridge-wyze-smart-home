@@ -13,47 +13,63 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   constructor (plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory)
 
-    this.getOnCharacteristic().on('set', this.set.bind(this))
+    // create a new Switch service
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Switch] Retrieving previous service for "${this.display_name} (${this.mac})"`)
+    this.wallSwitch = this.homeKitAccessory.getService(Service.Switch)
+    
+    if(!this.wallSwitch){ if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Switch] Adding service for "${this.display_name} (${this.mac})"`)
+    this.wallSwitch = this.homeKitAccessory.addService(Service.Switch)}
+
+    this.wallSwitch.getCharacteristic(Characteristic.On)
+      .onGet(this.handleOnGetWallSwitch.bind(this))
+      .onSet(this.handleOnSetWallSwitch.bind(this))
   }
 
-  updateCharacteristics (device) {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzeSwitch] Updating status of "${this.display_name}"`)
+  async updateCharacteristics (device) {
     if (device.conn_state === 0) {
-        this.getOnCharacteristic().updateValue(noResponse)
+      this.wallSwitch.getCharacteristic(Characteristic.On).updateValue(noResponse)
     } else {
-      this.wallSwitchGetIotProp()
-      this.getOnCharacteristic().updateValue((this.homeKitAccessory.context.device_params.switch_power) ? 1 : 0)
-    }
-  }
-
-  getSwitchService () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzeSwitch] Retrieving previous service for "${this.display_name}"`)
-    let service = this.homeKitAccessory.getService(Service.Switch)
-
-    if (!service) {
-      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzeSwitch] Adding service for "${this.display_name}"`)
-      service = this.homeKitAccessory.addService(Service.Switch)
-    }
-
-    return service
-  }
-
-  getOnCharacteristic () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzeSwitch] Fetching status of "${this.display_name}"`)
-    return this.getSwitchService().getCharacteristic(Characteristic.On)
-  }
-
-  async set (value, callback) {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzeSwitch] Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
-    try {
-      if ( this.single_press_type == SinglePressType.IOT){
-        await this.plugin.client.wallSwitchIot(this.mac,this.product_model, (value) ? true : false)
-      } else {
-        await this.plugin.client.wallSwitchPower(this.mac,this.product_model, (value) ? true : false)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Switch] Updating status of "${this.display_name} (${this.mac})"`)
+      const propertyList = await this.plugin.client.getIotProp(this.mac)
+      for (const prop of Object.keys(propertyList.data.props)) {
+        switch (prop) {
+          case 'iot_state':
+            this.iot_state = propertyList.data.props[prop]
+            break
+          case 'single_press_type':
+            this.single_press_type = propertyList.data.props[prop]
+            break
+          case 'double_press_type':
+            this.double_press_type = propertyList.data.props[prop]
+          case 'triple_press_type':
+            this.triple_press_type = propertyList.data.props[prop]
+            break
+          case 'long_press_type':
+            this.long_press_type = propertyList.data.props[prop]
+            break
+          case 'switch-power':
+            this.wallSwitch.getCharacteristic(Characteristic.On).updateValue(propertyList.data.props[prop])
+            this.switch_power = propertyList.data.props[prop]
+            break
+          case 'switch-iot':
+            this.switch_iot = propertyList.data.props[prop]
+            break
+        }
       }
-      callback()
-    } catch (e) {
-      callback(e)
+    }
+  }
+
+  async handleOnGetWallSwitch() {
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Switch] Getting Current State of "${this.display_name} (${this.mac})" : "${this.switch_power}"`)
+    return this.switch_power
+  }
+
+  async handleOnSetWallSwitch(value) {
+    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Switch] Target State Set "${this.display_name} (${this.mac})" : "${value}"`)
+    if (this.single_press_type == SinglePressType.IOT){
+      await this.plugin.client.wallSwitchIot(this.mac,this.product_model, (value) ? true : false)
+    } else {
+      await this.plugin.client.wallSwitchPower(this.mac,this.product_model, (value) ? true : false)
     }
   }
 }

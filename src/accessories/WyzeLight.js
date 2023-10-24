@@ -20,11 +20,13 @@ module.exports = class WyzeLight extends WyzeAccessory {
     this.getCharacteristic(Characteristic.ColorTemperature).on('set', this.setColorTemperature.bind(this))
   }
 
-  async updateCharacteristics () {
-    if (this.homeKitAccessory.context.conn_state === 0) {
+  async updateCharacteristics (device) {
+    if (device.conn_state === 0) {
+      if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Light] Updating status ${this.mac} (${this.display_name}) to noResponse`)
       this.getCharacteristic(Characteristic.On).updateValue(noResponse)
     } else {
-      this.getCharacteristic(Characteristic.On).updateValue(this.homeKitAccessory.context.device_params.switch_state)
+      if(this.plugin.config.logLevel == "debug") {this.plugin.log.info(`[Light] Updating status of ${this.mac} (${this.display_name})`)}
+      this.getCharacteristic(Characteristic.On).updateValue(device.device_params.switch_state)
 
       const propertyList = await this.plugin.client.getDevicePID(this.mac, this.product_model)
       for (const property of propertyList.data.property_list) {
@@ -42,11 +44,12 @@ module.exports = class WyzeLight extends WyzeAccessory {
   }
 
   updateBrightness (value) {
+    if(this.plugin.config.logLevel == "debug") {this.plugin.log.info(`[Light] Updating brightness of ${this.mac} (${this.display_name})`)}
     this.getCharacteristic(Characteristic.Brightness).updateValue(value)
   }
 
   updateColorTemp (value) {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Light] Setting color temperature for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value} (${this.plugin.client.kelvinToMired(value)})`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Light] Setting color temperature for ${this.mac} (${this.display_name}) to ${value} (${this.plugin.client.kelvinToMired(value)})`)
     this.getCharacteristic(Characteristic.ColorTemperature).updateValue(this.plugin.client.kelvinToMired(value))
   }
 
@@ -69,7 +72,7 @@ module.exports = class WyzeLight extends WyzeAccessory {
   }
 
   async setOn (value, callback) {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Light] Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Light] Setting power for ${this.mac} (${this.display_name}) to ${value}`)
 
     try {
       await this.plugin.client.lightPower(this.mac, this.product_model, (value) ? '1' : '0')
@@ -81,7 +84,7 @@ module.exports = class WyzeLight extends WyzeAccessory {
 
   async setBrightness (value, callback) {
     await this.sleep(250)
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Light] Setting brightness for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Light] Setting brightness for ${this.mac} (${this.display_name}) to ${value}`)
 
     try {
       await this.plugin.client.setBrightness(this.mac, this.product_model, value)
@@ -96,7 +99,7 @@ module.exports = class WyzeLight extends WyzeAccessory {
     await this.sleep(500)
     const floatValue = this.plugin.client.rangeToFloat(value, HOMEKIT_COLOR_TEMP_MIN, HOMEKIT_COLOR_TEMP_MAX)
     const wyzeValue = this.plugin.client.floatToRange(floatValue, WYZE_COLOR_TEMP_MIN, WYZE_COLOR_TEMP_MAX)
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Light] Setting color temperature for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value} (${wyzeValue})`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Light] Setting color temperature for ${this.mac} (${this.display_name}) to ${value} (${wyzeValue})`)
 
     try {
       await this.plugin.client.setColorTemperature(this.mac, this.product_model, wyzeValue)

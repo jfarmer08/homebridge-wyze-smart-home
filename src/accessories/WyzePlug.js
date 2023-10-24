@@ -12,7 +12,7 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   updateCharacteristics (device) {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzePlug] Updating status of "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Plug] Updating status of "${this.display_name} (${this.mac})"`)
     if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
@@ -21,11 +21,11 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   getOutletService () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzePlug] Retrieving previous service for "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Plug] Retrieving previous service for "${this.display_name} (${this.mac})"`)
     let service = this.homeKitAccessory.getService(Service.Outlet)
 
     if (!service) {
-      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzePlug] Adding service for "${this.display_name}"`)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Plug] Adding service for "${this.display_name} (${this.mac})"`)
       service = this.homeKitAccessory.addService(Service.Outlet)
     }
 
@@ -33,12 +33,12 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   getOnCharacteristic () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[WyzePlug] Fetching status of "${this.display_name}"`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Plug] Fetching status of "${this.display_name} (${this.mac})"`)
     return this.getOutletService().getCharacteristic(Characteristic.On)
   }
 
   async set (value, callback) {
-    if(this.plugin.config.logLevellll == "debug") this.plugin.log(`Setting power for ${this.homeKitAccessory.context.mac} (${this.homeKitAccessory.context.nickname}) to ${value}`)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Plug] Setting power for "${this.display_name} (${this.mac})" to ${value}`)
 
     try {
       await this.plugin.client.plugPower(this.mac, this.product_model, (value) ? '1' : '0')

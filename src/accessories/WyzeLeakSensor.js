@@ -1,12 +1,6 @@
 const { Service, Characteristic } = require('../types')
 const WyzeAccessory = require('./WyzeAccessory')
 
-const HOMEBRIDGE_SERVICE = Service.LeakSensor
-const HOMEBRIDGE_CHARACTERISTIC = Characteristic.LeakDetected
-const HOMEBRIDGE_BATTERY_SERVICE = Service.Battery
-const HOMEBRIDGE_BATTERY_CHARACTERISTIC = Characteristic.BatteryLevel
-const HOMEBRIDGE_IS_BATTERY_LOW_CHARACTERISTIC = Characteristic.StatusLowBattery
-
 const noResponse = new Error('No Response')
 noResponse.toString = () => { return noResponse.message }
 
@@ -20,64 +14,65 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getSensorService () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[LeakSensor] Retrieving previous service for "${this.display_name}"`)
-    let service = this.homeKitAccessory.getService(HOMEBRIDGE_SERVICE)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[LeakSensor] Retrieving previous service for "${this.display_name}"`)
+    let service = this.homeKitAccessory.getService(Service.LeakSensor)
 
     if (!service) {
-      if(this.plugin.config.logLevell == "debug") this.plugin.log(`[LeakSensor] Adding service for "${this.display_name}"`)
-      service = this.homeKitAccessory.addService(HOMEBRIDGE_SERVICE)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[LeakSensor] Adding service for "${this.display_name}"`)
+      service = this.homeKitAccessory.addService(Service.LeakSensor)
     }
 
     return service
   }
 
   getBatterySensorService () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[LeakSensorBattery] Retrieving previous service for "${this.display_name}"`)
-    let service = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[LeakSensorBattery] Retrieving previous service for "${this.display_name}"`)
+    let service = this.homeKitAccessory.getService(Service.Battery)
 
     if (!service) {
-      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[LeakSensorBattery] Adding service for "${this.display_name}"`)
-      service = this.homeKitAccessory.addService(HOMEBRIDGE_BATTERY_SERVICE)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[LeakSensorBattery] Adding service for "${this.display_name}"`)
+      service = this.homeKitAccessory.addService(Service.Battery)
     }
 
     return service
   }
 
   getIsBatteryLowSensorService () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[LeakSensorBatteryLow] Retrieving previous service for "${this.display_name}"`)
-    let service = this.homeKitAccessory.getService(HOMEBRIDGE_BATTERY_SERVICE)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[LeakSensorBatteryLow] Retrieving previous service for "${this.display_name}"`)
+    let service = this.homeKitAccessory.getService(Service.Battery)
 
     if (!service) {
-      if(this.plugin.config.logLevel == "debug") this.plugin.log(`[LeakSensorIsBatteryLow] Adding service for "${this.display_name}"`)
-      service = this.homeKitAccessory.addService(HOMEBRIDGE_BATTERY_SERVICE)
+      if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[LeakSensorIsBatteryLow] Adding service for "${this.display_name}"`)
+      service = this.homeKitAccessory.addService(Service.Battery)
     }
 
     return service
   }
 
   getOnCharacteristic () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[LeakSensor] Fetching status of "${this.display_name}"`)
-    return this.getSensorService().getCharacteristic(HOMEBRIDGE_CHARACTERISTIC)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[LeakSensor] Fetching status of "${this.display_name}"`)
+    return this.getSensorService().getCharacteristic(Characteristic.LeakDetected)
   }
 
   getBatteryCharacteristic () {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[LeakSensorBattery] Fetching status of "${this.display_name}"`)
-    return this.getBatterySensorService().getCharacteristic(HOMEBRIDGE_BATTERY_CHARACTERISTIC)
+    if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[LeakSensorBattery] Fetching status of "${this.display_name}"`)
+    return this.getBatterySensorService().getCharacteristic(Characteristic.BatteryLevel)
   }
 
   getIsBatteryLowCharacteristic () {
-    if(this.plugin.config.logLevel == "debug")  this.plugin.log(`[LeakSensorBattery] Fetching status of "${this.display_name}"`)
-    return this.getIsBatteryLowSensorService().getCharacteristic(HOMEBRIDGE_IS_BATTERY_LOW_CHARACTERISTIC)
+    if(this.plugin.config.logLevel == "debug")  this.plugin.log.info(`[LeakSensorBattery] Fetching status of "${this.display_name}"`)
+    return this.getIsBatteryLowSensorService().getCharacteristic(Characteristic.StatusLowBattery)
   }
 
   async updateCharacteristics (device) {
-    if(this.plugin.config.logLevel == "debug") this.plugin.log(`[LeakSensor] Updating status of "${this.display_name}"`)
     if (device.conn_state === 0) {
+      if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[LeakSensor] Updating status ${this.mac} (${this.display_name}) to noResponse`)
       this.getOnCharacteristic().updateValue(noResponse)
     } else {
-      this.getOnCharacteristic().updateValue(this.plugin.client.getDeviceState(device.device_params.ws_detect_state))
+      if(this.plugin.config.logLevel == "debug") {this.plugin.log.info(`[LeakSensor] Updating status of ${this.mac} (${this.display_name})`)}
+      this.getOnCharacteristic().updateValue(this.plugin.client.getLeakSensorState(device.device_params.ws_detect_state))
       this.getBatteryCharacteristic().updateValue(this.plugin.client.checkBatteryVoltage(device.device_params.voltage))
-      this.getIsBatteryLowCharacteristic().updateValue(device.device_params.is_low_battery)
+      this.getIsBatteryLowCharacteristic().updateValue(this.plugin.client.checkLowBattery(device.device_params.voltage))
     }
   }
 }

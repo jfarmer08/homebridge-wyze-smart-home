@@ -13,13 +13,6 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     constructor (plugin, homeKitAccessory) {
         super(plugin, homeKitAccessory)
 
-        // set accessory information
-        this.homeKitAccessory.getService(Service.Thermostat.AccessoryInformation)
-            .setCharacteristic(Characteristic.Manufacturer, 'Wyze')
-            .setCharacteristic(Characteristic.Model, 'Thermostat')
-            .setCharacteristic(Characteristic.SerialNumber, 'WYZE-THERMOSTAT');
-
-
         this.service = this.getThermostatService()
 
         // GET current heat/cool/off state
@@ -59,7 +52,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     }
 
     async handleCurrentTemperatureGet() {
-        if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] handleCurrentTemperatureGet status of "${this.display_name}" to ${this.thermostatTemperature}`)
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] handleCurrentTemperatureGet status of "${this.display_name}" to ${this.thermostatTemperature}`)
 
         return this.f2c(this.thermostatTemperature)
     }
@@ -73,18 +66,18 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     }
 
     async handleTargetTemperatureGet() {
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] handleTargetTemperatureGet Target Temp: " + this.c2f(this.getTargetTemperatureForSystemState()))
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] handleTargetTemperatureGet Target Temp: " + this.c2f(this.getTargetTemperatureForSystemState()))
         return this.getTargetTemperatureForSystemState()
     }
 
     async handleCoolingThresholdTemperatureGet() {
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] handleCoolingThresholdTemperatureGet Cool Setpoint: " + (this.thermostatCoolSetpoint))
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] handleCoolingThresholdTemperatureGet Cool Setpoint: " + (this.thermostatCoolSetpoint))
 
         return this.f2c(this.thermostatCoolSetpoint)
     }
 
     async handleHeatingThresholdTemperatureGet() {
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] handleHeatingThresholdTemperatureGet Heat Setpoint: " + (this.thermostatHeatSetpoint))
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] handleHeatingThresholdTemperatureGet Heat Setpoint: " + (this.thermostatHeatSetpoint))
 
         return this.f2c(this.thermostatHeatSetpoint)
     }
@@ -96,7 +89,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     // SET Methods for taking data from homekit and applying it to Wyze thermostat
     async handleTargetHeatingCoolingStateSet(value) {
         let targetState = this.getKey(this.Wyze2HomekitStates, value)
-        if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] handleTargetHeatingCoolingStateSet status of "${this.display_name}" to ${targetState} (${value})`)
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] handleTargetHeatingCoolingStateSet status of "${this.display_name}" to ${targetState} (${value})`)
 
         this.setHvacMode(targetState)
         this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState).updateValue(value);
@@ -109,26 +102,26 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
         let targetTemp = this.c2f(value)
         let currentStateNumber = this.Wyze2HomekitStates[this.thermostatModeSys]
 
-        if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] handleTargetTemperatureSet status of "${this.display_name}" to ${targetTemp} for mode ${this.thermostatModeSys} which is ${currentStateNumber}`)
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] handleTargetTemperatureSet status of "${this.display_name}" to ${targetTemp} for mode ${this.thermostatModeSys} which is ${currentStateNumber}`)
         
         // switch on current heating cooling state since we are NOT in auto mode
         switch(currentStateNumber) {
             case this.Wyze2HomekitStates.auto:
-                if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] WARNING: handleTargetTemperatureSet cannot set value since system is in AUTO`)
+                if(this.plugin.config.logLevel == "debug") this.plugin.log.warn(`[Thermostat] WARNING: handleTargetTemperatureSet cannot set value since system is in AUTO`)
                 break
             case this.Wyze2HomekitStates.cool:
-                if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] handleTargetTemperatureSet for COOLING`)
+                if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] handleTargetTemperatureSet for COOLING`)
                 this.handleCoolingThresholdTemperatureSet(value)
                 break
             case this.Wyze2HomekitStates.heat:
-                if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] handleTargetTemperatureSet for HEATING`)
+                if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] handleTargetTemperatureSet for HEATING`)
                 this.handleHeatingThresholdTemperatureSet(value)
                 break
             case this.Wyze2HomekitStates.off:
-                if(this.plugin.config.logLevell == "debug") this.plugin.log(`[Thermostat] WARNING: handleTargetTemperatureSet cannot set value since system is OFF`)
+                if(this.plugin.config.logLevell == "debug") this.plugin.log.warn(`[Thermostat] WARNING: handleTargetTemperatureSet cannot set value since system is OFF`)
                 break
             default:
-                if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] WARNING: handleTargetTemperatureSet cannot set value since system mode is UNDEFINED`)
+                if(this.plugin.config.logLevel == "debug") this.plugin.log.warn(`[Thermostat] WARNING: handleTargetTemperatureSet cannot set value since system mode is UNDEFINED`)
                 break
         }
 
@@ -138,7 +131,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     async handleCoolingThresholdTemperatureSet(value) {
         let c = this.clamp(value, 10, 35)
         let val = Math.round(this.c2f(c))
-        if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] handleCoolingThresholdTemperatureSet status of "${this.display_name}" to ${val}`)
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] handleCoolingThresholdTemperatureSet status of "${this.display_name}" to ${val}`)
 
         this.setCoolPoint(val)
         this.thermostatCoolSetpoint = val
@@ -148,7 +141,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     async handleHeatingThresholdTemperatureSet(value) {
         let c = this.clamp(value, 0, 25)
         let val = Math.round(this.c2f(c))
-        if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] handleHeatingThresholdTemperatureSet status of "${this.display_name}" to ${val}`)
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] handleHeatingThresholdTemperatureSet status of "${this.display_name}" to ${val}`)
 
         this.setHeatPoint(val)
         this.thermostatHeatSetpoint = val
@@ -157,32 +150,32 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
 
     async handleTemperatureDisplayUnitsSet(value) {
         // nothing for now, can use internally maybe
-        if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] handleTemperatureDisplayUnitsSet status of "${this.display_name}" to ${value}`)
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] handleTemperatureDisplayUnitsSet status of "${this.display_name}" to ${value}`)
         this.service.getCharacteristic(Characteristic.TemperatureDisplayUnits).updateValue(value)
     }
 
     // this is where we do the magic
     async updateCharacteristics (device) {
-        if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] Updating status of "${this.display_name}"`)
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] Updating status of "${this.display_name}"`)
 
         // have to wait for this call to finish before updating or we might get null data
         this.thermostatGetIotProp().then(this.fillData.bind(this))
     }
 
     fillData() {
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] Temp: " + (this.thermostatTemperature))
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] Temp: " + (this.thermostatTemperature))
 
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] Target Temp: " + this.c2f(this.getTargetTemperatureForSystemState()))
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] Target Temp: " + this.c2f(this.getTargetTemperatureForSystemState()))
         
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] Mode Sys: " + this.thermostatModeSys + " for " + this.Wyze2HomekitStates[this.thermostatModeSys])
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] Mode Sys: " + this.thermostatModeSys + " for " + this.Wyze2HomekitStates[this.thermostatModeSys])
 
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] Working State: " + this.thermostatWorkingState + " for " + this.Wyze2HomekitWorkingStates[this.thermostatWorkingState])
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] Working State: " + this.thermostatWorkingState + " for " + this.Wyze2HomekitWorkingStates[this.thermostatWorkingState])
 
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] Cool Setpoint: " + (this.thermostatCoolSetpoint))
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] Cool Setpoint: " + (this.thermostatCoolSetpoint))
 
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] Heat Setpoint: " + (this.thermostatHeatSetpoint))
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] Heat Setpoint: " + (this.thermostatHeatSetpoint))
 
-        if(this.plugin.config.logLevel == "debug") this.plugin.log("[Thermostat] Temp Units: " + this.Wyze2HomekitUnits[this.thermostatTempUnit])
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info("[Thermostat] Temp Units: " + this.Wyze2HomekitUnits[this.thermostatTempUnit])
     }
 
     getTargetTemperatureForSystemState() {
@@ -208,11 +201,11 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     }
 
     getThermostatService() {
-        if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] Retrieving previous service for "${this.display_name}"`)
+        if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] Retrieving previous service for "${this.display_name}"`)
         let service = this.homeKitAccessory.getService(Service.Thermostat)
     
         if (!service) {
-            if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] Adding service for "${this.display_name}"`)
+            if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] Adding service for "${this.display_name}"`)
           service = this.homeKitAccessory.addService(Service.Thermostat)
         }
     
@@ -252,11 +245,11 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
 
     clamp(number, min, max) {
         if (number < min) {
-            if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] Clamping value: ${number} to min ${min}`)
+            if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] Clamping value: ${number} to min ${min}`)
         }
 
         if (number > max) {
-            if(this.plugin.config.logLevel == "debug") this.plugin.log(`[Thermostat] Clamping value: ${number} to max ${max}`)
+            if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[Thermostat] Clamping value: ${number} to max ${max}`)
         }
 
         return Math.max(min, Math.min(number, max));

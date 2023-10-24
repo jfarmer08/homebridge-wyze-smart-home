@@ -25,7 +25,7 @@ After you have done that if you feel like my work has been valuable to you I wel
 - Tempeature Sensor (Status / Battery)
 - Leak Sensor (Status / Battery)
 - Lock (Battery / Door Status / Control)
-- Camera v2, v3, Outdoor Cam, PamCam (on/off)
+- Camera v2, v3, Outdoor Cam, PamCam (on/off, Siren, Floodlight, Garage Door)
 - Wall Switch
 - HMS
 - Thermostat
@@ -46,12 +46,13 @@ Use the settings UI in Homebridge Config UI X to configure your Wyze account, or
       "password": "YOUR_PASSWORD",
       "keyId": "",
       "apiKey": "",
-      "mfaCode": "YOUR_2FA_AUTHENTICATION_PIN",
+      "lowBatteryPercentage": 30,
       "filterDeviceTypeList": ["OutdoorPlug","Plug"],
       "filterByMacAddressList": ["MAC_ADDRESS_1","MAC_ADDRESS_2"],
       "garageDoorAccessory": ["MAC_ADDRESS_1","MAC_ADDRESS_2"],
       "spotLightAccessory": ["MAC_ADDRESS_1","MAC_ADDRESS_2"],
-      "alarmAccessory": ["MAC_ADDRESS_1","MAC_ADDRESS_2"]}
+      "alarmAccessory": ["MAC_ADDRESS_1","MAC_ADDRESS_2"],
+      "notificationAccessory": ["MAC_ADDRESS_1","MAC_ADDRESS_2"]}
   ]
 }
 ```
@@ -73,7 +74,7 @@ Once you have the API key, you can use it in your script to get the access token
 
 ### Optional Fields
 
-* **`refreshInterval`** &ndash; Defines how often the status of the devices will be polled in milliseconds (e.g., `"refreshInterval": 5000` will check the status of your devices' status every 5 seconds). Defaults to 10 seconds.
+* **`refreshInterval`** &ndash; Defines how often the status of the devices will be polled in milliseconds (e.g., `"refreshInterval": 60000` will check the status of your devices' status every 60 seconds). Defaults to 60 seconds.
 * **`phoneId`** &ndash; The phone id used by the Wyze App. This value is just found by intercepting your phone's traffic. If no `phoneId` is specified, a default value will be used.
 * **`logLevel`** &ndash; 
 * **`authApiKey`** &ndash; 
@@ -84,7 +85,8 @@ Once you have the API key, you can use it in your script to get the access token
 * **`sc`** &ndash; 
 * **`sv`** &ndash; 
 * **`persistPath`** &ndash; 
-* **`refreshTokenTimerEnabled`** &ndash; 
+* **`refreshTokenTimerEnabled`** &ndash;
+* **`lowBatteryPercentage`** &ndash; Defines when to show devices with low battery (e.g., `"lowBatteryPercentage": 30`). Defaults to 30%.
 
 ## Other Info
 

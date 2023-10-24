@@ -6,6 +6,12 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.37-alpha.5
+- Code Clean up
+- Add Switch to turn on/off Notifications
+- Correct Wall Switch Status
+- Adjust Logging
+
 ### v0.5.37-alpha.4
 - Add HL_A19C2
 - Code clean up

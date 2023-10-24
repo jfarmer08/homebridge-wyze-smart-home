@@ -74,6 +74,17 @@
     "default": "none",
     "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
   },
+  "lowBatteryPercentage": {
+    "title": "Low Battery Percentage",
+    "description": "Specify the Percentage of battery when consider low, default is 30%",
+    "type": "integer",
+    "default": 30,
+    "minimum": 10,
+    "maximum": 100,
+    "multipleOf": 1,
+    "required": false,
+    "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
+    },
   "garageDoorAccessory": {
     "type": "array",
     "title": "Wyze Garage Door Controller",
@@ -106,20 +117,28 @@
     "type": "string"},
     "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
     },
-  "excludeMacAddress": {
-  "title": "Exlcude by Mac Address",
-  "default": false,
-  "type": "boolean",
-  "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
-  },
-  "filterByMacAddressList": {
-  "type": "array",
-  "title": "",
-  "items": {
-  "title": "Device Mac Address",
-  "type": "string"},
-  "condition": {"functionBody": "return model.excludeMacAddress === true;"}
-  },
+  "notificationAccessory": {
+    "type": "array",
+    "title": "Wyze Notification Switch",
+    "items": {
+    "title": "Device Mac Address of camera you want to control the Notification Switch",
+    "type": "string"},
+    "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
+    },
+    "excludeMacAddress": {
+      "title": "Exlcude by Mac Address",
+      "default": false,
+      "type": "boolean",
+      "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
+    },
+    "filterByMacAddressList": {
+    "type": "array",
+    "title": "",
+    "items": {
+    "title": "Device Mac Address",
+    "type": "string"},
+    "condition": {"functionBody": "return model.excludeMacAddress === true;"}
+    },
   "excludedeviceType": {
   "title": "Exlcude Device by Type",
   "default": false,
