@@ -114,11 +114,11 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   async setBrightness(value, callback) {
-    await this.sleep(250)
+    await this.plugin.client.sleep(250)
     if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[MeshLight] Setting brightness for "${this.display_name} (${this.mac}) to ${value}"`)
 
     try {
-      await this.plugin.client.setBrightness(this.mac, this.product_model, value)
+      await this.plugin.client.setMeshBrightness(this.mac, this.product_model, value)
       callback()
     } catch (e) {
       callback(e)
@@ -126,13 +126,13 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   async setColorTemperature(value, callback) {
-    await this.sleep(500)
+    await this.plugin.client.sleep(500)
     let floatValue = this.plugin.client.rangeToFloat(value, HOMEKIT_COLOR_TEMP_MIN, HOMEKIT_COLOR_TEMP_MAX)
     let wyzeValue = this.plugin.client.floatToRange(floatValue, WYZE_COLOR_TEMP_MIN, WYZE_COLOR_TEMP_MAX)
     if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[MeshLight] Setting color temperature for "${this.display_name} (${this.mac}) to ${value} : ${wyzeValue}"`)
 
     try {
-      await this.plugin.client.setColorTemperature(this.mac, this.product_model, wyzeValue)
+      await this.plugin.client.setMeshColorTemperature(this.mac, this.product_model, wyzeValue)
       callback()
     } catch (e) {
       callback(e)
@@ -140,7 +140,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   async setHue(value, callback) {
-    await this.sleep(750)
+    await this.plugin.client.sleep(750)
     if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[MeshLight] Setting hue (color) for "${this.display_name} (${this.mac}) to ${value} : (H)S Values: ${value}, ${this.cache.saturation}"`)
 
     try {
@@ -161,7 +161,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   async setSaturation(value, callback) {
-    await this.sleep(1000)
+   await this.plugin.client.sleep(1000)
     if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[MeshLight] Setting saturation (color) for "${this.display_name} (${this.mac}) to ${value}"`)
     if(this.plugin.config.logLevel == "debug") this.plugin.log.info(`[MeshLight] H(S) Values: ${this.cache.saturation}, ${value}`)
 
