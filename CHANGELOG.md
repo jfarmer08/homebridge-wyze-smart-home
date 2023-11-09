@@ -6,6 +6,10 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.37-alpha.7
+- Remove Delay from MeshLight
+- Format Code
+
 ### v0.5.37-alpha.6
 - Correct Mesh Brightness
 - Correct camera offline

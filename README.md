@@ -63,7 +63,7 @@ Supported devices will be discovered and added to Homebridge automatically.
 
 * **`username`** &ndash; App email address
 * **`password`** &ndash; App password
-* **`apiKey`** &ndash;
+* **`apiKey`** &ndash; Navigate to [this portal](https://developer-api-console.wyze.com/)
 * **`keyId`** &ndash; Navigate to [this portal](https://developer-api-console.wyze.com/), and click Login to sign in to your Wyze account.
 Note: Ensure that the login info you are using matches the info you use when logLevel into the Wyze app.
 Once you’ve signed in, you’ll be automatically redirected back to the developer page.
@@ -76,16 +76,17 @@ Once you have the API key, you can use it in your script to get the access token
 
 * **`refreshInterval`** &ndash; Defines how often the status of the devices will be polled in milliseconds (e.g., `"refreshInterval": 60000` will check the status of your devices' status every 60 seconds). Defaults to 60 seconds.
 * **`phoneId`** &ndash; The phone id used by the Wyze App. This value is just found by intercepting your phone's traffic. If no `phoneId` is specified, a default value will be used.
-* **`logLevel`** &ndash; 
-* **`authApiKey`** &ndash; 
-* **`appName`** &ndash; 
-* **`appVer`** &ndash; 
-* **`appVersion`** &ndash; 
-* **`userAgent`** &ndash; 
-* **`sc`** &ndash; 
-* **`sv`** &ndash; 
-* **`persistPath`** &ndash; 
-* **`refreshTokenTimerEnabled`** &ndash;
+* **`logLevel`** &ndash; If no `logLevel` is specified, a default value will be used.
+* **`apiLogEnabled`** &ndash; If no `apiLogEnabled` is specified, a default value will be used.
+* **`authApiKey`** &ndash; If no `authApiKey` is specified, a default value will be used.
+* **`appName`** &ndash; If no `appName` is specified, a default value will be used.
+* **`appVer`** &ndash; If no `appVer` is specified, a default value will be used.
+* **`appVersion`** &ndash; If no `appVersion` is specified, a default value will be used.
+* **`userAgent`** &ndash; If no `userAgent` is specified, a default value will be used.
+* **`sc`** &ndash; If no `sc` is specified, a default value will be used.
+* **`sv`** &ndash; If no `sv` is specified, a default value will be used.
+* **`persistPath`** &ndash; If no `persistPath` is specified, a default value will be used.
+* **`refreshTokenTimerEnabled`** &ndash; If no `refreshTokenTimerEnabled` is specified, a default value will be used.
 * **`lowBatteryPercentage`** &ndash; Defines when to show devices with low battery (e.g., `"lowBatteryPercentage": 30`). Defaults to 30%.
 
 ## Other Info

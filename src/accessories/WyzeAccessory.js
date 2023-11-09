@@ -4,7 +4,7 @@ const { Service, Characteristic } = require('../types')
 const UPDATE_THROTTLE_MS = 1000
 
 module.exports = class WyzeAccessory {
-  constructor (plugin, homeKitAccessory) {
+  constructor(plugin, homeKitAccessory) {
     this.updating = false
     this.lastTimestamp = null
 
@@ -13,63 +13,63 @@ module.exports = class WyzeAccessory {
   }
 
   // Default Prop
-  get display_name ()             { return this.homeKitAccessory.displayName }
-  get mac ()                      { return this.homeKitAccessory.context.mac }
-  get product_type ()             { return this.homeKitAccessory.context.product_type }
-  get product_model ()            { return this.homeKitAccessory.context.product_model }
+  get display_name() { return this.homeKitAccessory.displayName }
+  get mac() { return this.homeKitAccessory.context.mac }
+  get product_type() { return this.homeKitAccessory.context.product_type }
+  get product_model() { return this.homeKitAccessory.context.product_model }
 
   // from thermostat
-  get thermostatTemperature()     { return this.homeKitAccessory.context.device_params?.temperature }
-  set thermostatTemperature(value){ this.homeKitAccessory.context.device_params.temperature = value }
+  get thermostatTemperature() { return this.homeKitAccessory.context.device_params?.temperature }
+  set thermostatTemperature(value) { this.homeKitAccessory.context.device_params.temperature = value }
 
-  get thermostatModeSys()         { return this.homeKitAccessory.context.device_params?.mode_sys }
-  set thermostatModeSys(value)    { this.homeKitAccessory.context.device_params.mode_sys = value }
+  get thermostatModeSys() { return this.homeKitAccessory.context.device_params?.mode_sys }
+  set thermostatModeSys(value) { this.homeKitAccessory.context.device_params.mode_sys = value }
 
-  get thermostatWorkingState()    { return this.homeKitAccessory.context.device_params?.working_state }
-  set thermostatWorkingState(value)    { this.homeKitAccessory.context.device_params.working_state = value }
+  get thermostatWorkingState() { return this.homeKitAccessory.context.device_params?.working_state }
+  set thermostatWorkingState(value) { this.homeKitAccessory.context.device_params.working_state = value }
 
-  get thermostatCoolSetpoint()    { return this.homeKitAccessory.context.device_params?.cool_sp }
-  set thermostatCoolSetpoint(value)    { this.homeKitAccessory.context.device_params.cool_sp = value}
+  get thermostatCoolSetpoint() { return this.homeKitAccessory.context.device_params?.cool_sp }
+  set thermostatCoolSetpoint(value) { this.homeKitAccessory.context.device_params.cool_sp = value }
 
-  get thermostatHeatSetpoint()    { return this.homeKitAccessory.context.device_params?.heat_sp }
-  set thermostatHeatSetpoint(value)    { this.homeKitAccessory.context.device_params.heat_sp = value }
+  get thermostatHeatSetpoint() { return this.homeKitAccessory.context.device_params?.heat_sp }
+  set thermostatHeatSetpoint(value) { this.homeKitAccessory.context.device_params.heat_sp = value }
 
-  get thermostatTempUnit()        { return this.homeKitAccessory.context.device_params?.temp_unit }
-  set thermostatTempUnit(value)        { this.homeKitAccessory.context.device_params.temp_unit = value }
+  get thermostatTempUnit() { return this.homeKitAccessory.context.device_params?.temp_unit }
+  set thermostatTempUnit(value) { this.homeKitAccessory.context.device_params.temp_unit = value }
 
-  get thermostatTime2Temp()        { return this.homeKitAccessory.context.device_params?.time2temp_val }
-  set thermostatTime2Temp(value)        { this.homeKitAccessory.context.device_params.time2temp_val = value }
+  get thermostatTime2Temp() { return this.homeKitAccessory.context.device_params?.time2temp_val }
+  set thermostatTime2Temp(value) { this.homeKitAccessory.context.device_params.time2temp_val = value }
 
-  get thermostatConnState()       { return this.homeKitAccessory.context.conn_state }
+  get thermostatConnState() { return this.homeKitAccessory.context.conn_state }
 
   /** Determines whether this accessory matches the given Wyze device */
-  matches (device) {
+  matches(device) {
     return this.mac === device.mac
   }
 
-  async update (device, timestamp) {
+  async update(device, timestamp) {
     const productType = device.product_type
 
     switch (productType) {
       case "Thermostat":
-      this.homeKitAccessory.context = {
-        mac: device.mac,
-        product_type: device.product_type,
-        product_model: device.product_model,
-        nickname: device.nickname,
-        conn_state: device.conn_state,
-        push_switch: device.push_switch,
-        device_params: device.device_params = {
-          temperature: this.thermostatTemperature,
-          cool_sp: this.thermostatCoolSetpoint,
-          heat_sp: this.thermostatHeatSetpoint,
-          working_state: this.thermostatWorkingState,
-          temp_unit: this.thermostatTempUnit,
-          mode_sys: this.thermostatModeSys,
-          time2temp_val: this.thermostatTime2Temp
-        }        
-      }
-      break
+        this.homeKitAccessory.context = {
+          mac: device.mac,
+          product_type: device.product_type,
+          product_model: device.product_model,
+          nickname: device.nickname,
+          conn_state: device.conn_state,
+          push_switch: device.push_switch,
+          device_params: device.device_params = {
+            temperature: this.thermostatTemperature,
+            cool_sp: this.thermostatCoolSetpoint,
+            heat_sp: this.thermostatHeatSetpoint,
+            working_state: this.thermostatWorkingState,
+            temp_unit: this.thermostatTempUnit,
+            mode_sys: this.thermostatModeSys,
+            time2temp_val: this.thermostatTime2Temp
+          }
+        }
+        break
       default:
         this.homeKitAccessory.context = {
           mac: device.mac,
@@ -91,7 +91,7 @@ module.exports = class WyzeAccessory {
       this.updateCharacteristics(device)
     }
   }
-  shouldUpdateCharacteristics (timestamp) {
+  shouldUpdateCharacteristics(timestamp) {
     if (this.updating) {
       return false
     }
@@ -103,10 +103,10 @@ module.exports = class WyzeAccessory {
     return true
   }
 
-  updateCharacteristics (device) {
+  updateCharacteristics(device) {
     //
   }
-  
+
   // Thermostat Methods
   async thermostatGetIotProp() {
     // Set Defaults
@@ -126,7 +126,7 @@ module.exports = class WyzeAccessory {
       for (const element of prop_key) {
         const prop = element;
         switch (prop) {
-          case 'temperature': 
+          case 'temperature':
             this.homeKitAccessory.context.device_params.temperature = Math.round(properties[prop])
             continue
           case 'cool_sp':
@@ -152,8 +152,8 @@ module.exports = class WyzeAccessory {
             continue
         }
       }
-        this.lastTimestamp = response.ts
-    } catch(e) {
+      this.lastTimestamp = response.ts
+    } catch (e) {
       this.plugin.log.error("Error in thermostat: " + e)
     } finally {
       this.updating = false
@@ -172,7 +172,7 @@ module.exports = class WyzeAccessory {
   }
   // auto, heat, cool
   async setHvacMode(value) {
-    const response =await this.plugin.client.thermostatSetIotProp(this.mac, this.product_model, 'mode_sys', value)
+    const response = await this.plugin.client.thermostatSetIotProp(this.mac, this.product_model, 'mode_sys', value)
     return response
   }
 
@@ -188,7 +188,7 @@ module.exports = class WyzeAccessory {
     return response
   }
 
-  sleep (ms) {
+  sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms * 1000))
   }
 }
