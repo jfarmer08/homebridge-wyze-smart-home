@@ -93,7 +93,7 @@
         "type": "array",
         "title": "Wyze Garage Door Controller",
         "items": {
-          "title": "Device Mac Address with accessory attached",
+          "title": "Device MAC Address with accessory attached",
           "type": "string"
         },
         "condition": {
@@ -104,7 +104,7 @@
         "type": "array",
         "title": "Wyze Camera Spotlight",
         "items": {
-          "title": "Device Mac Address with accessory attached",
+          "title": "Device MAC Address with accessory attached",
           "type": "string"
         },
         "condition": {
@@ -115,7 +115,7 @@
         "type": "array",
         "title": "Wyze Camera Floodlight",
         "items": {
-          "title": "Device Mac Address with accessory attached",
+          "title": "Device MAC Address with accessory attached",
           "type": "string"
         },
         "condition": {
@@ -126,7 +126,7 @@
         "type": "array",
         "title": "Wyze Camera Siren",
         "items": {
-          "title": "Device Mac Address with accessory attached",
+          "title": "Device MAC Address with accessory attached",
           "type": "string"
         },
         "condition": {
@@ -137,7 +137,7 @@
         "type": "array",
         "title": "Wyze Notification Switch",
         "items": {
-          "title": "Device Mac Address of camera you want to control the Notification Switch",
+          "title": "Device MAC Address of camera you want to control the Notification Switch",
           "type": "string"
         },
         "condition": {
@@ -145,7 +145,7 @@
         }
       },
       "excludeMacAddress": {
-        "title": "Exlcude by Mac Address",
+        "title": "Exclude by MAC Address",
         "default": false,
         "type": "boolean",
         "condition": {
@@ -156,7 +156,7 @@
         "type": "array",
         "title": "",
         "items": {
-          "title": "Device Mac Address",
+          "title": "Device MAC Address",
           "type": "string"
         },
         "condition": {
@@ -164,7 +164,7 @@
         }
       },
       "excludedeviceType": {
-        "title": "Exlcude Device by Type",
+        "title": "Exclude Device by Type",
         "default": false,
         "type": "boolean",
         "condition": {
@@ -172,7 +172,7 @@
         }
       },
       "filterDeviceTypeList": {
-        "title": "Exlcude Device by Type",
+        "title": "Exclude Device by Type",
         "type": "array",
         "uniqueItems": true,
         "items": {
