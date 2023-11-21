@@ -26,7 +26,7 @@
     "homebridge": ">=0.2.0"
   },
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^1.6.0",
     "colorsys": "^1.0.22",
     "crypto-js": "4.1.1",
     "md5": "^2.2.1",
