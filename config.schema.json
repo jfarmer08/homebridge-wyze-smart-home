@@ -5,113 +5,200 @@
   "headerDisplay": "Wyze plug-in for Homebridge. This is a custom component to allow control of various Wyze devices using the unofficial API. Please note this mimics the Wyze app and therefore access may be cut off at anytime. If you feel like my work has been valuable to you I welcome your support through Paypal. All funding goes back into product purchases. [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/AllenFarmer)",
   "footerDisplay": "For documentation please see GitHub repository",
   "schema": {
-  "type": "object",
-  "properties": {
-  "name": {
-  "title": "Plugin Name",
-  "description": "This name will appear in your Homebridge log",
-  "type": "string",
-  "default": "Wyze",
-  "required": true
-  },
-  "username": {
-  "title": "Username (E-Mail Address)",
-  "description": "The e-mail address used for your Wyze account",
-  "type": "string",
-  "default": "",
-  "required": true
-  },
-  "password": {
-  "title": "Password",
-  "description": "The password used for your Wyze account",
-  "type": "string",
-  "default": "",
-  "required": true
-  },
-  "keyId": {
-  "title": "Key ID",
-  "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com",
-  "type": "string",
-  "required": true
-  },
-  "apiKey": {
-  "title": "API Key",
-  "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com/)",
-  "type": "string",
-  "required": true
-  },
-  "mfaCode": {
-    "title": "One-time Password (for two-factor authentication)",
-    "description": "Only required for initial login if you have two-factor authentication enabled on your Wyze account",
-    "type": "string",
-    "default": "",
-    "required": false
-    },
-  "refreshInterval": {
-  "title": "Refresh Interval",
-  "description": "Specify the number of milliseconds to wait between updates, default is 60000 ms (60 seconds)",
-  "type": "integer",
-  "default": 60000,
-  "minimum": 60000,
-  "maximum": 180000,
-  "multipleOf": 10000,
-  "required": false
-  },
-  "entryExitDelay": {
-    "title": "HMS entry \\ exit delay",
-    "description": "Specify the number of seconds to wait for entry \\ exit delay, default 30 seconds",
-    "type": "integer",
-    "default": 30,
-    "minimum": 0,
-    "maximum": 180,
-    "multipleOf": 1,
-    "required": false
-    },
-  "showAdvancedOptions": {
-  "title": "Advance Options",
-  "default": false,
-  "type": "boolean"
-  },
-  "logging": {
-  "title": "Log Level",
-  "description": "Log Level info/debug/none",
-  "type": "string",
-  "default": "none",
-  "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
-  },
-  "excludeMacAddress": {
-  "title": "Exlcude by Mac Address",
-  "default": false,
-  "type": "boolean",
-  "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
-  },
-  "filterByMacAddressList": {
-  "type": "array",
-  "title": "",
-  "items": {
-  "title": "Device Mac Address",
-  "type": "string"},
-  "condition": {"functionBody": "return model.excludeMacAddress === true;"}
-  },
-  "excludedeviceType": {
-  "title": "Exlcude Device by Type",
-  "default": false,
-  "type": "boolean",
-  "condition": {"functionBody": "return model.showAdvancedOptions === true;"}
-  },
-  "filterDeviceTypeList": {
-  "title": "Exlcude Device by Type",
-  "type": "array",
-  "uniqueItems": true,
-  "items": {
-  "title": "Device Type",
-  "type": "string",
-  "enum": ["OutdoorPlug","Plug","Light","MeshLight","LightStrip","ContactSensor","MotionSensor","Lock","TemperatureHumidity","LeakSensor","Camera","Common","S1Gateway"]
-  },
-  "condition": {"functionBody": "return model.excludedeviceType === true;"}
-  }
-  }
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Plugin Name",
+        "description": "This name will appear in your Homebridge log",
+        "type": "string",
+        "default": "Wyze",
+        "required": true
+      },
+      "username": {
+        "title": "Username (E-Mail Address)",
+        "description": "The e-mail address used for your Wyze account",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      "password": {
+        "title": "Password",
+        "description": "The password used for your Wyze account",
+        "type": "string",
+        "default": "",
+        "required": true
+      },
+      "keyId": {
+        "title": "Key ID",
+        "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com",
+        "type": "string",
+        "required": true
+      },
+      "apiKey": {
+        "title": "API Key",
+        "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com/)",
+        "type": "string",
+        "required": true
+      },
+      "refreshInterval": {
+        "title": "Refresh Interval",
+        "description": "Specify the number of milliseconds to wait between updates, default is 60000 ms (60 seconds)",
+        "type": "integer",
+        "default": 60000,
+        "minimum": 60000,
+        "maximum": 180000,
+        "multipleOf": 10000,
+        "required": false
+      },
+      "hms": {
+        "title": "HMS Subscription",
+        "description": "Enable if HMS Subscription is current",
+        "type": "boolean",
+        "default": false
+      },
+      "showAdvancedOptions": {
+        "title": "Advance Options",
+        "default": false,
+        "type": "boolean"
+      },
+      "apiLogEnabled": {
+        "title": "Enable API logging",
+        "description": "",
+        "type": "boolean",
+        "default": false
+      },
+      "logLevel": {
+        "title": "Log Level",
+        "description": "Log Level info/debug/none",
+        "type": "string",
+        "default": "none",
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "lowBatteryPercentage": {
+        "title": "Low Battery Percentage",
+        "description": "Specify the Percentage of battery when consider low, default is 30%",
+        "type": "integer",
+        "default": 30,
+        "minimum": 10,
+        "maximum": 100,
+        "multipleOf": 1,
+        "required": false,
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "garageDoorAccessory": {
+        "type": "array",
+        "title": "Wyze Garage Door Controller",
+        "items": {
+          "title": "Device MAC Address with accessory attached",
+          "type": "string"
+        },
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "spotLightAccessory": {
+        "type": "array",
+        "title": "Wyze Camera Spotlight",
+        "items": {
+          "title": "Device MAC Address with accessory attached",
+          "type": "string"
+        },
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "floodLightAccessory": {
+        "type": "array",
+        "title": "Wyze Camera Floodlight",
+        "items": {
+          "title": "Device MAC Address with accessory attached",
+          "type": "string"
+        },
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "sirenAccessory": {
+        "type": "array",
+        "title": "Wyze Camera Siren",
+        "items": {
+          "title": "Device MAC Address with accessory attached",
+          "type": "string"
+        },
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "notificationAccessory": {
+        "type": "array",
+        "title": "Wyze Notification Switch",
+        "items": {
+          "title": "Device MAC Address of camera you want to control the Notification Switch",
+          "type": "string"
+        },
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "excludeMacAddress": {
+        "title": "Exclude by MAC Address",
+        "default": false,
+        "type": "boolean",
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "filterByMacAddressList": {
+        "type": "array",
+        "title": "",
+        "items": {
+          "title": "Device MAC Address",
+          "type": "string"
+        },
+        "condition": {
+          "functionBody": "return model.excludeMacAddress === true;"
+        }
+      },
+      "excludedeviceType": {
+        "title": "Exclude Device by Type",
+        "default": false,
+        "type": "boolean",
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
+      "filterDeviceTypeList": {
+        "title": "Exclude Device by Type",
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "title": "Device Type",
+          "type": "string",
+          "enum": [
+            "OutdoorPlug",
+            "Plug",
+            "Light",
+            "MeshLight",
+            "LightStrip",
+            "ContactSensor",
+            "MotionSensor",
+            "Lock",
+            "TemperatureHumidity",
+            "LeakSensor",
+            "Camera",
+            "Common"
+          ]
+        },
+        "condition": {
+          "functionBody": "return model.excludedeviceType === true;"
+        }
+      }
+    }
   },
   "form": null,
   "display": null
-  }
+}

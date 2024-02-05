@@ -1,0 +1,4 @@
+[submodule "src/wyze-api"]
+	path = src/wyze-api
+	url = https://github.com/jfarmer08/wyze-api
+	branch = main

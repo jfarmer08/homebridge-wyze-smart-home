@@ -6,6 +6,46 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.39
+- Support for WyzeCamOutdoor2
+
+### v0.5.38
+- Resolve issues with API changes from Wyze (2024-02-01) by @hgoscenski in #3
+- Format Code
+
+### v0.5.37-alpha.7
+- Remove Delay from MeshLight
+- Format Code
+
+### v0.5.37-alpha.6
+- Correct Mesh Brightness
+- Correct camera offline
+
+### v0.5.37-alpha.5
+- Code Clean up
+- Add Switch to turn on/off Notifications
+- Correct Wall Switch Status
+- Adjust Logging
+
+### v0.5.37-alpha.4
+- Add HL_A19C2
+- Code clean up
+
+### v0.5.37-alpha.3
+- Fix issue with Light
+
+### v0.5.37-alpha.2
+- Add check box for HMS Subscription
+- Removed MFA Support
+- Correct Door State for Garage Door
+- Code clean up
+
+### v0.5.37-alpha.1
+- Support for Siren
+- Support for Garage Door
+- Support for Spotlight
+- Support for Floodlight
+
 ### v0.5.36
 - Add HL_Cam3p to Approved List
 - Require API Key and KeyID
@@ -19,8 +59,10 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ### v0.5.33
 - Updated Thermostat behavior for single mode usage (heat/cool) (Thanks https://github.com/carTloyal123) - https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/111
+
 ### v0.5.32
 - Improve logging - https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/117
+
 ### v0.5.31
 - Improve Camera support - https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/92
 
