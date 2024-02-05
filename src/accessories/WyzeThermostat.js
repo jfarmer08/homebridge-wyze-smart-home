@@ -46,6 +46,9 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
       .onSet(this.handleCoolingThresholdTemperatureSet.bind(this))
 
     // Heating setpoint handlers - needed for system in Auto
+    // Default max value is 25, but we set it higher here for Wyze thermostats
+    // Shoutout to @fennix for the idea here: 
+    // https://github.com/tomas-kulhanek/homebridge-fenix-v24-wifi/blob/30a016ea125a5cfd439106472c1afd11f0ad6a2f/src/platformAccessory.ts#L65
     this.service
       .getCharacteristic(Characteristic.HeatingThresholdTemperature)
       .onGet(this.handleHeatingThresholdTemperatureGet.bind(this))
