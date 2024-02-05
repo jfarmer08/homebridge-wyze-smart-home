@@ -53,6 +53,14 @@
     {
       "type": "paypal",
       "url": "https://paypal.me/AllenFarmer"
+    },
+    {
+      "type": "venmo",
+      "url": "https://venmo.com/u/Allen-Farmer"
+    },
+    {
+      "type": "cashApp",
+      "url": "https://cash.app/$Jfamer08"
     }
   ]
 }
