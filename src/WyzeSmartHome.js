@@ -3,7 +3,7 @@ const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorMod
   TemperatureHumidityModels, LockModels, MotionSensorModels, ContactSensorModels, LightModels,
   LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels } = require('./enums')
 
-const WyzeAPI = require('./wyze-api/src')
+const WyzeAPI = require('wyze-api')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
@@ -224,7 +224,7 @@ module.exports = class WyzeSmartHome {
       try {
         this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
       } catch (error) {
-        this.log.error(`[${device.product_type}] Error removing accessory ${homeKitAccessory.context.nickname} (MAC: ${homeKitAccessory.context.mac}) : ${error}`)
+        this.log.error(`Error removing accessory ${homeKitAccessory.context.nickname} (MAC: ${homeKitAccessory.context.mac}) : ${error}`)
       }
     }
   }

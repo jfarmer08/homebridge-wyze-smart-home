@@ -5,6 +5,9 @@ If you like what I have done here and want to help I would recommend that you fi
 After you have done that if you feel like my work has been valuable to you I welcome your support through Paypal. All funding goes back into product purchases. I would love to support all products that Wyze has under their portfolio along with other product that gets rebranded for other companies.
 
 ## Releases
+### v0.5.38
+- Resolve issues with API changes from Wyze (2024-02-01) by @hgoscenski in #3
+- Format Code
 
 ### v0.5.37-alpha.7
 - Remove Delay from MeshLight
