@@ -29,7 +29,7 @@
   "dependencies": {
     "axios": "^1.5.0",
     "colorsys": "^1.0.22",
-    "crypto-js": "4.1.1",
+    "crypto-js": "4.2.0",
     "md5": "^2.2.1",
     "utf8": "^3.0.0",
     "uuid": "8.3.2",
