@@ -7,7 +7,6 @@
   "scripts": {
     "lint": "eslint src/**.js --max-warnings=0",
     "start": "homebridge -I -P . -U ~/Work/homebridge-wyze-api"
-
   },
   "keywords": [
     "homebridge-plugin",
@@ -34,20 +33,19 @@
     "utf8": "^3.0.0",
     "uuid": "8.3.2",
     "uuid-by-string": "4.0.0",
-    "base64-js":  "1.5.1",
+    "base64-js": "1.5.1",
     "moment": "2.29.4",
     "urllib": "3.18.0",
     "querystring": "0.2.1",
     "inherits": "2.0.4",
     "wyze-api": "^1.1.1"
-    },
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "eslint": "^8.17.0",
     "eslint-config-standard": "^17.0.0",
     "homebridge": "1.6.1"
-
   },
   "funding": [
     {

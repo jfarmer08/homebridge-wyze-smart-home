@@ -15,6 +15,14 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
+    // Set Defaults
+    this.thermostatTemperature = 69.0;
+    this.thermostatCoolSetpoint = 65.0;
+    this.thermostatHeatSetpoint = 72.0;
+    this.thermostatModeSys = "auto";
+    this.thermostatWorkingState = "idle";
+    this.thermostatTempUnit = "F";
+
     this.service = this.getThermostatService();
 
     // GET current heat/cool/off state
@@ -222,22 +230,114 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   }
 
   getThermostatService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
-        `[Thermostat] Retrieving previous service for "${this.display_name}"`
-      );
+    this.debugLog("Retrieving previous service for " + this.display_name);
     let service = this.homeKitAccessory.getService(Service.Thermostat);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
-          `[Thermostat] Adding service for "${this.display_name}"`
-        );
+      this.debugLog("Adding service for " + this.display_name);
       service = this.homeKitAccessory.addService(Service.Thermostat);
     }
 
     return service;
   }
+
+  // Wyze API Calls to GET info
+  // Thermostat Methods
+  async thermostatGetIotProp() {
+
+    let response;
+    try {
+      response = await this.plugin.client.thermostatGetIotProp(this.mac);
+      let properties = response.data.props;
+      const prop_key = Object.keys(properties);
+      for (const element of prop_key) {
+        const prop = element;
+        switch (prop) {
+          case "temperature":
+            this.thermostatTemperature = Math.round(properties[prop]);
+            continue;
+          case "cool_sp":
+            this.thermostatCoolSetpoint = Math.round(properties[prop]);
+            continue;
+          case "heat_sp":
+            this.thermostatHeatSetpoint = Math.round(properties[prop]);
+            continue;
+          case "working_state":
+            this.thermostatWorkingState = properties[prop];
+            continue;
+          case "temp_unit":
+            this.thermostatTempUnit = properties[prop];
+            continue;
+          case "mode_sys":
+            this.thermostatModeSys = properties[prop];
+            continue;
+          
+            // can check for "iot_state" and "time2temp_val" in future if needed
+        }
+      }
+      this.lastTimestamp = response.ts;
+    } catch (e) {
+      this.plugin.log.error("Error in thermostat: " + e);
+    } finally {
+      return response;
+    }
+  }
+
+  // IOT API Calls
+
+  async setPreset(value) {
+    const response = await this.plugin.client.thermostatSetIotProp(
+      this.mac,
+      this.product_model,
+      "config_scenario",
+      value
+    );
+    return response;
+  }
+  // auto, on, off / / ['auto', 'circ', 'on']
+  async setFanMode(value) {
+    const response = await this.plugin.client.thermostatSetIotProp(
+      this.mac,
+      this.product_model,
+      "fan_mode",
+      value
+    );
+    return response;
+  }
+  // auto, heat, cool
+  async setHvacMode(value) {
+    const response = await this.plugin.client.thermostatSetIotProp(
+      this.mac,
+      this.product_model,
+      "mode_sys",
+      value
+    );
+    return response;
+  }
+
+  // heat stop point
+  async setHeatPoint(value) {
+    const response = await this.plugin.client.thermostatSetIotProp(
+      this.mac,
+      this.product_model,
+      "heat_sp",
+      value
+    );
+    return response;
+  }
+
+  // Cool stop point
+  async setCoolPoint(value) {
+    const response = await this.plugin.client.thermostatSetIotProp(
+      this.mac,
+      this.product_model,
+      "cool_sp",
+      value
+    );
+    return response;
+  }
+
+  // Helper Functions
 
   debugLog(message) {
     if (this.plugin.config.logLevel == "debug")
