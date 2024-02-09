@@ -3,7 +3,8 @@ const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorMod
   TemperatureHumidityModels, LockModels, MotionSensorModels, ContactSensorModels, LightModels,
   LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels } = require('./enums')
 
-const WyzeAPI = require('wyze-api')
+const WyzeAPI = require('wyze-api') // Uncomment for Release
+//const WyzeAPI = require('./wyze-api/src') // Comment for Release
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
