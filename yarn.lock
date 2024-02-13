@@ -2366,10 +2366,10 @@
   "resolved" "https://registry.npmjs.org/wrappy/-/wrappy-1.0.2.tgz"
   "version" "1.0.2"
 
-"wyze-api@1.1.3":
-  "integrity" "sha512-9oIIn77n9IuOXpt8lDQmhvZLYy7AeRoIMzBOqHFwsfbsX5u1gMcVIx6ZqLXbIVAn/WHnDyznkoOp0/Mzx8WQWQ=="
-  "resolved" "https://registry.npmjs.org/wyze-api/-/wyze-api-1.1.3.tgz"
-  "version" "1.1.3"
+"wyze-api@1.1.4":
+  "integrity" "sha512-BpsYbXpkniYyX4Ysb+6OhjdUed43ZTZHXpCU7xnjlsO1TprDEkwwoMH4NAU0z8x4Vujakuv+oL8E5pRTmN4Shw=="
+  "resolved" "https://registry.npmjs.org/wyze-api/-/wyze-api-1.1.4.tgz"
+  "version" "1.1.4"
   dependencies:
     "@ptkdev/logger" "1.8.0"
     "axios" "1.5.0"
