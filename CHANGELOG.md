@@ -7,8 +7,12 @@ If you like what I have done here and want to help I would recommend that you fi
 After you have done that if you feel like my work has been valuable to you I welcome your support through Paypal or other means. 
 
 ## Releases
+
+### v0.5.44
+- Increase Wyze-api Version 1.0.5
+
 ### v0.5.43
-- Increase Wyze-api Version
+- Increase Wyze-api Version 1.0.6
 
 ### v0.5.42
 ### v0.5.41

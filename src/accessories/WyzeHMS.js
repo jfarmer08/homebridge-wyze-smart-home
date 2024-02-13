@@ -43,7 +43,7 @@ module.exports = class WyzeHMS extends WyzeAccessory {
         this.plugin.log.info(
           `[HMS] Updating status ${this.mac} (${this.display_name}) to noResponse`
         );
-      this.getCharacteristic(Characteristic.On).updateValue(noResponse);
+      this.getCharacteristic(Characteristic.SecuritySystemCurrentState).updateValue(noResponse);
     } else {
       if (this.plugin.config.logLevel == "debug")
         this.plugin.log.info(
