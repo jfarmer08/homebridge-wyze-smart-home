@@ -74,8 +74,8 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   updateBrightness(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MeshLight] Updating brightness record for "${this.display_name} (${
           this.mac
         }) to ${value}: ${JSON.stringify(value)}"`
@@ -86,8 +86,8 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   updateColorTemp(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MeshLight] Updating color Temp record for "${this.display_name} (${
           this.mac
         }) to ${value}: ${JSON.stringify(
@@ -102,8 +102,8 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   updateColor(value) {
     // Convert a Hex color from Wyze into the HSL values recognized by HomeKit.
     const hslValue = colorsys.hex2Hsv(value);
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MeshLight] Updating color record for "${this.display_name} (${
           this.mac
         }) to ${value}: ${JSON.stringify(hslValue)}"`
@@ -141,8 +141,8 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   async setOn(value, callback) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MeshLight] Setting power for "${this.display_name} (${this.mac})" to ${value}"`
       );
 
@@ -159,8 +159,8 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   async setBrightness(value, callback) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MeshLight] Setting brightness for "${this.display_name} (${this.mac}) to ${value}"`
       );
 
@@ -188,8 +188,8 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
         WYZE_COLOR_TEMP_MIN,
         WYZE_COLOR_TEMP_MAX
       );
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[MeshLight] Setting color temperature for "${this.display_name} (${this.mac}) to ${value} : ${wyzeValue}"`
         );
 
@@ -208,8 +208,8 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   async setHue(value, callback) {
     if (value != null) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[MeshLight] Setting hue (color) for "${this.display_name} (${this.mac}) to ${value} : (H)S Values: ${value}, ${this.cache.saturation}"`
         );
 
@@ -222,8 +222,8 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
             100
           );
           hexValue = hexValue.replace("#", "");
-          if (this.plugin.config.logLevel == "debug")
-            this.plugin.log.info(hexValue);
+          if (this.plugin.config.pluginLoggingEnabled)
+            this.plugin.log(hexValue);
           await this.plugin.client.setMeshHue(
             this.mac,
             this.product_model,
@@ -242,12 +242,12 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   async setSaturation(value, callback) {
     if (value != null) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[MeshLight] Setting saturation (color) for "${this.display_name} (${this.mac}) to ${value}"`
         );
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[MeshLight] H(S) Values: ${this.cache.saturation}, ${value}`
         );
 

@@ -65,13 +65,16 @@
         "title": "Enable API logging",
         "description": "",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
       },
-      "logLevel": {
-        "title": "Log Level",
-        "description": "Log Level info/debug/none",
-        "type": "string",
-        "default": "none",
+      "pluginLoggingEnabled": {
+        "title": "Enable Plugin logging",
+        "description": "",
+        "type": "boolean",
+        "default": false,
         "condition": {
           "functionBody": "return model.showAdvancedOptions === true;"
         }

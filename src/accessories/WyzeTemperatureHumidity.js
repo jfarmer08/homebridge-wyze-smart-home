@@ -17,15 +17,15 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getHumiditySensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Humidity] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.HumiditySensor);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Humidity] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.HumiditySensor);
@@ -35,15 +35,15 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getTemperatureSensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Temperature] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.TemperatureSensor);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Temperature] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.TemperatureSensor);
@@ -53,15 +53,15 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getBatterySensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Temperature Humidity] [Battery] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.Battery);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Temperature Humidity] [Battery] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
@@ -71,15 +71,15 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getIsBatteryLowSensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Temperature Humidity] [Low Battery] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.Battery);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Temperature Humidity] [Low Battery] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
@@ -89,8 +89,8 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getHumidityCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Temperature Humidity] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getHumiditySensorService().getCharacteristic(
@@ -99,8 +99,8 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getTemperatureCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Temperature Humidity] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getTemperatureSensorService().getCharacteristic(
@@ -109,8 +109,8 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getBatteryCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Temperature Humidity] [Battery] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getBatterySensorService().getCharacteristic(
@@ -119,8 +119,8 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   getIsBatteryLowCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Temperature Humidity] [Low Battery] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getIsBatteryLowSensorService().getCharacteristic(
@@ -129,8 +129,8 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   }
 
   updateCharacteristics(device) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Temperature Humidity] Updating status of "${this.display_name} (${this.mac})"`
       );
     if (device.conn_state === 0) {

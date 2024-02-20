@@ -30,14 +30,14 @@ module.exports = class WyzeLight extends WyzeAccessory {
 
   async updateCharacteristics(device) {
     if (device.conn_state === 0) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Light] Updating status ${this.mac} (${this.display_name}) to noResponse`
         );
       this.getCharacteristic(Characteristic.On).updateValue(noResponse);
     } else {
-      if (this.plugin.config.logLevel == "debug") {
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled) {
+        this.plugin.log(
           `[Light] Updating status of ${this.mac} (${this.display_name})`
         );
       }
@@ -64,8 +64,8 @@ module.exports = class WyzeLight extends WyzeAccessory {
   }
 
   updateBrightness(value) {
-    if (this.plugin.config.logLevel == "debug") {
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled) {
+      this.plugin.log(
         `[Light] Updating brightness of ${this.mac} (${this.display_name})`
       );
     }
@@ -73,8 +73,8 @@ module.exports = class WyzeLight extends WyzeAccessory {
   }
 
   updateColorTemp(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Light] Setting color temperature for ${this.mac} (${
           this.display_name
         }) to ${value} (${this.plugin.client.kelvinToMired(value)})`
@@ -103,8 +103,8 @@ module.exports = class WyzeLight extends WyzeAccessory {
   }
 
   async setOn(value, callback) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Light] Setting power for ${this.mac} (${this.display_name}) to ${value}`
       );
 
@@ -122,8 +122,8 @@ module.exports = class WyzeLight extends WyzeAccessory {
 
   async setBrightness(value, callback) {
     await this.sleep(250);
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Light] Setting brightness for ${this.mac} (${this.display_name}) to ${value}`
       );
 
@@ -152,8 +152,8 @@ module.exports = class WyzeLight extends WyzeAccessory {
       WYZE_COLOR_TEMP_MIN,
       WYZE_COLOR_TEMP_MAX
     );
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Light] Setting color temperature for ${this.mac} (${this.display_name}) to ${value} (${wyzeValue})`
       );
 
