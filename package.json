@@ -1,6 +1,6 @@
 {
   "name": "homebridge-wyze-smart-home",
-  "version": "0.5.44",
+  "version": "0.5.45",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
@@ -39,7 +39,7 @@
     "urllib": "3.18.0",
     "querystring": "0.2.1",
     "inherits": "2.0.4",
-    "wyze-api": "1.1.5"
+    "wyze-api": "1.1.7"
     },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.27.1",

@@ -8,6 +8,10 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v0.5.45
+- Increase Wyze-api Verison 1.0.7
+- Update Logging
+
 ### v0.5.44
 - Increase Wyze-api Version 1.0.5
 

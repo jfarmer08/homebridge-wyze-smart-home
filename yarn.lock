@@ -2366,10 +2366,10 @@ wrappy@1:
   resolved "https://registry.npmjs.org/wrappy/-/wrappy-1.0.2.tgz"
   integrity sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==
 
-wyze-api@1.1.5:
-  version "1.1.5"
-  resolved "https://registry.npmjs.org/wyze-api/-/wyze-api-1.1.5.tgz"
-  integrity sha512-tg7QxAcA5XuVorOSWDu+W9HGeArRHKwHuSw11kZkheos4g3TouHtLggpI9Ia6ajOnLyv85zb5eyhO2vlMVwBXA==
+wyze-api@1.1.7:
+  version "1.1.7"
+  resolved "https://registry.npmjs.org/wyze-api/-/wyze-api-1.1.7.tgz"
+  integrity sha512-iay3OIgyx5zVpQMmKDXrwdbeec5srK6x1Ia3w2hkAYstpVKlAncI/yU27CDjgyd+uiDtXezPuD4Y3NDa5K050g==
   dependencies:
     "@ptkdev/logger" "1.8.0"
     axios "1.5.0"

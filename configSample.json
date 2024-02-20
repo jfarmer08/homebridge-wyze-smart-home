@@ -28,6 +28,8 @@
             "apiKey": "apiKey",
             "refreshInterval": 20000,
             "entryExitDelay": 30,
+            "apiLogEnabled": true,
+            "pluginLoggingEnabled": true,
             "showAdvancedOptions": true,
             "excludeMacAddress": false,
             "excludedeviceType": true,
