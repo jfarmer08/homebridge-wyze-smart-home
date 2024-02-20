@@ -16,15 +16,15 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   getSensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MotionSensor] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.MotionSensor);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[MotionSensor] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.MotionSensor);
@@ -34,15 +34,15 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   getBatterySensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MotionSensorBattery] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.Battery);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[MotionSensorBattery] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
@@ -52,15 +52,15 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   getIsBatteryLowSensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MotionSensorIsBatteryLow] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.Battery);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[MotionSensorIsBatteryLow] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
@@ -70,8 +70,8 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   getOnCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MotionSensor] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getSensorService().getCharacteristic(
@@ -80,8 +80,8 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   getBatteryCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MotionSensorBattery] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getBatterySensorService().getCharacteristic(
@@ -90,8 +90,8 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   getIsBatteryLowCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MotionSensorBattery] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getIsBatteryLowSensorService().getCharacteristic(
@@ -100,8 +100,8 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   updateCharacteristics(device) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[MotionSensor] Updating status of "${this.display_name} (${this.mac})"`
       );
     if (device.conn_state === 0) {

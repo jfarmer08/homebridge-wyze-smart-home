@@ -16,15 +16,15 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getSensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[ContactSensor] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.ContactSensor);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[ContactSensor] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.ContactSensor);
@@ -34,14 +34,14 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getBatterySensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[ContactSensor] [Battery] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.Battery);
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[ContactSensor] [Battery] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
@@ -51,15 +51,15 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getIsBatteryLowSensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[ContactSensor] [Low Battery] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.Battery);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[ContactSensor] [Low Battery] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
@@ -69,8 +69,8 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getOnCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[ContactSensor] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getSensorService().getCharacteristic(
@@ -79,8 +79,8 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getBatteryCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[ContactSensor] [Battery] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getBatterySensorService().getCharacteristic(
@@ -89,8 +89,8 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   getIsBatteryLowCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[ContactSensor] [Low Battery] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getIsBatteryLowSensorService().getCharacteristic(
@@ -100,21 +100,21 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
 
   updateCharacteristics(device) {
     if (device.conn_state === 0) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[ContactSensor] Updating status "${this.display_name} (${this.mac}) to noResponse"`
         );
       this.getOnCharacteristic().updateValue(noResponse);
     } else {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[ContactSensor] Updating status of ${this.mac} (${this.display_name})`
         );
       this.getOnCharacteristic().updateValue(
         device.device_params.open_close_state
       );
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[ContactSensor] [Battery] Updating status of ${this.mac} (${
             this.display_name
           }) : ${this.plugin.client.checkBatteryVoltage(
@@ -124,8 +124,8 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
       this.getBatteryCharacteristic().updateValue(
         this.plugin.client.checkBatteryVoltage(device.device_params.voltage)
       );
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[ContactSensor] [Low Battery] Updating status of ${this.mac} (${
             this.display_name
           }) : ${this.plugin.client.checkLowBattery(

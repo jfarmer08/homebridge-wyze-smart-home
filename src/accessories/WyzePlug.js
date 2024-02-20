@@ -14,8 +14,8 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   updateCharacteristics(device) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Plug] Updating status of "${this.display_name} (${this.mac})"`
       );
     if (device.conn_state === 0) {
@@ -26,15 +26,15 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   getOutletService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Plug] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     let service = this.homeKitAccessory.getService(Service.Outlet);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Plug] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.Outlet);
@@ -44,16 +44,16 @@ module.exports = class WyzePlug extends WyzeAccessory {
   }
 
   getOnCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Plug] Fetching status of "${this.display_name} (${this.mac})"`
       );
     return this.getOutletService().getCharacteristic(Characteristic.On);
   }
 
   async set(value, callback) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Plug] Setting power for "${this.display_name} (${this.mac})" to ${value}`
       );
 

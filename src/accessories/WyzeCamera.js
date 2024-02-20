@@ -12,15 +12,15 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     super(plugin, homeKitAccessory);
 
     if (Object.values(enums.CameraModels).includes(this.product_model)) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Camera] [Privacy Switch] Retrieving previous service for ${this.mac} (${this.display_name})`
         );
       this.privacySwitch = this.homeKitAccessory.getService(this.display_name);
 
       if (!this.privacySwitch) {
-        if (this.plugin.config.logLevel == "debug")
-          this.plugin.log.info(
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(
             `[Camera] [Privacy Switch] Adding service for ${this.mac} (${this.display_name})`
           );
         this.privacySwitch = this.homeKitAccessory.addService(
@@ -40,16 +40,16 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           this.plugin.config.garageDoorAccessory?.find((d) => d === this.mac)
         ) {
           this.garageDoorEnabled = true;
-          if (this.plugin.config.logLevel == "debug")
-            this.plugin.log.info(
+          if (this.plugin.config.pluginLoggingEnabled)
+            this.plugin.log(
               `[Camera] [Garage Door] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
           this.garageDoorService = this.homeKitAccessory.getService(
             Service.GarageDoorOpener
           );
           if (!this.garageDoorService) {
-            if (this.plugin.config.logLevel == "debug")
-              this.plugin.log.info(
+            if (this.plugin.config.pluginLoggingEnabled)
+              this.plugin.log(
                 `[Camera] [Garage Door] Adding service for ${this.mac} (${this.display_name})`
               );
             this.garageDoorService = this.homeKitAccessory.addService(
@@ -74,8 +74,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           this.plugin.config.spotLightAccessory?.find((d) => d === this.mac)
         ) {
           this.spotLightEnabled = true;
-          if (this.plugin.config.logLevel == "debug")
-            this.plugin.log.info(
+          if (this.plugin.config.pluginLoggingEnabled)
+            this.plugin.log(
               `[Camera] [Spotlight Switch] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
 
@@ -83,8 +83,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
             Service.Lightbulb
           );
           if (!this.spotLightService) {
-            if (this.plugin.config.logLevel == "debug")
-              this.plugin.log.info(
+            if (this.plugin.config.pluginLoggingEnabled)
+              this.plugin.log(
                 `[Camera] [Spotlight] Adding service for ${this.mac} (${this.display_name})`
               );
             this.spotLightService = this.homeKitAccessory.addService(
@@ -103,8 +103,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           this.plugin.config.floodLightAccessory?.find((d) => d === this.mac)
         ) {
           this.floodLightEnabled = true;
-          if (this.plugin.config.logLevel == "debug")
-            this.plugin.log.info(
+          if (this.plugin.config.pluginLoggingEnabled)
+            this.plugin.log(
               `[Camera] [FloodLight] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
 
@@ -112,8 +112,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
             Service.Lightbulb
           );
           if (!this.floodLightService) {
-            if (this.plugin.config.logLevel == "debug")
-              this.plugin.log.info(
+            if (this.plugin.config.pluginLoggingEnabled)
+              this.plugin.log(
                 `[Camera] [FloodLight] Adding service for ${this.mac} (${this.display_name})`
               );
             this.floodLightService = this.homeKitAccessory.addService(
@@ -130,16 +130,16 @@ module.exports = class WyzeCamera extends WyzeAccessory {
         }
         if (this.plugin.config.sirenAccessory?.find((d) => d === this.mac)) {
           this.sirenEnabled = true;
-          if (this.plugin.config.logLevel == "debug")
-            this.plugin.log.info(
+          if (this.plugin.config.pluginLoggingEnabled)
+            this.plugin.log(
               `[Camera] [Siren] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
           this.sirenSwitch = this.homeKitAccessory.getService(
             this.display_name + " Siren"
           );
           if (!this.sirenSwitch) {
-            if (this.plugin.config.logLevel == "debug")
-              this.plugin.log.info(
+            if (this.plugin.config.pluginLoggingEnabled)
+              this.plugin.log(
                 `[Camera] [Alarm Switch] Adding service for ${this.mac} (${this.display_name})`
               );
             this.sirenSwitch = this.homeKitAccessory.addService(
@@ -157,16 +157,16 @@ module.exports = class WyzeCamera extends WyzeAccessory {
         if (
           this.plugin.config.notificationAccessory?.find((d) => d === this.mac)
         ) {
-          if (this.plugin.config.logLevel == "debug")
-            this.plugin.log.info(
+          if (this.plugin.config.pluginLoggingEnabled)
+            this.plugin.log(
               `[Camera] [Notification] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
           this.notificationSwitch = this.homeKitAccessory.getService(
             this.display_name + " Notification"
           );
           if (!this.notificationSwitch) {
-            if (this.plugin.config.logLevel == "debug")
-              this.plugin.log.info(
+            if (this.plugin.config.pluginLoggingEnabled)
+              this.plugin.log(
                 `[Camera] [Notification] Adding service for ${this.mac} (${this.display_name})`
               );
             this.notificationSwitch = this.homeKitAccessory.addService(
@@ -187,16 +187,16 @@ module.exports = class WyzeCamera extends WyzeAccessory {
 
   async updateCharacteristics(device) {
     if (device.conn_state === 0) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Camera] Updating status ${this.mac} (${this.display_name}) to noResponse`
         );
       this.privacySwitch
         .getCharacteristic(Characteristic.On)
         .updateValue(noResponse);
       if (this.plugin.config.sirenAccessory?.find((d) => d === device.mac)) {
-        if (this.plugin.config.logLevel == "debug")
-          this.plugin.log.info(
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(
             `[Camera] [Siren] Updating status ${this.mac} (${this.display_name}) to noResponse`
           );
         this.sirenSwitch
@@ -204,8 +204,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           .updateValue(noResponse);
       }
       if (this.plugin.config.floodLightAccessory?.find((d) => d === this.mac)) {
-        if (this.plugin.config.logLevel == "debug")
-          this.plugin.log.info(
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(
             `[Camera] [FloodLight] Updating status of ${this.mac} (${this.display_name}) to noResponse`
           );
         this.floodLightService
@@ -213,8 +213,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           .updateValue(noResponse);
       }
       if (this.plugin.config.spotLightAccessory?.find((d) => d === this.mac)) {
-        if (this.plugin.config.logLevel == "debug")
-          this.plugin.log.info(
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(
             `[Camera] [SpotLight] Updating status of ${this.mac} (${this.display_name}) to noResponse`
           );
         this.spotLightService
@@ -222,8 +222,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           .updateValue(noResponse);
       }
       if (this.plugin.config.garageDoorAccessory?.find((d) => d === this.mac)) {
-        if (this.plugin.config.logLevel == "debug")
-          this.plugin.log.info(
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(
             `[Camera] [Garage Door] Updating status of ${this.mac} (${this.display_name}) to noResponse`
           );
         this.garageDoorService
@@ -233,8 +233,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       if (
         this.plugin.config.notificationAccessory?.find((d) => d === this.mac)
       ) {
-        if (this.plugin.config.logLevel == "debug")
-          this.plugin.log.info(
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(
             `[Camera] [Notification] Updating status of ${this.mac} (${this.display_name}) to noResponse`
           );
         this.notificationSwitch
@@ -255,8 +255,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
                   (d) => d === this.mac
                 )
               ) {
-                if (this.plugin.config.logLevel == "debug") {
-                  this.plugin.log.info(
+                if (this.plugin.config.pluginLoggingEnabled) {
+                  this.plugin.log(
                     `[Camera] [Notification] Updating status of ${this.mac} (${this.display_name})`
                   );
                 }
@@ -267,8 +267,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
               }
               break;
             case "P3":
-              if (this.plugin.config.logLevel == "debug")
-                this.plugin.log.info(
+              if (this.plugin.config.pluginLoggingEnabled)
+                this.plugin.log(
                   `[Camera] [Privacy] Updating status of ${this.mac} (${this.display_name})`
                 );
               this.on = property.value;
@@ -283,8 +283,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
               if (
                 this.plugin.config.sirenAccessory?.find((d) => d === this.mac)
               ) {
-                if (this.plugin.config.logLevel == "debug") {
-                  this.plugin.log.info(
+                if (this.plugin.config.pluginLoggingEnabled) {
+                  this.plugin.log(
                     `[Camera] [Siren] Updating status of ${this.mac} (${this.display_name})`
                   );
                 }
@@ -300,8 +300,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
                   (d) => d === this.mac
                 )
               ) {
-                if (this.plugin.config.logLevel == "debug") {
-                  this.plugin.log.info(
+                if (this.plugin.config.pluginLoggingEnabled) {
+                  this.plugin.log(
                     `[Camera] [SpotLight] Updating status of ${this.mac} (${this.display_name})`
                   );
                 }
@@ -317,8 +317,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
                   (d) => d === this.mac
                 )
               ) {
-                if (this.plugin.config.logLevel == "debug") {
-                  this.plugin.log.info(
+                if (this.plugin.config.pluginLoggingEnabled) {
+                  this.plugin.log(
                     `[Camera] [Garage Door] Updating status of ${this.mac} (${this.display_name})`
                   );
                 }
@@ -331,8 +331,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           }
         }
       } else {
-        if (this.plugin.config.logLevel == "debug")
-          this.plugin.log.info(
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(
             `[Camera] [Privacy] Updating status of ${this.mac} (${this.display_name})`
           );
         this.power_switch = device.device_params.power_switch;
@@ -344,8 +344,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async getGarageCurrentState() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera Garage Door] Getting Current State for ${this.mac} (${this.display_name} : ${this.garageDoor})`
       );
     let currentValue;
@@ -357,8 +357,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async getGarageTargetState() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera Garage Door] Getting Target State for ${this.mac} (${this.display_name} : ${this.garageDoor})`
       );
 
@@ -372,8 +372,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async handleObstructionDetectedGet() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera Garage Door] Getting ObstructionState for ${this.mac} (${this.display_name})`
       );
 
@@ -384,8 +384,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     if (this.cameraAccessoryAttached()) {
       this.powerSwitch = this.on;
     } else this.powerSwitch = this.power_switch;
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [Privacy] Getting Current State for ${this.mac} (${this.display_name} : ${this.powerSwitch})`
       );
     if (this.powerSwitch === "undefined" || this.powerSwitch == null) {
@@ -396,8 +396,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async handleOnGetSpotlight() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [SpotLight] Getting Current State for ${this.mac} (${this.display_name} : ${this.floodLight})`
       );
     if (this.floodLight === "undefined" || this.floodLight == null) {
@@ -406,8 +406,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async handleOnGetFloodlight() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [FloodLight] Getting Current State for ${this.mac} (${this.display_name} : ${this.floodLight})`
       );
     if (this.floodLight === "undefined" || this.floodLight == null) {
@@ -416,8 +416,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async handleOnGetAlarmSwitch() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [Siren] Getting Current State for ${this.mac} (${this.display_name} : ${this.siren})`
       );
     if (this.siren === "undefined" || this.siren == null) {
@@ -426,8 +426,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async getNotification() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [Notification] Getting Current State for ${this.mac} (${this.display_name} : ${this.notification})`
       );
     if (this.notification === "undefined" || this.notification == null) {
@@ -436,8 +436,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async handleOnSetSpotlight(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [SpotLight] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
     this.plugin.client.cameraSpotLight(
@@ -448,8 +448,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async handleOnSetFloodlight(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [FloodLight] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
     this.plugin.client.cameraFloodLight(
@@ -460,8 +460,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async handleOnSetPrivacySwitch(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [Privacy] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
     this.plugin.client.cameraPrivacy(
@@ -472,8 +472,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async handleOnSetAlarmSwitch(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [Siren] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
     this.plugin.client.cameraSiren(
@@ -484,8 +484,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async setNotification(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera] [Notification] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
     this.plugin.client.cameraNotifications(
@@ -496,8 +496,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async setGarageTargetState(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[Camera Garage Door] Setting Target State for ${this.mac} (${this.display_name}) to ${value}`
       );
     this.plugin.client.garageDoor(this.mac, this.product_model);
