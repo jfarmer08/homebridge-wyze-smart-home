@@ -16,14 +16,14 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
     super(plugin, homeKitAccessory);
 
     // create a new Switch service
-    if (this.plugin.config.logLevel == "debug")
+    if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
         `[Switch] Retrieving previous service for "${this.display_name} (${this.mac})"`
       );
     this.wallSwitch = this.homeKitAccessory.getService(Service.Switch);
 
     if (!this.wallSwitch) {
-      if (this.plugin.config.logLevel == "debug")
+      if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
           `[Switch] Adding service for "${this.display_name} (${this.mac})"`
         );
@@ -42,7 +42,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
         .getCharacteristic(Characteristic.On)
         .updateValue(noResponse);
     } else {
-      if (this.plugin.config.logLevel == "debug")
+      if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
           `[Switch] Updating status of "${this.display_name} (${this.mac})"`
         );
@@ -78,7 +78,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   }
 
   async handleOnGetWallSwitch() {
-    if (this.plugin.config.logLevel == "debug")
+    if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
         `[Switch] Getting Current State of "${this.display_name} (${this.mac})" : "${this.switch_power}"`
       );
@@ -86,7 +86,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   }
 
   async handleOnSetWallSwitch(value) {
-    if (this.plugin.config.logLevel == "debug")
+    if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
         `[Switch] Target State Set "${this.display_name} (${this.mac})" : "${value}"`
       );

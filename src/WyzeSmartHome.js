@@ -3,7 +3,8 @@ const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorMod
   TemperatureHumidityModels, LockModels, MotionSensorModels, ContactSensorModels, LightModels,
   LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels } = require('./enums')
 
-const WyzeAPI = require('wyze-api')
+const WyzeAPI = require('wyze-api') // Uncomment for Release
+//const WyzeAPI = require('./wyze-api/src') // Comment for Release
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
@@ -51,7 +52,6 @@ module.exports = class WyzeSmartHome {
       keyId: this.config.keyId,
       apiKey: this.config.apiKey,
       //Logging
-      logLevel: this.config.logLevel,
       apiLogEnabled: this.config.apiLogEnabled,
       //App Config
       lowBatteryPercentage: this.config.lowBatteryPercentage,
@@ -95,14 +95,14 @@ module.exports = class WyzeSmartHome {
   }
 
   async refreshDevices() {
-    if (this.config.logLevel == "debug") this.log('Refreshing devices...')
+    if (this.config.pluginLoggingEnabled) this.log('Refreshing devices...')
 
     try {
       const objectList = await this.client.getObjectList()
       const timestamp = objectList.ts
       const devices = objectList.data.device_list
 
-      if (this.config.logLevel == "debug") this.log(`Found ${devices.length} device(s)`)
+      if (this.config.pluginLoggingEnabled) this.log(`Found ${devices.length} device(s)`)
       await this.loadDevices(devices, timestamp)
     } catch (e) {
       this.log.error(`Error getting devices: ${e}`)
@@ -122,7 +122,7 @@ module.exports = class WyzeSmartHome {
 
     const removedAccessories = this.accessories.filter(a => !foundAccessories.includes(a))
     if (removedAccessories.length > 0) {
-      if (this.config.logLevel == "info" || "debug") this.log(`Removing ${removedAccessories.length} device(s)`)
+      if (this.config.pluginLoggingEnabled) this.log(`Removing ${removedAccessories.length} device(s)`)
       const removedHomeKitAccessories = removedAccessories.map(a => a.homeKitAccessory)
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, removedHomeKitAccessories)
     }
@@ -133,15 +133,15 @@ module.exports = class WyzeSmartHome {
   async loadDevice(device, timestamp) {
     const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model, device.mac, device.nickname)
     if (!accessoryClass) {
-      if (this.config.logLevel == "debug") this.log(`[${device.product_type}] Unsupported device type: (Name: ${device.nickname}) (MAC: ${device.mac}) (Model: ${device.product_model})`)
+      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Unsupported device type: (Name: ${device.nickname}) (MAC: ${device.mac}) (Model: ${device.product_model})`)
       return
     }
     else if (this.config.filterByMacAddressList?.find(d => d === device.mac) || this.config.filterDeviceTypeList?.find(d => d === device.product_type)) {
-      if (this.config.logLevel == "debug") this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is in the Ignore Device list`)
+      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is in the Ignore Device list`)
       return
     }
     else if (device.product_type == 'S1Gateway' && this.config.hms == false) {
-      if (this.config.logLevel == "debug") this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is not enabled`)
+      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is not enabled`)
       return
     }
 
@@ -152,7 +152,7 @@ module.exports = class WyzeSmartHome {
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
-      if (this.config.logLevel == "debug") this.log(`[${device.product_type}] Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
+      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
     accessory.update(device, timestamp)
 

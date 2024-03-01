@@ -16,15 +16,15 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getSensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[LeakSensor] Retrieving previous service for "${this.display_name}"`
       );
     let service = this.homeKitAccessory.getService(Service.LeakSensor);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[LeakSensor] Adding service for "${this.display_name}"`
         );
       service = this.homeKitAccessory.addService(Service.LeakSensor);
@@ -34,15 +34,15 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getBatterySensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[LeakSensorBattery] Retrieving previous service for "${this.display_name}"`
       );
     let service = this.homeKitAccessory.getService(Service.Battery);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[LeakSensorBattery] Adding service for "${this.display_name}"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
@@ -52,15 +52,15 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getIsBatteryLowSensorService() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[LeakSensorBatteryLow] Retrieving previous service for "${this.display_name}"`
       );
     let service = this.homeKitAccessory.getService(Service.Battery);
 
     if (!service) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[LeakSensorIsBatteryLow] Adding service for "${this.display_name}"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
@@ -70,8 +70,8 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getOnCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[LeakSensor] Fetching status of "${this.display_name}"`
       );
     return this.getSensorService().getCharacteristic(
@@ -80,8 +80,8 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getBatteryCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[LeakSensorBattery] Fetching status of "${this.display_name}"`
       );
     return this.getBatterySensorService().getCharacteristic(
@@ -90,8 +90,8 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getIsBatteryLowCharacteristic() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[LeakSensorBattery] Fetching status of "${this.display_name}"`
       );
     return this.getIsBatteryLowSensorService().getCharacteristic(
@@ -101,14 +101,14 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
 
   async updateCharacteristics(device) {
     if (device.conn_state === 0) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[LeakSensor] Updating status ${this.mac} (${this.display_name}) to noResponse`
         );
       this.getOnCharacteristic().updateValue(noResponse);
     } else {
-      if (this.plugin.config.logLevel == "debug") {
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled) {
+        this.plugin.log(
           `[LeakSensor] Updating status of ${this.mac} (${this.display_name})`
         );
       }

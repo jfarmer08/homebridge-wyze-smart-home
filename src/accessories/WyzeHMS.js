@@ -11,8 +11,8 @@ module.exports = class WyzeHMS extends WyzeAccessory {
     super(plugin, homeKitAccessory);
 
     // create a new Security System service
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[HMS] Retrieving previous service for "${this.display_name}"`
       );
     this.securityService = this.homeKitAccessory.getService(
@@ -20,8 +20,8 @@ module.exports = class WyzeHMS extends WyzeAccessory {
     );
 
     if (!this.securityService) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(`[HMS] Adding service for "${this.display_name}"`);
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(`[HMS] Adding service for "${this.display_name}"`);
       this.securityService = this.homeKitAccessory.addService(
         Service.SecuritySystem
       );
@@ -39,14 +39,14 @@ module.exports = class WyzeHMS extends WyzeAccessory {
 
   async updateCharacteristics(device) {
     if (device.conn_state === 0) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[HMS] Updating status ${this.mac} (${this.display_name}) to noResponse`
         );
-      this.getCharacteristic(Characteristic.On).updateValue(noResponse);
+      this.getCharacteristic(Characteristic.SecuritySystemCurrentState).updateValue(noResponse);
     } else {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[HMS] Updating Current State of "${this.display_name}"`
         );
       await this.getHmsID();
@@ -61,8 +61,8 @@ module.exports = class WyzeHMS extends WyzeAccessory {
   }
 
   async handleSecuritySystemCurrentStateGet() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[HMS] Getting Current State of "${this.display_name}" : "${this.hmsStatus}"`
       );
     if (this.hmsStatus === "undefined" || this.hmsStatus == null) {
@@ -71,8 +71,8 @@ module.exports = class WyzeHMS extends WyzeAccessory {
   }
 
   async handleSecuritySystemTargetStateGet() {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[HMS] Getting Target State of "${this.display_name}" : "${this.hmsStatus}"`
       );
     if (this.hmsStatus === "undefined" || this.hmsStatus == null) {
@@ -81,8 +81,8 @@ module.exports = class WyzeHMS extends WyzeAccessory {
   }
 
   async handleSecuritySystemTargetStateSet(value) {
-    if (this.plugin.config.logLevel == "debug")
-      this.plugin.log.info(
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
         `[HMS] Target State Set "${
           this.display_name
         }" : "${this.convertHomeKitStateToHmsState(value)}"`

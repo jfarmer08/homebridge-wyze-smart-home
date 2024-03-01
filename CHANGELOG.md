@@ -1,10 +1,29 @@
 # homebridge-wyze-smart-home
-# Funding   [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/AllenFarmer)
+
+# Funding   [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/AllenFarmer) [![Donate](https://img.shields.io/badge/Donate-Venmo-blue.svg?style=flat-square&maxAge=2592000)](https://venmo.com/u/Allen-Farmer) [![Donate](https://img.shields.io/badge/Donate-Cash_App-blue.svg?style=flat-square&maxAge=2592000)](https://cash.app/$Jfamer08)
+
 If you like what I have done here and want to help I would recommend that you firstly look into supporting Homebridge. None of this could happen without them.
 
-After you have done that if you feel like my work has been valuable to you I welcome your support through Paypal. All funding goes back into product purchases. I would love to support all products that Wyze has under their portfolio along with other product that gets rebranded for other companies.
+After you have done that if you feel like my work has been valuable to you I welcome your support through Paypal or other means. 
 
 ## Releases
+
+### v0.5.45
+- Increase Wyze-api Verison 1.0.7
+- Update Logging
+
+### v0.5.44
+- Increase Wyze-api Version 1.0.5
+
+### v0.5.43
+- Increase Wyze-api Version 1.0.6
+
+### v0.5.42
+### v0.5.41
+- Increase version of wyze-api 1.0.3
+
+### v0.5.40
+- Correct Outdoor Cam 2 model number
 
 ### v0.5.39
 - Support for WyzeCamOutdoor2

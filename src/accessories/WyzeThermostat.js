@@ -75,8 +75,8 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   }
 
   async handleCurrentTemperatureGet() {
-    this.debugLog("handleCurrentTemperatureGet status of " + this.display_name + " to " + this.thermostatTemperature);
 
+    this.debugLog("handleCurrentTemperatureGet status of " + this.display_name + " to " + this.thermostatTemperature);
     return this.f2c(this.thermostatTemperature);
   }
 
@@ -89,20 +89,18 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   }
 
   async handleTargetTemperatureGet() {
-    this.debugLog("handleTargetTemperatureGet Target Temp: " + this.c2f(this.getTargetTemperatureForSystemState()));
 
+    this.debugLog("handleTargetTemperatureGet Target Temp: " + this.c2f(this.getTargetTemperatureForSystemState()));
     return this.getTargetTemperatureForSystemState();
   }
 
   async handleCoolingThresholdTemperatureGet() {
     this.debugLog("handleCoolingThresholdTemperatureGet Cool Setpoint: " + this.thermostatCoolSetpoint);
-
     return this.f2c(this.thermostatCoolSetpoint);
   }
 
   async handleHeatingThresholdTemperatureGet() {
     this.debugLog("handleHeatingThresholdTemperatureGet Heat Setpoint: " + this.thermostatHeatSetpoint);
-
     return this.f2c(this.thermostatHeatSetpoint);
   }
 
@@ -397,15 +395,15 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
 
   clamp(number, min, max) {
     if (number < min) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Thermostat] Clamping value: ${number} to min ${min}`
         );
     }
 
     if (number > max) {
-      if (this.plugin.config.logLevel == "debug")
-        this.plugin.log.info(
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
           `[Thermostat] Clamping value: ${number} to max ${max}`
         );
     }
