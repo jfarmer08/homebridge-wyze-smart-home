@@ -338,7 +338,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   // Helper Functions
 
   debugLog(message) {
-    if (this.plugin.config.logLevel == "debug")
+    if (this.plugin.config.logLevel == "debug" && this.plugin.config.pluginLoggingEnabled)
       this.plugin.log.info(
         this.colors.CYAN + "[Thermostat] " + message + this.colors.RESET
       );
