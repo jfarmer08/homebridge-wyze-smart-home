@@ -6,7 +6,7 @@
   "main": "src/index.js",
   "scripts": {
     "lint": "eslint src/**.js --max-warnings=0",
-    "start": "homebridge -I -P . -U . > homebrfidge.log"
+    "start": "homebridge -I -P . -U . > homebridge.log"
   },
   "keywords": [
     "homebridge-plugin",
