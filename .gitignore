@@ -9,9 +9,9 @@ persist/
 package-lock.json
 config.json
 backups/
-accessories/.cachedAccessories.bak
 *.bak
-accessories/cachedAccessories
 testing/
 accessories/uiAccessoriesLayout.json
 bun.lockb
+accessories/*cachedAccessories*
+homebridge.log
