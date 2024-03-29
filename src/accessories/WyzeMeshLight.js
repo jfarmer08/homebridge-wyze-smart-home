@@ -63,7 +63,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
             if (property.value != null) this.updateBrightness(property.value);
             break;
           case WYZE_API_COLOR_TEMP_PROPERTY:
-            if (property.value != null) this.updateColorTemp(property.value);
+            if (property.value != null && property.value !== "0") this.updateColorTemp(property.value);
             break;
           case WYZE_API_COLOR_PROPERTY:
             if (property.value != null && property.value !== "0") this.updateColor(property.value);
