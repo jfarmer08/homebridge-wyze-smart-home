@@ -227,7 +227,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
           await this.plugin.client.setMeshHue(
             this.mac,
             this.product_model,
-            this.hexValue
+            hexValue
           );
           this.cacheUpdated = false;
         } else {
