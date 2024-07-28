@@ -323,9 +323,6 @@ module.exports = class WyzeCamera extends WyzeAccessory {
                   );
                 }
                 this.garageDoor = property.value;
-                this.garageDoorService
-                  .getCharacteristic(Characteristic.CurrentDoorState)
-                  .updateValue(this.garageDoor);
               }
               break;
           }
