@@ -323,9 +323,6 @@ module.exports = class WyzeCamera extends WyzeAccessory {
                   );
                 }
                 this.garageDoor = property.value;
-                this.garageDoorService
-                  .getCharacteristic(Characteristic.CurrentDoorState)
-                  .updateValue(this.garageDoor);
               }
               break;
           }
@@ -501,7 +498,6 @@ module.exports = class WyzeCamera extends WyzeAccessory {
         `[Camera Garage Door] Setting Target State for ${this.mac} (${this.display_name}) to ${value}`
       );
     this.plugin.client.garageDoor(this.mac, this.product_model);
-    await this.sleep(1000);
     if (value == 0) {
       this.garageDoorService
         .getCharacteristic(Characteristic.CurrentDoorState)
