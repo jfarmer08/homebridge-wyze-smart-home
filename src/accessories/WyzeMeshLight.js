@@ -77,7 +77,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
     if (
         property.value != null &&
         property.value !== "0" &&
-        property.value != "undefi"
+        property.value !== "undefi"
     ) {
       return true;
     } else {
