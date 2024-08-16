@@ -3,6 +3,7 @@ const CameraModels = {
   WyzeCamV2: "WYZEC1-JZ",
   WyzeCamV3: "WYZE_CAKP2JFUS",
   WyzeCamV3Pro: "HL_CAM3P",
+  WyzeCamV4: "HL_CAM4",
   WyzeCamFloodlight: "WYZE_CAKP2JFUS",
   WyzeCamPan: "WYZECP1_JEF",
   WyzeCamPanv2: "HL_PAN2",
