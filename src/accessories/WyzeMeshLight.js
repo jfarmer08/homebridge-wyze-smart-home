@@ -60,16 +60,29 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
       for (const property of propertyList.data.property_list) {
         switch (property.pid) {
           case WYZE_API_BRIGHTNESS_PROPERTY:
-            if (property.value != null) this.updateBrightness(property.value);
+            if (this.isValidProperty(property)) this.updateBrightness(property.value);
             break;
           case WYZE_API_COLOR_TEMP_PROPERTY:
-            if (property.value != null && property.value !== "0") this.updateColorTemp(property.value);
+            if (this.isValidProperty(property)) this.updateColorTemp(property.value);
             break;
           case WYZE_API_COLOR_PROPERTY:
-            if (property.value != null && property.value !== "0") this.updateColor(property.value);
+            if (this.isValidProperty(property)) this.updateColor(property.value);
             break;
         }
       }
+    }
+  }
+
+  isValidProperty(property) {
+    if (
+        property.value != null &&
+        property.value !== "0" &&
+        property.value !== "undefi"
+    ) {
+      return true;
+    } else {
+      this.plugin.log(`Encountered invalid property value: ${JSON.stringify(property, null, 2)}`);
+      return false;
     }
   }
 
