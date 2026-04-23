@@ -39,16 +39,13 @@ exports.MotionSensorModels = MotionSensorModels
 const LockModels = { YDLO1: "YD.LO1" }
 exports.LockModels = LockModels
 
-const LockBoltV2Models = { DX_LB2: "DX_LB2", DX_PVLOC: "DX_PVLOC" }
-exports.LockBoltV2Models = LockBoltV2Models
-
 const TemperatureHumidityModels = { TH3U: "TH3U" }
 exports.TemperatureHumidityModels = TemperatureHumidityModels
 
 const LeakSensorModels = { WS3U: "WS3U" }
 exports.LeakSensorModels = LeakSensorModels
 
-const CommonModels = { "LightSwitch": "LD_SS1", "Palm": "DX_PVLOC" }
+const CommonModels = { "LightSwitch": "LD_SS1" }
 exports.CommonModels = CommonModels
 
 const S1GatewayModels = { 'GW3U': 'GW3U' }

@@ -1,6 +1,6 @@
 const { homebridge, Accessory, UUIDGen } = require('./types')
 const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorModels,
-  TemperatureHumidityModels, LockModels, LockBoltV2Models, MotionSensorModels, ContactSensorModels, LightModels,
+  TemperatureHumidityModels, LockModels, MotionSensorModels, ContactSensorModels, LightModels,
   LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels } = require('./enums')
 
 const WyzeAPI = require('wyze-api') // Uncomment for Release
@@ -9,7 +9,6 @@ const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
 const WyzeLock = require('./accessories/WyzeLock')
-const WyzeLockBoltV2 = require('./accessories/WyzeLockBoltV2')
 const WyzeContactSensor = require('./accessories/WyzeContactSensor')
 const WyzeMotionSensor = require('./accessories/WyzeMotionSensor')
 const WyzeTemperatureHumidity = require('./accessories/WyzeTemperatureHumidity')
@@ -185,7 +184,6 @@ module.exports = class WyzeSmartHome {
       case 'Camera':
         if (Object.values(CameraModels).includes(model)) { return WyzeCamera }
       case 'Common':
-        if (Object.values(LockBoltV2Models).includes(model)) { return WyzeLockBoltV2 }
         if (Object.values(CommonModels).includes(model)) { return WyzeSwitch }
       case 'S1Gateway':
         if (Object.values(S1GatewayModels).includes(model)) { return WyzeHMS }

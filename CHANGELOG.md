@@ -8,13 +8,6 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
-### v0.5.47
-- Add Wyze Lock Bolt v2 (DX_LB2) support via IoT3 API
-- Add Palm Lock (DX_PVLOC) support via IoT3 API
-- Add WyzeCamV4 support
-- Update axios to 1.7.4 for security improvements
-- Fix color crashloop issue in camera v4
-
 ### v0.5.46
 - Update thermostat structure to new format
 - Update thermostat to have min/max thresholds closer to Wyze Thermostat thresholds -  https://github.com/jfarmer08/homebridge-wyze-smart-home/issues/203
