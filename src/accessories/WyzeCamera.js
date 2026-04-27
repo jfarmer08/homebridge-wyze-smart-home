@@ -16,27 +16,26 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     // after homebridge publishes the bridge (not during configureAccessory).
     this._cameraControllerReady = false;
 
-    // Motion sensor — always added for cameras that have events
-    this.motionService =
-      this.homeKitAccessory.getService(Service.MotionSensor) ||
-      this.homeKitAccessory.addService(Service.MotionSensor);
-    this.motionService
-      .getCharacteristic(Characteristic.MotionDetected)
-      .onGet(() => this.motionDetected ?? false);
-    this.motionService
-      .getCharacteristic(Characteristic.StatusActive)
-      .onGet(() => this.cameraOnline ?? false);
-    this.motionDetected = false;
+    // Remove any MotionSensor service left over from earlier plugin versions —
+    // we don't have a reliable way to detect motion (cloud event polling was
+    // too laggy and noisy) so we no longer expose it.
+    const staleMotion = this.homeKitAccessory.getService(Service.MotionSensor);
+    if (staleMotion) this.homeKitAccessory.removeService(staleMotion);
+
     this.cameraOnline = false;
-    // Track when motion was last seen so we can clear it after 30s
-    this._motionClearTimer = null;
 
     if (Object.values(enums.CameraModels).includes(this.product_model)) {
+      const privacyName = `${this.display_name} Privacy`;
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
           `[Camera] [Privacy Switch] Retrieving previous service for ${this.mac} (${this.display_name})`
         );
-      this.privacySwitch = this.homeKitAccessory.getService(this.display_name);
+      // Look up by subtype (stable across renames). Fall back to legacy
+      // name-based lookup so cameras that were paired before the rename
+      // don't get a duplicate service added.
+      this.privacySwitch =
+        this.homeKitAccessory.getServiceById(Service.Switch, "Privacy") ||
+        this.homeKitAccessory.getService(this.display_name);
 
       if (!this.privacySwitch) {
         if (this.plugin.config.pluginLoggingEnabled)
@@ -45,9 +44,15 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           );
         this.privacySwitch = this.homeKitAccessory.addService(
           Service.Switch,
-          this.display_name,
+          privacyName,
           "Privacy"
         );
+        // Set ConfiguredName once at creation so the Home app shows a clear
+        // default label. Don't overwrite on subsequent loads — that would
+        // wipe out any rename the user has done themselves.
+        if (Characteristic.ConfiguredName) {
+          this.privacySwitch.setCharacteristic(Characteristic.ConfiguredName, privacyName);
+        }
       }
 
       this.privacySwitch
@@ -64,6 +69,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
             this.plugin.log(
               `[Camera] [Garage Door] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
+          const garageName = `${this.display_name} Garage Door`;
           this.garageDoorService = this.homeKitAccessory.getService(
             Service.GarageDoorOpener
           );
@@ -73,8 +79,13 @@ module.exports = class WyzeCamera extends WyzeAccessory {
                 `[Camera] [Garage Door] Adding service for ${this.mac} (${this.display_name})`
               );
             this.garageDoorService = this.homeKitAccessory.addService(
-              Service.GarageDoorOpener
+              Service.GarageDoorOpener,
+              garageName,
+              "GarageDoor"
             );
+            if (Characteristic.ConfiguredName) {
+              this.garageDoorService.setCharacteristic(Characteristic.ConfiguredName, garageName);
+            }
           }
           // create handlers for required characteristics
           this.garageDoorService
@@ -99,8 +110,10 @@ module.exports = class WyzeCamera extends WyzeAccessory {
               `[Camera] [Spotlight Switch] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
 
-          this.spotLightService = this.homeKitAccessory.getService(
-            Service.Lightbulb
+          const spotName = `${this.display_name} Spotlight`;
+          this.spotLightService = this.homeKitAccessory.getServiceById(
+            Service.Lightbulb,
+            "Spotlight"
           );
           if (!this.spotLightService) {
             if (this.plugin.config.pluginLoggingEnabled)
@@ -109,9 +122,12 @@ module.exports = class WyzeCamera extends WyzeAccessory {
               );
             this.spotLightService = this.homeKitAccessory.addService(
               Service.Lightbulb,
-              this.display_name + " Spotlight",
+              spotName,
               "Spotlight"
             );
+            if (Characteristic.ConfiguredName) {
+              this.spotLightService.setCharacteristic(Characteristic.ConfiguredName, spotName);
+            }
           }
 
           this.spotLightService
@@ -128,8 +144,10 @@ module.exports = class WyzeCamera extends WyzeAccessory {
               `[Camera] [FloodLight] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
 
-          this.floodLightService = this.homeKitAccessory.getService(
-            Service.Lightbulb
+          const floodName = `${this.display_name} Floodlight`;
+          this.floodLightService = this.homeKitAccessory.getServiceById(
+            Service.Lightbulb,
+            "FloodLight"
           );
           if (!this.floodLightService) {
             if (this.plugin.config.pluginLoggingEnabled)
@@ -138,9 +156,12 @@ module.exports = class WyzeCamera extends WyzeAccessory {
               );
             this.floodLightService = this.homeKitAccessory.addService(
               Service.Lightbulb,
-              this.display_name + " FloodLight",
+              floodName,
               "FloodLight"
             );
+            if (Characteristic.ConfiguredName) {
+              this.floodLightService.setCharacteristic(Characteristic.ConfiguredName, floodName);
+            }
           }
 
           this.floodLightService
@@ -154,19 +175,23 @@ module.exports = class WyzeCamera extends WyzeAccessory {
             this.plugin.log(
               `[Camera] [Siren] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
-          this.sirenSwitch = this.homeKitAccessory.getService(
-            this.display_name + " Siren"
-          );
+          const sirenName = `${this.display_name} Siren`;
+          this.sirenSwitch =
+            this.homeKitAccessory.getServiceById(Service.Switch, "Siren") ||
+            this.homeKitAccessory.getService(sirenName);
           if (!this.sirenSwitch) {
             if (this.plugin.config.pluginLoggingEnabled)
               this.plugin.log(
-                `[Camera] [Alarm Switch] Adding service for ${this.mac} (${this.display_name})`
+                `[Camera] [Siren Switch] Adding service for ${this.mac} (${this.display_name})`
               );
             this.sirenSwitch = this.homeKitAccessory.addService(
               Service.Switch,
-              this.display_name + " Siren",
+              sirenName,
               "Siren"
             );
+            if (Characteristic.ConfiguredName) {
+              this.sirenSwitch.setCharacteristic(Characteristic.ConfiguredName, sirenName);
+            }
           }
 
           this.sirenSwitch
@@ -181,9 +206,10 @@ module.exports = class WyzeCamera extends WyzeAccessory {
             this.plugin.log(
               `[Camera] [Notification] Retrieving previous service for ${this.mac} (${this.display_name})`
             );
-          this.notificationSwitch = this.homeKitAccessory.getService(
-            this.display_name + " Notification"
-          );
+          const notifName = `${this.display_name} Notifications`;
+          this.notificationSwitch =
+            this.homeKitAccessory.getServiceById(Service.Switch, "Notification") ||
+            this.homeKitAccessory.getService(this.display_name + " Notification");
           if (!this.notificationSwitch) {
             if (this.plugin.config.pluginLoggingEnabled)
               this.plugin.log(
@@ -191,9 +217,12 @@ module.exports = class WyzeCamera extends WyzeAccessory {
               );
             this.notificationSwitch = this.homeKitAccessory.addService(
               Service.Switch,
-              this.display_name + " Notification",
+              notifName,
               "Notification"
             );
+            if (Characteristic.ConfiguredName) {
+              this.notificationSwitch.setCharacteristic(Characteristic.ConfiguredName, notifName);
+            }
           }
 
           this.notificationSwitch
@@ -268,29 +297,6 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     } catch (err) {
       this.plugin.log.error(`[Camera] cameraIsOnline failed for ${this.display_name}: ${err.message}`);
       this.cameraOnline = false;
-    }
-    this.motionService
-      .getCharacteristic(Characteristic.StatusActive)
-      .updateValue(this.cameraOnline);
-
-    // Poll for motion events in the last 30 seconds
-    if (this.cameraOnline) {
-      try {
-        const events = await this.plugin.client.getCameraEventList({
-          deviceMac: this.mac,
-          count: 1,
-          beginTime: Date.now() - 30_000,
-        });
-        const hasMotion = Array.isArray(events?.event_list) && events.event_list.length > 0;
-        if (hasMotion !== this.motionDetected) {
-          this.motionDetected = hasMotion;
-          this.motionService
-            .getCharacteristic(Characteristic.MotionDetected)
-            .updateValue(this.motionDetected);
-        }
-      } catch (_) {
-        // non-fatal — motion just won't update this cycle
-      }
     }
 
     if (!this.cameraOnline) {
@@ -518,11 +524,18 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log(
         `[Camera] [SpotLight] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
-    this.plugin.client.cameraSpotLight(
-      this.mac,
-      this.product_model,
-      value ? "1" : "2"
-    );
+    try {
+      await this.plugin.client.cameraSpotLight(
+        this.mac,
+        this.product_model,
+        value ? "1" : "2"
+      );
+    } catch (err) {
+      this.plugin.log.error(
+        `[Camera] [SpotLight] Set failed for ${this.display_name}: ${err.message}`
+      );
+      throw err;
+    }
   }
 
   async handleOnSetFloodlight(value) {
@@ -530,11 +543,18 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log(
         `[Camera] [FloodLight] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
-    this.plugin.client.cameraFloodLight(
-      this.mac,
-      this.product_model,
-      value ? "1" : "2"
-    );
+    try {
+      await this.plugin.client.cameraFloodLight(
+        this.mac,
+        this.product_model,
+        value ? "1" : "2"
+      );
+    } catch (err) {
+      this.plugin.log.error(
+        `[Camera] [FloodLight] Set failed for ${this.display_name}: ${err.message}`
+      );
+      throw err;
+    }
   }
 
   async handleOnSetPrivacySwitch(value) {
@@ -542,11 +562,18 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log(
         `[Camera] [Privacy] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
-    this.plugin.client.cameraPrivacy(
-      this.mac,
-      this.product_model,
-      value ? "power_on" : "power_off"
-    );
+    try {
+      await this.plugin.client.cameraPrivacy(
+        this.mac,
+        this.product_model,
+        value ? "power_on" : "power_off"
+      );
+    } catch (err) {
+      this.plugin.log.error(
+        `[Camera] [Privacy] Set failed for ${this.display_name}: ${err.message}`
+      );
+      throw err;
+    }
   }
 
   async handleOnSetAlarmSwitch(value) {
@@ -554,11 +581,18 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log(
         `[Camera] [Siren] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
-    this.plugin.client.cameraSiren(
-      this.mac,
-      this.product_model,
-      value ? "siren_on" : "siren_off"
-    );
+    try {
+      await this.plugin.client.cameraSiren(
+        this.mac,
+        this.product_model,
+        value ? "siren_on" : "siren_off"
+      );
+    } catch (err) {
+      this.plugin.log.error(
+        `[Camera] [Siren] Set failed for ${this.display_name}: ${err.message}`
+      );
+      throw err;
+    }
   }
 
   async setNotification(value) {
@@ -566,11 +600,18 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log(
         `[Camera] [Notification] Setting Current State for ${this.mac} (${this.display_name}) to ${value}`
       );
-    this.plugin.client.cameraNotifications(
-      this.mac,
-      this.product_model,
-      value ? "1" : "0"
-    );
+    try {
+      await this.plugin.client.cameraNotifications(
+        this.mac,
+        this.product_model,
+        value ? "1" : "0"
+      );
+    } catch (err) {
+      this.plugin.log.error(
+        `[Camera] [Notification] Set failed for ${this.display_name}: ${err.message}`
+      );
+      throw err;
+    }
   }
 
   async setGarageTargetState(value) {
@@ -578,7 +619,14 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.plugin.log(
         `[Camera Garage Door] Setting Target State for ${this.mac} (${this.display_name}) to ${value}`
       );
-    this.plugin.client.garageDoor(this.mac, this.product_model);
+    try {
+      await this.plugin.client.garageDoor(this.mac, this.product_model);
+    } catch (err) {
+      this.plugin.log.error(
+        `[Camera] [Garage Door] Trigger failed for ${this.display_name}: ${err.message}`
+      );
+      throw err;
+    }
     if (value == 0) {
       this.garageDoorService
         .getCharacteristic(Characteristic.CurrentDoorState)
@@ -594,7 +642,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     return !!(
       this.plugin.config.garageDoorAccessory?.find((d) => d === this.mac) ||
       this.plugin.config.spotLightAccessory?.find((d) => d === this.mac) ||
-      this.plugin.config.alarmAccessory?.find((d) => d === this.mac) ||
+      this.plugin.config.sirenAccessory?.find((d) => d === this.mac) ||
       this.plugin.config.floodLightAccessory?.find((d) => d === this.mac) ||
       this.plugin.config.notificationAccessory?.find((d) => d === this.mac)
     );

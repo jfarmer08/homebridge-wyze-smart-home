@@ -32,6 +32,10 @@ module.exports = class WyzeAccessory {
   }
 
   async update(device, timestamp) {
+    // Cache the freshest device payload so accessories can read live fields
+    // (device_params, camera_thumbnails, etc.) without re-fetching the
+    // device list from Wyze on every characteristic read.
+    this.device = device;
     const productType = device.product_type;
 
     switch (productType) {

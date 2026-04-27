@@ -138,9 +138,15 @@ module.exports = class WyzeSmartHome {
 
     const removedAccessories = this.accessories.filter(a => !foundAccessories.includes(a))
     if (removedAccessories.length > 0) {
-      if (this.config.pluginLoggingEnabled) this.log(`Removing ${removedAccessories.length} device(s)`)
-      const removedHomeKitAccessories = removedAccessories.map(a => a.homeKitAccessory)
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, removedHomeKitAccessories)
+      // External (camera) accessories aren't registered with the bridge, so
+      // they can't be unregistered here. They have to be removed manually
+      // from the Home app — same behavior as homebridge-camera-ffmpeg /
+      // homebridge-unifi-protect.
+      const bridged = removedAccessories.filter(a => !(a instanceof WyzeCamera))
+      if (bridged.length > 0) {
+        if (this.config.pluginLoggingEnabled) this.log(`Removing ${bridged.length} device(s)`)
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, bridged.map(a => a.homeKitAccessory))
+      }
     }
 
     this.accessories = foundAccessories
@@ -165,8 +171,19 @@ module.exports = class WyzeSmartHome {
     let accessory = this.accessories.find(a => a.matches(device))
     if (!accessory) {
       const isCamera = accessoryClass === WyzeCamera
-      const homeKitAccessory = this.createHomeKitAccessory(device, isCamera ? Categories?.CAMERA : undefined)
+      const homeKitAccessory = this.createHomeKitAccessory(
+        device,
+        isCamera ? Categories?.CAMERA : undefined,
+        isCamera
+      )
       accessory = new accessoryClass(this, homeKitAccessory)
+      if (isCamera) {
+        // Cameras are published as external accessories so they pair
+        // independently from the bridge — sidesteps the ~150-accessory
+        // bridge cap and gives much more reliable streaming. Each camera
+        // shows up in HomeKit as its own device with its own setup code.
+        this.api.publishExternalAccessories(PLUGIN_NAME, [homeKitAccessory])
+      }
       this.accessories.push(accessory)
     } else {
       if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
@@ -234,7 +251,7 @@ module.exports = class WyzeSmartHome {
     }
   }
 
-  createHomeKitAccessory(device, category) {
+  createHomeKitAccessory(device, category, external = false) {
     const uuid = UUIDGen.generate(device.mac)
 
     const homeKitAccessory = new Accessory(device.nickname, uuid, category)
@@ -246,7 +263,11 @@ module.exports = class WyzeSmartHome {
       nickname: device.nickname
     }
 
-    this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
+    // External accessories (cameras) are published by the caller via
+    // publishExternalAccessories so they don't go through the bridge.
+    if (!external) {
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
+    }
     return homeKitAccessory
   }
 
@@ -259,6 +280,25 @@ module.exports = class WyzeSmartHome {
     }
 
     const accessoryClass = this.getAccessoryClass(homeKitAccessory.context.product_type, homeKitAccessory.context.product_model)
+    if (accessoryClass === WyzeCamera) {
+      // Cameras must be external accessories. If a camera shows up here it
+      // was cached from an older plugin version that bridged it — drop the
+      // bridged copy so loadDevice re-publishes it externally.
+      try {
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [homeKitAccessory])
+        if (this.config.pluginLoggingEnabled) {
+          this.log(`[Camera] Migrating ${homeKitAccessory.context.nickname} (${homeKitAccessory.context.mac}) from bridged to external — re-pair in Home app.`)
+        }
+      } catch (error) {
+        // "Cannot find the bridged Accessory to remove" is benign on
+        // subsequent restarts — the camera was already migrated to external
+        // in a previous run.
+        if (!String(error?.message || error).includes("Cannot find the bridged Accessory")) {
+          this.log.error(`[Camera] Migration unregister failed for ${homeKitAccessory.context.nickname}: ${error}`)
+        }
+      }
+      return
+    }
     if (accessoryClass) {
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
