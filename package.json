@@ -4,8 +4,13 @@
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
+  "homebridge": {
+    "pluginAlias": "WyzeSmartHome",
+    "platform": "WyzeSmartHome"
+  },
   "scripts": {
-    "lint": "eslint src/**.js --max-warnings=0"
+    "lint": "eslint src/**.js --max-warnings=0",
+    "start": "hb-service run -P ./ -U ./ --stdout"
   },
   "keywords": [
     "homebridge-plugin",
@@ -22,14 +27,15 @@
   },
   "engines": {
     "homebridge": "^1.6.0 || ^2.0.0-beta.0",
-    "node": "^18.20.4 || ^20.15.1"
+    "node": "^18.20.4 || ^20.15.1 || ^22.0.0"
   },
   "dependencies": {
+    "aws-sdk": "2.1679.0",
     "axios": "^1.5.0",
     "base64-js": "1.5.1",
     "colorsys": "^1.0.22",
     "crypto-js": "4.2.0",
-    "homebridge-config-ui-x": "^4.56.4",
+    "homebridge-config-ui-x": "^5.22.0",
     "inherits": "2.0.4",
     "md5": "^2.2.1",
     "moment": "2.29.4",
@@ -38,15 +44,15 @@
     "utf8": "^3.0.0",
     "uuid": "8.3.2",
     "uuid-by-string": "4.0.0",
-    "wyze-api": "1.1.7",
-    "aws-sdk": "2.1679.0"
+    "werift": "^0.23.0",
+    "wyze-api": "1.1.7"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "eslint": "^8.17.0",
     "eslint-config-standard": "^17.0.0",
-    "homebridge": "^2.0.0-beta.0"
+    "homebridge": "^1.11.4"
   },
   "funding": [
     {
