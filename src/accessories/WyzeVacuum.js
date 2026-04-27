@@ -60,7 +60,7 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
 
       // `battary` is the Wyze API field name (typo in their API)
       const battery = info.battary ?? this.batteryLevel;
-      const modeName = this.plugin.client.parseVacuumMode(info.mode);
+      const modeName = this.plugin.client.vacuumGetMode(info);
       const suction = info.cleanlevel ?? this.suctionLevel;
       const charging = !!(info.chargeState);
 
