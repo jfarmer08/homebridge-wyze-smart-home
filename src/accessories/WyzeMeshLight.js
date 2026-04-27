@@ -1,15 +1,9 @@
-const colorsys = require("colorsys");
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 
 const WYZE_API_BRIGHTNESS_PROPERTY = "P1501";
 const WYZE_API_COLOR_TEMP_PROPERTY = "P1502";
 const WYZE_API_COLOR_PROPERTY = "P1507";
-
-const WYZE_COLOR_TEMP_MIN = 2700;
-const WYZE_COLOR_TEMP_MAX = 6500;
-const HOMEKIT_COLOR_TEMP_MIN = 500;
-const HOMEKIT_COLOR_TEMP_MAX = 140;
 
 const noResponse = new Error("No Response");
 noResponse.toString = () => {
@@ -113,22 +107,19 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   updateColor(value) {
-    // Convert a Hex color from Wyze into the HSL values recognized by HomeKit.
-    const hslValue = colorsys.hex2Hsv(value);
+    const { hue, saturation } = this.plugin.client.wyzeColorToHomeKit(value);
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
         `[MeshLight] Updating color record for "${this.display_name} (${
           this.mac
-        }) to ${value}: ${JSON.stringify(hslValue)}"`
+        }) to ${value}: hue=${hue} saturation=${saturation}"`
       );
 
-    // Update Hue
-    this.updateHue(hslValue.h);
-    this.cache.hue = hslValue.h;
+    this.updateHue(hue);
+    this.cache.hue = hue;
 
-    // Update Saturation
-    this.updateSaturation(hslValue.s);
-    this.cache.saturation = hslValue.s;
+    this.updateSaturation(saturation);
+    this.cache.saturation = saturation;
   }
 
   updateHue(value) {
@@ -191,16 +182,7 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
 
   async setColorTemperature(value, callback) {
     if (value != null) {
-      let floatValue = this.plugin.client.rangeToFloat(
-        value,
-        HOMEKIT_COLOR_TEMP_MIN,
-        HOMEKIT_COLOR_TEMP_MAX
-      );
-      let wyzeValue = this.plugin.client.floatToRange(
-        floatValue,
-        WYZE_COLOR_TEMP_MIN,
-        WYZE_COLOR_TEMP_MAX
-      );
+      const wyzeValue = this.plugin.client.homeKitColorTempToWyze(value);
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
           `[MeshLight] Setting color temperature for "${this.display_name} (${this.mac}) to ${value} : ${wyzeValue}"`
@@ -229,12 +211,10 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
       try {
         this.cache.hue = value;
         if (this.cacheUpdated) {
-          let hexValue = colorsys.hsv2Hex(
+          const hexValue = this.plugin.client.homeKitColorToWyze(
             this.cache.hue,
-            this.cache.saturation,
-            100
+            this.cache.saturation
           );
-          hexValue = hexValue.replace("#", "");
           if (this.plugin.config.pluginLoggingEnabled)
             this.plugin.log(hexValue);
           await this.plugin.client.setMeshHue(
@@ -267,12 +247,10 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
       try {
         this.cache.saturation = value;
         if (this.cacheUpdated) {
-          let hexValue = colorsys.hsv2Hex(
+          const hexValue = this.plugin.client.homeKitColorToWyze(
             this.cache.hue,
-            this.cache.saturation,
-            100
+            this.cache.saturation
           );
-          hexValue = hexValue.replace("#", "");
           await this.plugin.client.setMeshSaturation(
             this.mac,
             this.product_model,

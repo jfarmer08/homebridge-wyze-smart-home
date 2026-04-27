@@ -140,7 +140,7 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
         device.device_params.th_sensor_humidity
       );
       this.getTemperatureCharacteristic().updateValue(
-        (device.device_params.th_sensor_temperature - 32.0) / 1.8
+        this.plugin.client.wyzeTemperatureToHomeKit(device.device_params.th_sensor_temperature)
       );
       this.getBatteryCharacteristic().updateValue(
         this.plugin.client.checkBatteryVoltage(device.device_params.voltage)
