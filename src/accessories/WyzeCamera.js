@@ -412,10 +412,11 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           this.plugin.log(
             `[Camera] [Privacy] Updating status of ${this.mac} (${this.display_name})`
           );
-        this.power_switch = device.device_params.power_switch;
+        const powerSwitch = device.device_params?.power_switch;
+        this.power_switch = powerSwitch;
         this.privacySwitch
-          .getCharacteristic(Characteristic.On)
-          .updateValue(device.device_params.power_switch);
+          ?.getCharacteristic(Characteristic.On)
+          .updateValue(powerSwitch);
       }
     }
   }

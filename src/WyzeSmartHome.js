@@ -40,6 +40,13 @@ module.exports = class WyzeSmartHome {
 
     this.accessories = []
 
+    process.on('unhandledRejection', (reason) => {
+      this.log.error(`[Wyze] Unhandled promise rejection: ${reason?.stack ?? reason}`)
+    })
+    process.on('uncaughtException', (err) => {
+      this.log.error(`[Wyze] Uncaught exception: ${err.stack ?? err}`)
+    })
+
     this.api.on('didFinishLaunching', this.didFinishLaunching.bind(this))
   }
 
@@ -164,7 +171,9 @@ module.exports = class WyzeSmartHome {
     } else {
       if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
-    accessory.update(device, timestamp)
+    accessory.update(device, timestamp).catch((err) => {
+      this.log.error(`[${device.product_type}] Unhandled error updating ${device.nickname}: ${err.message}\n${err.stack}`)
+    })
 
     return accessory
   }
