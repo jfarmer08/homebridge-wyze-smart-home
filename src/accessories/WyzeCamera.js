@@ -1,6 +1,7 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 const enums = require("../enums");
+const WyzeCameraStreamingDelegate = require("../camera/WyzeCameraStreamingDelegate");
 
 const noResponse = new Error("No Response");
 noResponse.toString = () => {
@@ -10,6 +11,9 @@ noResponse.toString = () => {
 module.exports = class WyzeCamera extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
+
+    // Camera streaming via HomeKit CameraController
+    this._setupCameraController();
 
     // Motion sensor — always added for cameras that have events
     this.motionService =
@@ -198,6 +202,42 @@ module.exports = class WyzeCamera extends WyzeAccessory {
         }
       }
     }
+  }
+
+  _setupCameraController() {
+    const { hap } = require("../types");
+    if (!hap?.CameraController) return; // guard for unit-test environments
+
+    const delegate = new WyzeCameraStreamingDelegate(this);
+
+    const controller = new hap.CameraController({
+      cameraStreamCount: 2,
+      delegate,
+      streamingOptions: {
+        supportedCryptoSuites: [hap.SRTPCryptoSuites.AES_CM_128_HMAC_SHA1_80],
+        video: {
+          resolutions: [
+            [1920, 1080, 30],
+            [1280, 720, 30],
+            [1280, 720, 15],
+            [640, 360, 30],
+            [640, 360, 15],
+            [320, 240, 15],
+          ],
+          codec: {
+            profiles: [hap.H264Profile.BASELINE, hap.H264Profile.MAIN],
+            levels: [hap.H264Level.LEVEL3_1, hap.H264Level.LEVEL4],
+          },
+        },
+      },
+    });
+
+    this.homeKitAccessory.configureController(controller);
+
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
+        `[Camera] [Stream] CameraController configured for ${this.display_name} (${this.mac})`
+      );
   }
 
   async updateCharacteristics(device) {
