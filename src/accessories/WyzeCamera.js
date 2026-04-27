@@ -11,6 +11,21 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
+    // Motion sensor — always added for cameras that have events
+    this.motionService =
+      this.homeKitAccessory.getService(Service.MotionSensor) ||
+      this.homeKitAccessory.addService(Service.MotionSensor);
+    this.motionService
+      .getCharacteristic(Characteristic.MotionDetected)
+      .onGet(() => this.motionDetected ?? false);
+    this.motionService
+      .getCharacteristic(Characteristic.StatusActive)
+      .onGet(() => this.cameraOnline ?? false);
+    this.motionDetected = false;
+    this.cameraOnline = false;
+    // Track when motion was last seen so we can clear it after 30s
+    this._motionClearTimer = null;
+
     if (Object.values(enums.CameraModels).includes(this.product_model)) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
@@ -186,6 +201,31 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
+    this.cameraOnline = device.conn_state !== 0;
+    this.motionService
+      .getCharacteristic(Characteristic.StatusActive)
+      .updateValue(this.cameraOnline);
+
+    // Poll for motion events in the last 30 seconds
+    if (this.cameraOnline) {
+      try {
+        const events = await this.plugin.client.getCameraEventList({
+          deviceMac: this.mac,
+          count: 1,
+          beginTime: Date.now() - 30_000,
+        });
+        const hasMotion = Array.isArray(events?.event_list) && events.event_list.length > 0;
+        if (hasMotion !== this.motionDetected) {
+          this.motionDetected = hasMotion;
+          this.motionService
+            .getCharacteristic(Characteristic.MotionDetected)
+            .updateValue(this.motionDetected);
+        }
+      } catch (_) {
+        // non-fatal — motion just won't update this cycle
+      }
+    }
+
     if (device.conn_state === 0) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(

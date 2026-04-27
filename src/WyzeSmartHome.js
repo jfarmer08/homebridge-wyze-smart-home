@@ -1,10 +1,11 @@
 const { homebridge, Accessory, UUIDGen } = require('./types')
 const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorModels,
   TemperatureHumidityModels, LockModels, LockBoltV2Models, MotionSensorModels, ContactSensorModels, LightModels,
-  LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels } = require('./enums')
+  LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels,
+  VacuumModels, IrrigationModels } = require('./enums')
 
-const WyzeAPI = require('wyze-api') // Uncomment for Release
-//const WyzeAPI = require('./wyze-api/src') // Comment for Release
+//const WyzeAPI = require('wyze-api') // Uncomment for Release
+const WyzeAPI = require('./wyze-api/src') // Comment for Release
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
@@ -18,6 +19,8 @@ const WyzeCamera = require('./accessories/WyzeCamera')
 const WyzeSwitch = require('./accessories/WyzeSwitch')
 const WyzeHMS = require('./accessories/WyzeHMS')
 const WyzeThermostat = require('./accessories/WyzeThermostat')
+const WyzeVacuum = require('./accessories/WyzeVacuum')
+const WyzeIrrigation = require('./accessories/WyzeIrrigation')
 
 const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
@@ -191,6 +194,10 @@ module.exports = class WyzeSmartHome {
         if (Object.values(S1GatewayModels).includes(model)) { return WyzeHMS }
       case 'Thermostat':
         if (Object.values(ThermostatModels).includes(model)) { return WyzeThermostat }
+      case 'Vacuum':
+        if (Object.values(VacuumModels).includes(model)) { return WyzeVacuum }
+      case 'Irrigation':
+        if (Object.values(IrrigationModels).includes(model)) { return WyzeIrrigation }
     }
   }
 

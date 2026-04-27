@@ -60,6 +60,12 @@ exports.ThermostatModels = ThermostatModels
 const ThermostatRoomSensor = { CO_TH1: "CO_TH1" }
 exports.ThermostatRoomSensor = ThermostatRoomSensor
 
+const VacuumModels = { JA_RO2: "JA_RO2" }
+exports.VacuumModels = VacuumModels
+
+const IrrigationModels = { BS_WK1: "BS_WK1" }
+exports.IrrigationModels = IrrigationModels
+
 //"OutdoorPlugMain" : "WLPPO", "ChimeSensor" : "CHIME", "HeadPhones":"JA_HP","YDGW1":"YD.GW1",
 //"Scale_S":"WL_SC3","WL_SC2":"WL_SC2", "JA_RO2":"JA_RO2", "Sprinkler":"BS_WK1", "ThermostatRoomSensor":"CO_TH1",
 //"BLE_Lock":"YD_BT1","JA_SL10":"JA_SL10"}
