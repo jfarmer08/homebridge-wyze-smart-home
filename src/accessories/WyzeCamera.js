@@ -259,7 +259,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this._setupCameraController();
     }
 
-    this.cameraOnline = device.conn_state !== 0;
+    this.cameraOnline = this.plugin.client.cameraIsOnline(device);
     this.motionService
       .getCharacteristic(Characteristic.StatusActive)
       .updateValue(this.cameraOnline);
@@ -284,60 +284,26 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       }
     }
 
-    if (device.conn_state === 0) {
+    if (!this.cameraOnline) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
           `[Camera] Updating status ${this.mac} (${this.display_name}) to noResponse`
         );
-      this.privacySwitch
-        .getCharacteristic(Characteristic.On)
-        .updateValue(noResponse);
+      this.privacySwitch?.getCharacteristic(Characteristic.On).updateValue(noResponse);
       if (this.plugin.config.sirenAccessory?.find((d) => d === device.mac)) {
-        if (this.plugin.config.pluginLoggingEnabled)
-          this.plugin.log(
-            `[Camera] [Siren] Updating status ${this.mac} (${this.display_name}) to noResponse`
-          );
-        this.sirenSwitch
-          .getCharacteristic(Characteristic.On)
-          .updateValue(noResponse);
+        this.sirenSwitch?.getCharacteristic(Characteristic.On).updateValue(noResponse);
       }
       if (this.plugin.config.floodLightAccessory?.find((d) => d === this.mac)) {
-        if (this.plugin.config.pluginLoggingEnabled)
-          this.plugin.log(
-            `[Camera] [FloodLight] Updating status of ${this.mac} (${this.display_name}) to noResponse`
-          );
-        this.floodLightService
-          .getCharacteristic(Characteristic.On)
-          .updateValue(noResponse);
+        this.floodLightService?.getCharacteristic(Characteristic.On).updateValue(noResponse);
       }
       if (this.plugin.config.spotLightAccessory?.find((d) => d === this.mac)) {
-        if (this.plugin.config.pluginLoggingEnabled)
-          this.plugin.log(
-            `[Camera] [SpotLight] Updating status of ${this.mac} (${this.display_name}) to noResponse`
-          );
-        this.spotLightService
-          .getCharacteristic(Characteristic.On)
-          .updateValue(noResponse);
+        this.spotLightService?.getCharacteristic(Characteristic.On).updateValue(noResponse);
       }
       if (this.plugin.config.garageDoorAccessory?.find((d) => d === this.mac)) {
-        if (this.plugin.config.pluginLoggingEnabled)
-          this.plugin.log(
-            `[Camera] [Garage Door] Updating status of ${this.mac} (${this.display_name}) to noResponse`
-          );
-        this.garageDoorService
-          .getCharacteristic(Characteristic.CurrentDoorState)
-          .updateValue(noResponse);
+        this.garageDoorService?.getCharacteristic(Characteristic.CurrentDoorState).updateValue(noResponse);
       }
-      if (
-        this.plugin.config.notificationAccessory?.find((d) => d === this.mac)
-      ) {
-        if (this.plugin.config.pluginLoggingEnabled)
-          this.plugin.log(
-            `[Camera] [Notification] Updating status of ${this.mac} (${this.display_name}) to noResponse`
-          );
-        this.notificationSwitch
-          .getCharacteristic(Characteristic.On)
-          .updateValue(noResponse);
+      if (this.plugin.config.notificationAccessory?.find((d) => d === this.mac)) {
+        this.notificationSwitch?.getCharacteristic(Characteristic.On).updateValue(noResponse);
       }
     } else {
       if (this.cameraAccessoryAttached()) {

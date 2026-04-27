@@ -57,7 +57,11 @@ module.exports = class WyzeAccessory {
       );
 
     if (this.shouldUpdateCharacteristics(timestamp)) {
-      this.updateCharacteristics(device);
+      Promise.resolve(this.updateCharacteristics(device)).catch((err) => {
+        this.plugin.log.error(
+          `[${device.product_type}] Error updating ${device.nickname}: ${err.message}\n${err.stack}`
+        );
+      });
     }
   }
   shouldUpdateCharacteristics(timestamp) {

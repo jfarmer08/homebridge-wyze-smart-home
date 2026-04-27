@@ -201,6 +201,7 @@ module.exports = class WyzeSmartHome {
       case 'Thermostat':
         if (Object.values(ThermostatModels).includes(model)) { return WyzeThermostat }
       case 'Vacuum':
+      case 'JA_RO2': // Wyze API returns model name as product_type for vacuums
         if (Object.values(VacuumModels).includes(model)) { return WyzeVacuum }
       case 'Irrigation':
         if (Object.values(IrrigationModels).includes(model)) { return WyzeIrrigation }
