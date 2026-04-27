@@ -12,8 +12,9 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
-    // Camera streaming via HomeKit CameraController
-    this._setupCameraController();
+    // CameraController is deferred to first updateCharacteristics so it runs
+    // after homebridge publishes the bridge (not during configureAccessory).
+    this._cameraControllerReady = false;
 
     // Motion sensor — always added for cameras that have events
     this.motionService =
@@ -253,6 +254,11 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
+    if (!this._cameraControllerReady) {
+      this._cameraControllerReady = true;
+      this._setupCameraController();
+    }
+
     this.cameraOnline = device.conn_state !== 0;
     this.motionService
       .getCharacteristic(Characteristic.StatusActive)

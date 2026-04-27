@@ -11,4 +11,5 @@ module.exports.update = function (homebridge) {
   types.UUIDGen = homebridge.hap.uuid
   types.HapStatusError = homebridge.hap.HapStatusError
   types.HAPStatus = homebridge.hap.HAPStatus
+  types.Categories = homebridge.hap.Categories
 }

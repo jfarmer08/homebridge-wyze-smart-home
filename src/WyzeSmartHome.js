@@ -1,4 +1,4 @@
-const { homebridge, Accessory, UUIDGen } = require('./types')
+const { homebridge, Accessory, UUIDGen, Categories } = require('./types')
 const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorModels,
   TemperatureHumidityModels, LockModels, LockBoltV2Models, MotionSensorModels, ContactSensorModels, LightModels,
   LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels,
@@ -157,7 +157,8 @@ module.exports = class WyzeSmartHome {
 
     let accessory = this.accessories.find(a => a.matches(device))
     if (!accessory) {
-      const homeKitAccessory = this.createHomeKitAccessory(device)
+      const isCamera = accessoryClass === WyzeCamera
+      const homeKitAccessory = this.createHomeKitAccessory(device, isCamera ? Categories?.CAMERA : undefined)
       accessory = new accessoryClass(this, homeKitAccessory)
       this.accessories.push(accessory)
     } else {
@@ -206,10 +207,10 @@ module.exports = class WyzeSmartHome {
     }
   }
 
-  createHomeKitAccessory(device) {
+  createHomeKitAccessory(device, category) {
     const uuid = UUIDGen.generate(device.mac)
 
-    const homeKitAccessory = new Accessory(device.nickname, uuid)
+    const homeKitAccessory = new Accessory(device.nickname, uuid, category)
 
     homeKitAccessory.context = {
       mac: device.mac,
