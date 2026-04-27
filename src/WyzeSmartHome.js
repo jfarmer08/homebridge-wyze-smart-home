@@ -104,7 +104,12 @@ module.exports = class WyzeSmartHome {
     try {
       const objectList = await this.client.getObjectList()
       const timestamp = objectList.ts
-      const devices = objectList.data.device_list
+      const devices = objectList?.data?.device_list
+
+      if (!Array.isArray(devices)) {
+        this.log.error(`Error getting devices: unexpected response from getObjectList (device_list missing)`)
+        return
+      }
 
       if (this.config.pluginLoggingEnabled) this.log(`Found ${devices.length} device(s)`)
       await this.loadDevices(devices, timestamp)

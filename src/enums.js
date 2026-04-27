@@ -5,11 +5,19 @@ const CameraModels = {
   WyzeCamV3Pro: "HL_CAM3P",
   WyzeCamV4: "HL_CAM4",
   WyzeCamFloodlight: "WYZE_CAKP2JFUS",
+  WyzeCamFloodlightPro: "LD_CFP",
   WyzeCamPan: "WYZECP1_JEF",
   WyzeCamPanv2: "HL_PAN2",
   WyzeCamPanv3: "HL_PAN3",
+  WyzeCamPanPro: "HL_PANP",
   WyzeCamOutdoor: "WVOD1",
-  WyzeCamOutdoor2: "HL_WCO2"
+  WyzeCamOutdoor2: "HL_WCO2",
+  WyzeCamDoorbell: "WYZEDB3",
+  WyzeCamDoorbellPro: "GW_BE1",
+  WyzeCamDoorbellPro2: "AN_RDB1",
+  WyzeBatteryCamPro: "AN_RSCW",
+  WyzeCamOG: "GW_GC1",
+  WyzeCamOGTelephoto3x: "GW_GC",
 }
 exports.CameraModels = CameraModels;
 
