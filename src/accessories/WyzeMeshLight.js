@@ -1,9 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
-
-const WYZE_API_BRIGHTNESS_PROPERTY = "P1501";
-const WYZE_API_COLOR_TEMP_PROPERTY = "P1502";
-const WYZE_API_COLOR_PROPERTY = "P1507";
+const { propertyIds: PIDs } = require("wyze-api");
 
 const noResponse = new Error("No Response");
 noResponse.toString = () => {
@@ -53,13 +50,13 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
       );
       for (const property of propertyList.data.property_list) {
         switch (property.pid) {
-          case WYZE_API_BRIGHTNESS_PROPERTY:
+          case PIDs.BRIGHTNESS:
             if (this.isValidProperty(property)) this.updateBrightness(property.value);
             break;
-          case WYZE_API_COLOR_TEMP_PROPERTY:
+          case PIDs.COLOR_TEMP:
             if (this.isValidProperty(property)) this.updateColorTemp(property.value);
             break;
-          case WYZE_API_COLOR_PROPERTY:
+          case PIDs.COLOR:
             if (this.isValidProperty(property)) this.updateColor(property.value);
             break;
         }
