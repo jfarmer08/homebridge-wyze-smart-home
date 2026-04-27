@@ -75,6 +75,35 @@ function redactBearerTokens(str) {
   return str.replace(/\bBearer\s+[-._~+/0-9a-zA-Z]+=*\b/g, 'Bearer [REDACTED]')
 }
 
+function redactEmails(str) {
+  // Local part can be quite permissive (RFC 5321) but we keep the regex
+  // conservative — anything with "@" and a TLD-shaped tail. Preserves first
+  // letter so duplicate accounts can still be told apart in logs.
+  return str.replace(
+    /\b([A-Za-z0-9])[A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
+    (_m, first) => `${first}***@***`
+  )
+}
+
+function redactGeo(str) {
+  // 1) Lat/lon pairs in any common form. Conservative: only redact when both
+  //    values land in plausible ranges, so we don't flag random floats.
+  let out = str.replace(
+    /(["']?)(lat(?:itude)?)(["']?\s*[:=]\s*)(-?(?:90(?:\.0+)?|[0-8]?\d(?:\.\d+)?))/gi,
+    (_m, q1, name, sep) => `${q1}${name}${sep}[REDACTED_LAT]`
+  )
+  out = out.replace(
+    /(["']?)(lon(?:gitude)?|lng)(["']?\s*[:=]\s*)(-?(?:180(?:\.0+)?|1[0-7]\d(?:\.\d+)?|[0-9]?\d(?:\.\d+)?))/gi,
+    (_m, q1, name, sep) => `${q1}${name}${sep}[REDACTED_LON]`
+  )
+  // 2) "address": "...", "formatted_address": "..." — redact the value.
+  out = out.replace(
+    /(["']?)((?:formatted_)?address)(["']?\s*[:=]\s*)(["'])([^"']*)(["'])/gi,
+    (_m, q1, name, sep, oq, _val, cq) => `${q1}${name}${sep}${oq}[REDACTED]${cq}`
+  )
+  return out
+}
+
 function redactKeyValueSecrets(str) {
   const keys = [
     'password',
@@ -103,6 +132,8 @@ function sanitizeLogMessage(input) {
   let s = stripControlChars(input)
   s = redactBearerTokens(s)
   s = redactKeyValueSecrets(s)
+  s = redactGeo(s)
+  s = redactEmails(s)
   s = redactMacs(s)
   return boundLength(s, 2000)
 }
