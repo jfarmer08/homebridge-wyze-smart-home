@@ -6,6 +6,7 @@ const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorMod
 
 //const WyzeAPI = require('wyze-api') // Uncomment for Release
 const WyzeAPI = require('./wyze-api/src') // Comment for Release
+const { wrapLogger, resolveSecrets, getValidatedBaseUrls, sanitizeDeviceName } = require('./security')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
@@ -33,8 +34,15 @@ function delay(ms) {
 
 module.exports = class WyzeSmartHome {
   constructor(log, config, api) {
-    this.log = log
-    this.config = config
+    // Sanitize all log output: redact bearer tokens, access_token / refresh_token,
+    // passwords, API keys, and MAC addresses. Strips control chars and bounds line
+    // length. Applies to every downstream consumer that uses this.log (including
+    // the WyzeAPI client, which we pass it to below).
+    this.log = wrapLogger(log)
+    // Merge in credentials from secretsFile (if configured) and WYZE_* env vars,
+    // and validate / lock down the auth/api base URLs to known Wyze hosts.
+    this.config = resolveSecrets(config, this.log)
+    Object.assign(this.config, getValidatedBaseUrls(this.config, this.log))
     this.api = api
     this.client = this.getClient()
 
@@ -253,14 +261,17 @@ module.exports = class WyzeSmartHome {
 
   createHomeKitAccessory(device, category, external = false) {
     const uuid = UUIDGen.generate(device.mac)
+    // Bound length and strip control chars so a malformed Wyze nickname
+    // can't break HomeKit pairing or surprise the user.
+    const safeName = sanitizeDeviceName(device.nickname)
 
-    const homeKitAccessory = new Accessory(device.nickname, uuid, category)
+    const homeKitAccessory = new Accessory(safeName, uuid, category)
 
     homeKitAccessory.context = {
       mac: device.mac,
       product_type: device.product_type,
       product_model: device.product_model,
-      nickname: device.nickname
+      nickname: safeName
     }
 
     // External accessories (cameras) are published by the caller via
