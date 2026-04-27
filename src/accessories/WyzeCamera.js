@@ -229,6 +229,18 @@ module.exports = class WyzeCamera extends WyzeAccessory {
             levels: [hap.H264Level.LEVEL3_1, hap.H264Level.LEVEL4],
           },
         },
+        audio: {
+          twoWayAudio: false,
+          codecs: [
+            {
+              type: hap.AudioStreamingCodecType.OPUS,
+              samplerate: [
+                hap.AudioStreamingSamplerate.KHZ_16,
+                hap.AudioStreamingSamplerate.KHZ_24,
+              ],
+            },
+          ],
+        },
       },
     });
 

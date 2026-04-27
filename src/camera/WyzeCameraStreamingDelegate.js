@@ -5,7 +5,10 @@ const nodeCrypto = require("crypto");
 class WyzeCameraStreamingDelegate {
   constructor(camera) {
     this.camera = camera;
-    // sessionID (hex string) → { localRtpPort, videoSsrc, targetAddress, videoPort, rtcpPort, srtpKey, srtpSalt, streamHandle }
+    // sessionID (hex) → { localRtpPort, localAudioRtpPort, videoSsrc, audioSsrc,
+    //                     targetAddress, videoPort, rtcpPort, srtpKey, srtpSalt,
+    //                     audioPort, audioRtcpPort, audioSrtpKey, audioSrtpSalt,
+    //                     streamHandle }
     this._sessions = new Map();
   }
 
@@ -26,17 +29,23 @@ class WyzeCameraStreamingDelegate {
 
   async prepareStream(request, callback) {
     const sessionKey = request.sessionID.toString("hex");
-    const { localRtpPort, videoSsrc, localAddress } =
+    const { localRtpPort, localAudioRtpPort, videoSsrc, audioSsrc, localAddress } =
       await this.camera.plugin.client.prepareCameraHKStream();
 
     this._sessions.set(sessionKey, {
       localRtpPort,
+      localAudioRtpPort,
       videoSsrc,
+      audioSsrc,
       targetAddress: request.targetAddress,
       videoPort: request.video.port,
       rtcpPort: request.video.rtcp_port ?? request.video.port + 1,
       srtpKey: request.video.srtp_key,
       srtpSalt: request.video.srtp_salt,
+      audioPort: request.audio?.port ?? null,
+      audioRtcpPort: request.audio?.rtcp_port ?? (request.audio?.port ? request.audio.port + 1 : null),
+      audioSrtpKey: request.audio?.srtp_key ?? null,
+      audioSrtpSalt: request.audio?.srtp_salt ?? null,
       streamHandle: null,
     });
 
@@ -45,6 +54,12 @@ class WyzeCameraStreamingDelegate {
       video: {
         port: localRtpPort,
         ssrc: videoSsrc,
+        srtp_key: nodeCrypto.randomBytes(16),
+        srtp_salt: nodeCrypto.randomBytes(14),
+      },
+      audio: {
+        port: localAudioRtpPort,
+        ssrc: audioSsrc,
         srtp_key: nodeCrypto.randomBytes(16),
         srtp_salt: nodeCrypto.randomBytes(14),
       },
@@ -69,12 +84,18 @@ class WyzeCameraStreamingDelegate {
           this.camera.product_model,
           {
             localRtpPort: session.localRtpPort,
+            localAudioRtpPort: session.localAudioRtpPort,
             targetAddress: session.targetAddress,
             videoPort: session.videoPort,
             rtcpPort: session.rtcpPort,
             srtpKey: session.srtpKey,
             srtpSalt: session.srtpSalt,
             videoSsrc: session.videoSsrc,
+            audioPort: session.audioPort,
+            audioRtcpPort: session.audioRtcpPort,
+            audioSrtpKey: session.audioSrtpKey,
+            audioSrtpSalt: session.audioSrtpSalt,
+            audioSsrc: session.audioSsrc,
             bitrate: request.video?.max_bit_rate ?? 300,
             logger: this.camera.plugin.config.pluginLoggingEnabled
               ? this.camera.plugin.log
