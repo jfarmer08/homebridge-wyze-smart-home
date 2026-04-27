@@ -41,10 +41,10 @@ module.exports = class WyzeSmartHome {
     this.accessories = []
 
     process.on('unhandledRejection', (reason) => {
-      this.log.error(`[Wyze] Unhandled promise rejection: ${reason?.stack ?? reason}`)
+      this.log.error(`Unhandled promise rejection: ${reason?.stack ?? reason}`)
     })
     process.on('uncaughtException', (err) => {
-      this.log.error(`[Wyze] Uncaught exception: ${err.stack ?? err}`)
+      this.log.error(`Uncaught exception: ${err.stack ?? err}`)
     })
 
     this.api.on('didFinishLaunching', this.didFinishLaunching.bind(this))
