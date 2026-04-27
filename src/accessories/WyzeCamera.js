@@ -227,7 +227,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           ],
           codec: {
             profiles: [hap.H264Profile.BASELINE, hap.H264Profile.MAIN],
-            levels: [hap.H264Level.LEVEL3_1, hap.H264Level.LEVEL4],
+            levels: [hap.H264Level.LEVEL3_1, hap.H264Level.LEVEL4_0],
           },
         },
         audio: {
