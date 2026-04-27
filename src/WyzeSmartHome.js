@@ -170,41 +170,58 @@ module.exports = class WyzeSmartHome {
   }
 
   getAccessoryClass(type, model) {
+    const matches = (map) => map != null && Object.values(map).includes(model)
     switch (type) {
       case 'OutdoorPlug':
-        if (Object.values(OutdoorPlugModels).includes(model)) { return WyzePlug }
+        if (matches(OutdoorPlugModels)) return WyzePlug
+        break
       case 'Plug':
-        if (Object.values(PlugModels).includes(model)) { return WyzePlug }
+        if (matches(PlugModels)) return WyzePlug
+        break
       case 'Light':
-        if (Object.values(LightModels).includes(model)) { return WyzeLight }
+        if (matches(LightModels)) return WyzeLight
+        break
       case 'MeshLight':
-        if (Object.values(MeshLightModels).includes(model)) { return WyzeMeshLight }
+        if (matches(MeshLightModels)) return WyzeMeshLight
+        break
       case 'LightStrip':
-        if (Object.values(LightStripModels).includes(model)) { return WyzeMeshLight }
+        if (matches(LightStripModels)) return WyzeMeshLight
+        break
       case 'ContactSensor':
-        if (Object.values(ContactSensorModels).includes(model)) { return WyzeContactSensor }
+        if (matches(ContactSensorModels)) return WyzeContactSensor
+        break
       case 'MotionSensor':
-        if (Object.values(MotionSensorModels).includes(model)) { return WyzeMotionSensor }
+        if (matches(MotionSensorModels)) return WyzeMotionSensor
+        break
       case 'Lock':
-        if (Object.values(LockModels).includes(model)) { return WyzeLock }
+        if (matches(LockModels)) return WyzeLock
+        break
       case 'TemperatureHumidity':
-        if (Object.values(TemperatureHumidityModels).includes(model)) { return WyzeTemperatureHumidity }
+        if (matches(TemperatureHumidityModels)) return WyzeTemperatureHumidity
+        break
       case 'LeakSensor':
-        if (Object.values(LeakSensorModels).includes(model)) { return WyzeLeakSensor }
+        if (matches(LeakSensorModels)) return WyzeLeakSensor
+        break
       case 'Camera':
-        if (Object.values(CameraModels).includes(model)) { return WyzeCamera }
+        if (matches(CameraModels)) return WyzeCamera
+        break
       case 'Common':
-        if (Object.values(LockBoltV2Models).includes(model)) { return WyzeLockBoltV2 }
-        if (Object.values(CommonModels).includes(model)) { return WyzeSwitch }
+        if (matches(LockBoltV2Models)) return WyzeLockBoltV2
+        if (matches(CommonModels)) return WyzeSwitch
+        break
       case 'S1Gateway':
-        if (Object.values(S1GatewayModels).includes(model)) { return WyzeHMS }
+        if (matches(S1GatewayModels)) return WyzeHMS
+        break
       case 'Thermostat':
-        if (Object.values(ThermostatModels).includes(model)) { return WyzeThermostat }
+        if (matches(ThermostatModels)) return WyzeThermostat
+        break
       case 'Vacuum':
-      case 'JA_RO2': // Wyze API returns model name as product_type for vacuums
-        if (Object.values(VacuumModels).includes(model)) { return WyzeVacuum }
+      case 'JA_RO2':
+        if (matches(VacuumModels)) return WyzeVacuum
+        break
       case 'Irrigation':
-        if (Object.values(IrrigationModels).includes(model)) { return WyzeIrrigation }
+        if (matches(IrrigationModels)) return WyzeIrrigation
+        break
     }
   }
 
