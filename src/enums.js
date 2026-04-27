@@ -68,8 +68,8 @@ exports.ThermostatModels = ThermostatModels
 const ThermostatRoomSensor = { CO_TH1: "CO_TH1" }
 exports.ThermostatRoomSensor = ThermostatRoomSensor
 
-const VacuumModels = { JA_RO2: "JA_RO2" }
-exports.VacuumModels = VacuumModels
+//const VacuumModels = { JA_RO2: "JA_RO2" }
+//exports.VacuumModels = VacuumModels
 
 const IrrigationModels = { BS_WK1: "BS_WK1" }
 exports.IrrigationModels = IrrigationModels

@@ -256,10 +256,19 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   async updateCharacteristics(device) {
     if (!this._cameraControllerReady) {
       this._cameraControllerReady = true;
-      this._setupCameraController();
+      try {
+        this._setupCameraController();
+      } catch (err) {
+        this.plugin.log.error(`[Camera] _setupCameraController failed for ${this.display_name}: ${err.message}\n${err.stack}`);
+      }
     }
 
-    this.cameraOnline = this.plugin.client.cameraIsOnline(device);
+    try {
+      this.cameraOnline = this.plugin.client.cameraIsOnline(device);
+    } catch (err) {
+      this.plugin.log.error(`[Camera] cameraIsOnline failed for ${this.display_name}: ${err.message}`);
+      this.cameraOnline = false;
+    }
     this.motionService
       .getCharacteristic(Characteristic.StatusActive)
       .updateValue(this.cameraOnline);
@@ -307,10 +316,17 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       }
     } else {
       if (this.cameraAccessoryAttached()) {
-        const propertyList = await this.plugin.client.getDevicePID(
-          this.mac,
-          this.product_model
-        );
+        let propertyList;
+        try {
+          propertyList = await this.plugin.client.getDevicePID(this.mac, this.product_model);
+        } catch (err) {
+          this.plugin.log.error(`[Camera] getDevicePID failed for ${this.display_name}: ${err.message}`);
+          return;
+        }
+        if (!propertyList?.data?.property_list) {
+          this.plugin.log.error(`[Camera] getDevicePID returned unexpected data for ${this.display_name}`);
+          return;
+        }
         for (const property of propertyList.data.property_list) {
           switch (property.pid) {
             case "P1":
