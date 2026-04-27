@@ -32,6 +32,14 @@ class WyzeCameraStreamingDelegate {
     const { localRtpPort, localAudioRtpPort, videoSsrc, audioSsrc, localAddress } =
       await this.camera.plugin.client.prepareCameraHKStream();
 
+    // Generate the SRTP keys we will use when sending to HomeKit.
+    // These must match what we give FFmpeg — HomeKit's own srtp_key/salt
+    // in the request are for the reverse direction (HomeKit → plugin).
+    const videoSrtpKey = nodeCrypto.randomBytes(16);
+    const videoSrtpSalt = nodeCrypto.randomBytes(14);
+    const audioSrtpKey = nodeCrypto.randomBytes(16);
+    const audioSrtpSalt = nodeCrypto.randomBytes(14);
+
     this._sessions.set(sessionKey, {
       localRtpPort,
       localAudioRtpPort,
@@ -40,12 +48,12 @@ class WyzeCameraStreamingDelegate {
       targetAddress: request.targetAddress,
       videoPort: request.video.port,
       rtcpPort: request.video.rtcp_port ?? request.video.port + 1,
-      srtpKey: request.video.srtp_key,
-      srtpSalt: request.video.srtp_salt,
+      srtpKey: videoSrtpKey,
+      srtpSalt: videoSrtpSalt,
       audioPort: request.audio?.port ?? null,
       audioRtcpPort: request.audio?.rtcp_port ?? (request.audio?.port ? request.audio.port + 1 : null),
-      audioSrtpKey: request.audio?.srtp_key ?? null,
-      audioSrtpSalt: request.audio?.srtp_salt ?? null,
+      audioSrtpKey,
+      audioSrtpSalt,
       streamHandle: null,
     });
 
@@ -54,14 +62,14 @@ class WyzeCameraStreamingDelegate {
       video: {
         port: localRtpPort,
         ssrc: videoSsrc,
-        srtp_key: nodeCrypto.randomBytes(16),
-        srtp_salt: nodeCrypto.randomBytes(14),
+        srtp_key: videoSrtpKey,
+        srtp_salt: videoSrtpSalt,
       },
       audio: {
         port: localAudioRtpPort,
         ssrc: audioSsrc,
-        srtp_key: nodeCrypto.randomBytes(16),
-        srtp_salt: nodeCrypto.randomBytes(14),
+        srtp_key: audioSrtpKey,
+        srtp_salt: audioSrtpSalt,
       },
     });
   }

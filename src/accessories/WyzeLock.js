@@ -104,6 +104,10 @@ module.exports = class WyzeLock extends WyzeAccessory {
         this.product_model
       );
       let lockProperties = propertyList.device;
+      if (!lockProperties) {
+        this.plugin.log.error(`[Lock] getLockInfo returned no device data for ${this.display_name}`);
+        return;
+      }
       const prop_key = Object.keys(lockProperties);
       for (const element of prop_key) {
         const prop = element;
