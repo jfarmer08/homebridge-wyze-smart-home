@@ -22,6 +22,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     this.thermostatModeSys = "auto";
     this.thermostatWorkingState = "idle";
     this.thermostatTempUnit = "F";
+    this.thermostatHumidity = 50;
 
     this.service = this.getThermostatService();
 
@@ -65,6 +66,11 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
         maxValue: 35
       });
 
+    // Current humidity (optional characteristic — thermostat reports it)
+    this.service
+      .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+      .onGet(this.handleCurrentHumidityGet.bind(this));
+
     // Target display unit handlers
     this.service
       .getCharacteristic(Characteristic.TemperatureDisplayUnits)
@@ -102,6 +108,10 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   async handleHeatingThresholdTemperatureGet() {
     this.debugLog("handleHeatingThresholdTemperatureGet Heat Setpoint: " + this.thermostatHeatSetpoint);
     return this.f2c(this.thermostatHeatSetpoint);
+  }
+
+  async handleCurrentHumidityGet() {
+    return this.thermostatHumidity;
   }
 
   async handleTemperatureDisplayUnitsGet() {
@@ -195,14 +205,18 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   }
 
   fillData() {
-    // This just prints new data from Wyze API
     this.debugLog("Temp: " + this.thermostatTemperature);
+    this.debugLog("Humidity: " + this.thermostatHumidity);
     this.debugLog("Target Temp: " + this.c2f(this.getTargetTemperatureForSystemState()));
     this.debugLog("Mode Sys: " + this.thermostatModeSys + " for " + this.Wyze2HomekitStates[this.thermostatModeSys]);
     this.debugLog("Working State: " + this.thermostatWorkingState + " for " + this.Wyze2HomekitWorkingStates[this.thermostatWorkingState]);
     this.debugLog("Cool Setpoint: " + this.thermostatCoolSetpoint);
     this.debugLog("Heat Setpoint: " + this.thermostatHeatSetpoint);
     this.debugLog("Temp Units: " + this.Wyze2HomekitUnits[this.thermostatTempUnit]);
+
+    this.service
+      .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+      .updateValue(this.thermostatHumidity);
   }
 
   getTargetTemperatureForSystemState() {
@@ -269,8 +283,9 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
           case "mode_sys":
             this.thermostatModeSys = properties[prop];
             continue;
-          
-            // can check for "iot_state" and "time2temp_val" in future if needed
+          case "humidity":
+            this.thermostatHumidity = Math.round(properties[prop]);
+            continue;
         }
       }
       this.lastTimestamp = response.ts;

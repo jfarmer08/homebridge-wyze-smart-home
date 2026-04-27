@@ -11,6 +11,7 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
     super(plugin, homeKitAccessory);
 
     this.getOnCharacteristic();
+    this.getStatusActiveCharacteristic();
     this.getBatteryCharacteristic();
     this.getIsBatteryLowCharacteristic();
   }
@@ -69,6 +70,10 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
     return service;
   }
 
+  getStatusActiveCharacteristic() {
+    return this.getSensorService().getCharacteristic(Characteristic.StatusActive);
+  }
+
   getOnCharacteristic() {
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
@@ -104,7 +109,9 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
       this.plugin.log(
         `[MotionSensor] Updating status of "${this.display_name} (${this.mac})"`
       );
-    if (device.conn_state === 0) {
+    const online = device.conn_state !== 0;
+    this.getStatusActiveCharacteristic().updateValue(online);
+    if (!online) {
       this.getOnCharacteristic().updateValue(noResponse);
     } else {
       this.getOnCharacteristic().updateValue(device.device_params.motion_state);

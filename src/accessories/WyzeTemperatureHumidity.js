@@ -12,6 +12,8 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
 
     this.getTemperatureCharacteristic();
     this.getHumidityCharacteristic();
+    this.getTemperatureStatusActiveCharacteristic();
+    this.getHumidityStatusActiveCharacteristic();
     this.getBatteryCharacteristic();
     this.getIsBatteryLowCharacteristic();
   }
@@ -88,6 +90,14 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
     return service;
   }
 
+  getTemperatureStatusActiveCharacteristic() {
+    return this.getTemperatureSensorService().getCharacteristic(Characteristic.StatusActive);
+  }
+
+  getHumidityStatusActiveCharacteristic() {
+    return this.getHumiditySensorService().getCharacteristic(Characteristic.StatusActive);
+  }
+
   getHumidityCharacteristic() {
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
@@ -133,7 +143,10 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
       this.plugin.log(
         `[Temperature Humidity] Updating status of "${this.display_name} (${this.mac})"`
       );
-    if (device.conn_state === 0) {
+    const online = device.conn_state !== 0;
+    this.getTemperatureStatusActiveCharacteristic().updateValue(online);
+    this.getHumidityStatusActiveCharacteristic().updateValue(online);
+    if (!online) {
       this.getHumidityCharacteristic().updateValue(noResponse);
     } else {
       this.getHumidityCharacteristic().updateValue(

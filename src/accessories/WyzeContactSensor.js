@@ -11,6 +11,7 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
     super(plugin, homeKitAccessory);
 
     this.getOnCharacteristic();
+    this.getStatusActiveCharacteristic();
     this.getBatteryCharacteristic();
     this.getIsBatteryLowCharacteristic();
   }
@@ -68,6 +69,10 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
     return service;
   }
 
+  getStatusActiveCharacteristic() {
+    return this.getSensorService().getCharacteristic(Characteristic.StatusActive);
+  }
+
   getOnCharacteristic() {
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
@@ -99,7 +104,9 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
   }
 
   updateCharacteristics(device) {
-    if (device.conn_state === 0) {
+    const online = device.conn_state !== 0;
+    this.getStatusActiveCharacteristic().updateValue(online);
+    if (!online) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
           `[ContactSensor] Updating status "${this.display_name} (${this.mac}) to noResponse"`

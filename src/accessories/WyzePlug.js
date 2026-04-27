@@ -11,6 +11,12 @@ module.exports = class WyzePlug extends WyzeAccessory {
     super(plugin, homeKitAccessory);
 
     this.getOnCharacteristic().on("set", this.set.bind(this));
+    this.getOutletService().getCharacteristic(Characteristic.OutletInUse)
+      .onGet(this.getOutletInUse.bind(this));
+  }
+
+  async getOutletInUse() {
+    return this.outletInUse ?? false;
   }
 
   updateCharacteristics(device) {
@@ -21,7 +27,12 @@ module.exports = class WyzePlug extends WyzeAccessory {
     if (device.conn_state === 0) {
       this.getOnCharacteristic().updateValue(noResponse);
     } else {
+      const isOn = device.device_params.switch_state === 1;
+      this.outletInUse = isOn;
       this.getOnCharacteristic().updateValue(device.device_params.switch_state);
+      this.getOutletService()
+        .getCharacteristic(Characteristic.OutletInUse)
+        .updateValue(isOn);
     }
   }
 

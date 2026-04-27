@@ -66,6 +66,10 @@ module.exports = class WyzeLock extends WyzeAccessory {
       .getCharacteristic(Characteristic.StatusLowBattery)
       .onGet(this.getLowBatteryStatus.bind(this));
 
+    this.batteryService
+      .getCharacteristic(Characteristic.ChargingState)
+      .onGet(() => Characteristic.ChargingState.NOT_CHARGING);
+
     this.contactService
       .getCharacteristic(Characteristic.ContactSensorState)
       .onGet(this.getDoorStatus.bind(this));
