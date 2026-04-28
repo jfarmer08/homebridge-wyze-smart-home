@@ -1,11 +1,13 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
-
+const { markServiceOnline } = require("./offlineIndicator");
 
 module.exports = class WyzeMotionSensor extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
+    // Touch each characteristic once so HAP adds it to the service if
+    // missing. Subsequent calls return the existing characteristic.
     this.getOnCharacteristic();
     this.getStatusActiveCharacteristic();
     this.getBatteryCharacteristic();
@@ -13,12 +15,7 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
   }
 
   getSensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[MotionSensor] Retrieving previous service for "${this.display_name} (${this.mac})"`
-      );
     let service = this.homeKitAccessory.getService(Service.MotionSensor);
-
     if (!service) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
@@ -26,102 +23,64 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
         );
       service = this.homeKitAccessory.addService(Service.MotionSensor);
     }
-
     return service;
   }
 
-  getBatterySensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[MotionSensorBattery] Retrieving previous service for "${this.display_name} (${this.mac})"`
-      );
+  getBatteryService() {
     let service = this.homeKitAccessory.getService(Service.Battery);
-
     if (!service) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[MotionSensorBattery] Adding service for "${this.display_name} (${this.mac})"`
+          `[MotionSensor] [Battery] Adding service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
     }
-
     return service;
   }
 
-  getIsBatteryLowSensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[MotionSensorIsBatteryLow] Retrieving previous service for "${this.display_name} (${this.mac})"`
-      );
-    let service = this.homeKitAccessory.getService(Service.Battery);
-
-    if (!service) {
-      if (this.plugin.config.pluginLoggingEnabled)
-        this.plugin.log(
-          `[MotionSensorIsBatteryLow] Adding service for "${this.display_name} (${this.mac})"`
-        );
-      service = this.homeKitAccessory.addService(Service.Battery);
-    }
-
-    return service;
+  getOnCharacteristic() {
+    return this.getSensorService().getCharacteristic(Characteristic.MotionDetected);
   }
 
   getStatusActiveCharacteristic() {
     return this.getSensorService().getCharacteristic(Characteristic.StatusActive);
   }
 
-  getOnCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[MotionSensor] Fetching status of "${this.display_name} (${this.mac})"`
-      );
-    return this.getSensorService().getCharacteristic(
-      Characteristic.MotionDetected
-    );
-  }
-
   getBatteryCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[MotionSensorBattery] Fetching status of "${this.display_name} (${this.mac})"`
-      );
-    return this.getBatterySensorService().getCharacteristic(
-      Characteristic.BatteryLevel
-    );
+    return this.getBatteryService().getCharacteristic(Characteristic.BatteryLevel);
   }
 
   getIsBatteryLowCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[MotionSensorBattery] Fetching status of "${this.display_name} (${this.mac})"`
-      );
-    return this.getIsBatteryLowSensorService().getCharacteristic(
-      Characteristic.StatusLowBattery
-    );
+    return this.getBatteryService().getCharacteristic(Characteristic.StatusLowBattery);
   }
 
   updateCharacteristics(device) {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[MotionSensor] Updating status of "${this.display_name} (${this.mac})"`
-      );
     const online = device.conn_state !== 0;
-    this.getStatusActiveCharacteristic().updateValue(online);
+    markServiceOnline(this.getSensorService(), online);
+
     if (!online) {
-      // StatusActive (set above) signals offline. Skip the motion-state
-      // update so the last reading stays visible.
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
           `[MotionSensor] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
         );
-    } else {
-      this.getOnCharacteristic().updateValue(device.device_params.motion_state);
-      this.getBatteryCharacteristic().updateValue(
-        this.plugin.client.checkBatteryVoltage(device.device_params.voltage)
-      );
-      this.getIsBatteryLowCharacteristic().updateValue(
-        this.plugin.client.checkLowBattery(device.device_params.voltage)
-      );
+      return;
     }
+
+    // Wyze motion_state: 0 = no motion, 1 = motion detected.
+    // HomeKit MotionDetected is a boolean — coerce explicitly.
+    const motionDetected = device.device_params.motion_state === 1;
+    const batteryPct = this.plugin.client.checkBatteryVoltage(device.device_params.voltage);
+    const batteryLow = this.plugin.client.checkLowBattery(device.device_params.voltage);
+
+    this.getOnCharacteristic().updateValue(motionDetected);
+    this.getBatteryCharacteristic().updateValue(batteryPct);
+    this.getIsBatteryLowCharacteristic().updateValue(batteryLow);
+
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
+        `[MotionSensor] ${this.mac} (${this.display_name}): ` +
+          `${motionDetected ? "MOTION" : "still"}, ` +
+          `battery ${batteryPct}%${batteryLow ? " (low)" : ""}`
+      );
   }
 };
