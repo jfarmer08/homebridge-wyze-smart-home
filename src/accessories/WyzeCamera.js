@@ -295,14 +295,38 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     }
 
     if (!this.cameraOnline) {
-      // Don't push `noResponse` — that triggers HomeKit's red unreachable
-      // banner. Just leave the existing characteristic values in place so
-      // the user sees the last-known state until the camera comes back.
+      // If we've previously had real data, leave HomeKit on the last
+      // known state instead of the unreachable banner. But on a fresh
+      // install with the camera already offline, we have no real state
+      // yet — fall back to the unreachable banner so the user isn't
+      // shown a misleading default (e.g. privacy switch reading "off"
+      // when we genuinely don't know).
+      if (!this._hasGoodData) {
+        const noResp = new Error("No Response");
+        noResp.toString = () => noResp.message;
+        this.privacySwitch?.getCharacteristic(Characteristic.On).updateValue(noResp);
+        if (this.plugin.config.sirenAccessory?.find((d) => d === device.mac)) {
+          this.sirenSwitch?.getCharacteristic(Characteristic.On).updateValue(noResp);
+        }
+        if (this.plugin.config.floodLightAccessory?.find((d) => d === this.mac)) {
+          this.floodLightService?.getCharacteristic(Characteristic.On).updateValue(noResp);
+        }
+        if (this.plugin.config.spotLightAccessory?.find((d) => d === this.mac)) {
+          this.spotLightService?.getCharacteristic(Characteristic.On).updateValue(noResp);
+        }
+        if (this.plugin.config.garageDoorAccessory?.find((d) => d === this.mac)) {
+          this.garageDoorService?.getCharacteristic(Characteristic.CurrentDoorState).updateValue(noResp);
+        }
+        if (this.plugin.config.notificationAccessory?.find((d) => d === this.mac)) {
+          this.notificationSwitch?.getCharacteristic(Characteristic.On).updateValue(noResp);
+        }
+      }
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Camera] ${this.mac} (${this.display_name}) is offline — keeping last known state`
+          `[Camera] ${this.mac} (${this.display_name}) is offline — ${this._hasGoodData ? "keeping last known state" : "showing as unreachable (no prior data)"}`
         );
     } else {
+      this._hasGoodData = true;
       if (this.cameraAccessoryAttached()) {
         let propertyList;
         try {

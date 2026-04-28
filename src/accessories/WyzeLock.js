@@ -82,12 +82,21 @@ module.exports = class WyzeLock extends WyzeAccessory {
 
   async updateCharacteristics(device) {
     if (device.conn_state === 0) {
-      // Don't push `noResponse` — that triggers HomeKit's unreachable
-      // banner. Just skip the update so the last known state stays
-      // visible until the device comes back online.
+      // If we've previously had real data, leave HomeKit on the last
+      // known state instead of the unreachable banner. But if we've
+      // never had good data (fresh install with the lock offline), let
+      // HomeKit show "unresponsive" so the user isn't shown a misleading
+      // default state (e.g. UNSECURED when we genuinely don't know).
+      if (!this._hasGoodData) {
+        const noResp = new Error("No Response");
+        noResp.toString = () => noResp.message;
+        this.lockService
+          .getCharacteristic(Characteristic.LockCurrentState)
+          .updateValue(noResp);
+      }
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Lock] "${this.display_name} (${this.mac})" is offline — keeping last known state`
+          `[Lock] "${this.display_name} (${this.mac})" is offline — ${this._hasGoodData ? "keeping last known state" : "showing as unreachable (no prior data)"}`
         );
     } else {
       if (this.plugin.config.pluginLoggingEnabled)
@@ -103,6 +112,9 @@ module.exports = class WyzeLock extends WyzeAccessory {
         this.plugin.log.error(`[Lock] getLockInfo returned no device data for ${this.display_name}`);
         return;
       }
+      // We've successfully fetched live state — from now on, transient
+      // offline cycles can keep the last known characteristics visible.
+      this._hasGoodData = true;
       const prop_key = Object.keys(lockProperties);
       for (const element of prop_key) {
         const prop = element;
