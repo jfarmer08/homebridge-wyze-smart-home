@@ -53,6 +53,7 @@ const CAMERA_FEATURE_KEYS = [
   ["floodlight", "floodLightAccessory"],
   ["siren", "sirenAccessory"],
   ["notifications", "notificationAccessory"],
+  ["motionDetection", "motionDetectionAccessory"],
 ];
 
 const ADVANCED_KEYS = [
@@ -117,6 +118,7 @@ function normalize(input) {
         floodlight: !!cam.floodlight,
         siren: !!cam.siren,
         notifications: !!cam.notifications,
+        motionDetection: !!cam.motionDetection,
       });
     }
   }
@@ -127,7 +129,7 @@ function normalize(input) {
       const row = cameraMap.get(mac) || {
         mac,
         name: "",
-        garage: false, spotlight: false, floodlight: false, siren: false, notifications: false,
+        garage: false, spotlight: false, floodlight: false, siren: false, notifications: false, motionDetection: false,
       };
       row[feature] = true;
       cameraMap.set(mac, row);

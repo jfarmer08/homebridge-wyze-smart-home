@@ -23,6 +23,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     this.siren = persisted.siren;
     this.floodLight = persisted.floodLight;       // shared with spotlight (P1056)
     this.garageDoor = persisted.garageDoor;
+    this.motionDetection = persisted.motionDetection;
 
     // Remove any MotionSensor service left over from earlier plugin versions —
     // we don't have a reliable way to detect motion so we no longer expose it.
@@ -125,6 +126,28 @@ module.exports = class WyzeCamera extends WyzeAccessory {
         .getCharacteristic(Characteristic.On)
         .onGet(this.getNotification.bind(this))
         .onSet(this.setNotification.bind(this));
+    }
+
+    // Motion-detection master switch: toggles whether the camera even
+    // looks for motion. Different from the Notifications switch above —
+    // notifications gates the alerts you get; motion detection gates
+    // whether the camera processes motion at all (so e.g. recording
+    // triggers stop too). Useful for users who want the camera always
+    // powered on but want to pause motion-driven automation via
+    // HomeKit. Resolves #231.
+    if (this._isInConfig("motionDetectionAccessory")) {
+      this.motionDetectionSwitch = this._getOrAddService({
+        ServiceType: Service.Switch,
+        subtype: "MotionDetection",
+        defaultName: `${this.display_name} Motion Detection`,
+        legacyLookup: () =>
+          this.homeKitAccessory.getService(`${this.display_name} Motion Detection`),
+        label: "Motion Detection",
+      });
+      this.motionDetectionSwitch
+        .getCharacteristic(Characteristic.On)
+        .onGet(this.getMotionDetection.bind(this))
+        .onSet(this.setMotionDetection.bind(this));
     }
   }
 
@@ -238,6 +261,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     markServiceOnline(this.spotLightService, this.cameraOnline);
     markServiceOnline(this.garageDoorService, this.cameraOnline);
     markServiceOnline(this.notificationSwitch, this.cameraOnline);
+    markServiceOnline(this.motionDetectionSwitch, this.cameraOnline);
 
     if (!this.cameraOnline) {
       if (this.plugin.config.pluginLoggingEnabled)
@@ -319,6 +343,20 @@ module.exports = class WyzeCamera extends WyzeAccessory {
             summary.push(`garage=${property.value == 1 ? "open" : "closed"}`);
           }
           break;
+        case "P1001":   // Motion detection state (most cameras)
+        case "P1029": { // Motion detection state (Wyze Cam Outdoor)
+          if (this._isInConfig("motionDetectionAccessory")) {
+            // Wyze returns "1"/"0" strings on some firmwares, 1/0 ints
+            // on others. Coerce to boolean explicitly so the HomeKit
+            // characteristic gets a clean true/false.
+            this.motionDetection = property.value == 1 || property.value === "1";
+            this.motionDetectionSwitch
+              ?.getCharacteristic(Characteristic.On)
+              .updateValue(this.motionDetection);
+            summary.push(`motion=${this.motionDetection ? "on" : "off"}`);
+          }
+          break;
+        }
       }
     }
 
@@ -331,6 +369,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       siren: this.siren,
       floodLight: this.floodLight,
       garageDoor: this.garageDoor,
+      motionDetection: this.motionDetection,
     });
 
     if (this.plugin.config.pluginLoggingEnabled && summary.length > 0)
@@ -352,6 +391,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   async handleOnGetFloodlight()   { return this.floodLight ?? 0; }
   async handleOnGetAlarmSwitch()  { return this.siren ?? 0; }
   async getNotification()         { return this.notification ?? 0; }
+  async getMotionDetection()      { return this.motionDetection ?? 0; }
 
   async getGarageCurrentState() {
     return this.plugin.client.wyzeGarageDoorStateToHomeKit(this.garageDoor);
@@ -397,6 +437,17 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     );
   }
 
+  async setMotionDetection(value) {
+    // cameraMotionOn / cameraMotionOff handle the per-model PID
+    // routing internally (P1001 + P1047 for most cameras, P1029 for
+    // Wyze Cam Outdoor). All we have to do here is pick the verb.
+    return this._set("Motion Detection", () =>
+      value
+        ? this.plugin.client.cameraMotionOn(this.mac, this.product_model)
+        : this.plugin.client.cameraMotionOff(this.mac, this.product_model)
+    );
+  }
+
   async setGarageTargetState(value) {
     await this._set("Garage Door", () =>
       this.plugin.client.garageDoor(this.mac, this.product_model)
@@ -433,7 +484,8 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this._isInConfig("spotLightAccessory") ||
       this._isInConfig("sirenAccessory") ||
       this._isInConfig("floodLightAccessory") ||
-      this._isInConfig("notificationAccessory")
+      this._isInConfig("notificationAccessory") ||
+      this._isInConfig("motionDetectionAccessory")
     );
   }
 };

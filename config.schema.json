@@ -100,7 +100,8 @@
             "spotlight": { "title": "Expose Spotlight Switch", "type": "boolean", "default": false },
             "floodlight": { "title": "Expose Floodlight Switch", "type": "boolean", "default": false },
             "siren": { "title": "Expose Siren Switch", "type": "boolean", "default": false },
-            "notifications": { "title": "Expose Notifications Switch", "type": "boolean", "default": false }
+            "notifications": { "title": "Expose Notifications Switch", "type": "boolean", "default": false },
+            "motionDetection": { "title": "Expose Motion Detection Switch", "type": "boolean", "default": false, "description": "Toggles whether the camera looks for motion at all (different from notifications). Useful if you want to keep the camera powered on but pause motion-triggered events via HomeKit automation." }
           }
         }
       },
@@ -300,7 +301,8 @@
                         "cameras[].spotlight",
                         "cameras[].floodlight",
                         "cameras[].siren",
-                        "cameras[].notifications"
+                        "cameras[].notifications",
+                        "cameras[].motionDetection"
                       ]
                     }
                   ]
