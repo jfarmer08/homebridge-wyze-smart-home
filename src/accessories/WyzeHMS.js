@@ -2,9 +2,6 @@ const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 const { markServiceOnline } = require("./offlineIndicator");
 
-const TARGET = Characteristic.SecuritySystemTargetState;
-const CURRENT = Characteristic.SecuritySystemCurrentState;
-
 module.exports = class WyzeHMS extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
@@ -47,7 +44,7 @@ module.exports = class WyzeHMS extends WyzeAccessory {
       this.hmsStatus = response.message;
       this.securityService
         .getCharacteristic(Characteristic.SecuritySystemCurrentState)
-        .updateValue(this.convertHmsStateToHomeKitState(this.hmsStatus));
+        .updateValue(this.plugin.client.wyzeHmsStateToHomeKit(this.hmsStatus));
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(`[HMS] ${this.display_name}: ${this.hmsStatus}`);
     } catch (err) {
@@ -61,12 +58,11 @@ module.exports = class WyzeHMS extends WyzeAccessory {
   async handleStateGet() {
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(`[HMS] Get "${this.display_name}": ${this.hmsStatus}`);
-    if (!this.hmsStatus || this.hmsStatus === "undefined") return TARGET.DISARM;
-    return this.convertHmsStateToHomeKitState(this.hmsStatus);
+    return this.plugin.client.wyzeHmsStateToHomeKit(this.hmsStatus);
   }
 
   async handleTargetStateSet(value) {
-    const wyzeState = this.convertHomeKitStateToHmsState(value);
+    const wyzeState = this.plugin.client.homeKitHmsStateToWyze(value);
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(`[HMS] Set target "${this.display_name}": ${wyzeState}`);
     try {
@@ -76,27 +72,6 @@ module.exports = class WyzeHMS extends WyzeAccessory {
         `[HMS] Set failed for "${this.display_name}": ${err.message || err}`
       );
       throw err;
-    }
-  }
-
-  convertHmsStateToHomeKitState(hmsState) {
-    switch (hmsState) {
-      case "home":     return TARGET.STAY_ARM;
-      case "away":     return TARGET.AWAY_ARM;
-      case "disarm":
-      case "changing": return TARGET.DISARM;
-      default:         return TARGET.DISARM;
-    }
-  }
-
-  convertHomeKitStateToHmsState(homeKitState) {
-    switch (homeKitState) {
-      case TARGET.STAY_ARM:
-      case TARGET.NIGHT_ARM:        return "home";
-      case TARGET.AWAY_ARM:         return "away";
-      case TARGET.DISARM:           return "off";
-      case CURRENT.ALARM_TRIGGERED: return "";
-      default:                      return "off";
     }
   }
 
