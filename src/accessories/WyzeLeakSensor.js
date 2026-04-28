@@ -1,10 +1,13 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
+const { markServiceOnline } = require("./offlineIndicator");
 
-module.exports = class WyzeHumidity extends WyzeAccessory {
+module.exports = class WyzeLeakSensor extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
+    // Touch each characteristic once so HAP adds it to the service if
+    // missing. Subsequent calls return the existing characteristic.
     this.getOnCharacteristic();
     this.getStatusActiveCharacteristic();
     this.getBatteryCharacteristic();
@@ -12,12 +15,7 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
   }
 
   getSensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[LeakSensor] Retrieving previous service for "${this.display_name}"`
-      );
     let service = this.homeKitAccessory.getService(Service.LeakSensor);
-
     if (!service) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
@@ -25,108 +23,65 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
         );
       service = this.homeKitAccessory.addService(Service.LeakSensor);
     }
-
     return service;
   }
 
-  getBatterySensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[LeakSensorBattery] Retrieving previous service for "${this.display_name}"`
-      );
+  getBatteryService() {
     let service = this.homeKitAccessory.getService(Service.Battery);
-
     if (!service) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[LeakSensorBattery] Adding service for "${this.display_name}"`
+          `[LeakSensor] [Battery] Adding service for "${this.display_name}"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
     }
-
     return service;
   }
 
-  getIsBatteryLowSensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[LeakSensorBatteryLow] Retrieving previous service for "${this.display_name}"`
-      );
-    let service = this.homeKitAccessory.getService(Service.Battery);
-
-    if (!service) {
-      if (this.plugin.config.pluginLoggingEnabled)
-        this.plugin.log(
-          `[LeakSensorIsBatteryLow] Adding service for "${this.display_name}"`
-        );
-      service = this.homeKitAccessory.addService(Service.Battery);
-    }
-
-    return service;
+  getOnCharacteristic() {
+    return this.getSensorService().getCharacteristic(Characteristic.LeakDetected);
   }
 
   getStatusActiveCharacteristic() {
     return this.getSensorService().getCharacteristic(Characteristic.StatusActive);
   }
 
-  getOnCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[LeakSensor] Fetching status of "${this.display_name}"`
-      );
-    return this.getSensorService().getCharacteristic(
-      Characteristic.LeakDetected
-    );
-  }
-
   getBatteryCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[LeakSensorBattery] Fetching status of "${this.display_name}"`
-      );
-    return this.getBatterySensorService().getCharacteristic(
-      Characteristic.BatteryLevel
-    );
+    return this.getBatteryService().getCharacteristic(Characteristic.BatteryLevel);
   }
 
   getIsBatteryLowCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[LeakSensorBattery] Fetching status of "${this.display_name}"`
-      );
-    return this.getIsBatteryLowSensorService().getCharacteristic(
-      Characteristic.StatusLowBattery
-    );
+    return this.getBatteryService().getCharacteristic(Characteristic.StatusLowBattery);
   }
 
   async updateCharacteristics(device) {
     const online = device.conn_state !== 0;
-    this.getStatusActiveCharacteristic().updateValue(online);
+    markServiceOnline(this.getSensorService(), online);
+
     if (!online) {
-      // StatusActive on the sensor service handles the offline indicator
-      // (set above). Skip the leak-state update so the last known reading
-      // stays visible instead of getting overwritten.
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
           `[LeakSensor] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
         );
-    } else {
-      if (this.plugin.config.pluginLoggingEnabled) {
-        this.plugin.log(
-          `[LeakSensor] Updating status of ${this.mac} (${this.display_name})`
-        );
-      }
-      this.getOnCharacteristic().updateValue(
-        this.plugin.client.getLeakSensorState(
-          device.device_params.ws_detect_state
-        )
-      );
-      this.getBatteryCharacteristic().updateValue(
-        this.plugin.client.checkBatteryVoltage(device.device_params.voltage)
-      );
-      this.getIsBatteryLowCharacteristic().updateValue(
-        this.plugin.client.checkLowBattery(device.device_params.voltage)
-      );
+      return;
     }
+
+    // Wyze ws_detect_state: 0 = dry, 1 = wet. The helper also collapses
+    // any unknown value (>= 2) to "leak detected" as a fail-safe — better
+    // a false alarm than missing a real leak on a safety device.
+    const leakState = this.plugin.client.getLeakSensorState(device.device_params.ws_detect_state);
+    const batteryPct = this.plugin.client.checkBatteryVoltage(device.device_params.voltage);
+    const batteryLow = this.plugin.client.checkLowBattery(device.device_params.voltage);
+
+    this.getOnCharacteristic().updateValue(leakState);
+    this.getBatteryCharacteristic().updateValue(batteryPct);
+    this.getIsBatteryLowCharacteristic().updateValue(batteryLow);
+
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
+        `[LeakSensor] ${this.mac} (${this.display_name}): ` +
+          `${leakState === Characteristic.LeakDetected.LEAK_DETECTED ? "WET" : "dry"}, ` +
+          `battery ${batteryPct}%${batteryLow ? " (low)" : ""}`
+      );
   }
 };
