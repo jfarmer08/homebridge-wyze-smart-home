@@ -92,6 +92,16 @@
           "functionBody": "return model.showAdvancedOptions === true;"
         }
       },
+      "enableThermostatRoomSensors": {
+        "title": "Expose Wyze Thermostat Room Sensors",
+        "description": "Discover CO_TH1 room sensors paired to each Wyze Thermostat and surface them in HomeKit as separate Temperature/Humidity tiles. Adds one extra API call per thermostat per refresh cycle.",
+        "type": "boolean",
+        "default": false,
+        "required": false,
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
       "garageDoorAccessory": {
         "type": "array",
         "title": "Wyze Garage Door Controller",

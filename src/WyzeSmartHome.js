@@ -1,7 +1,7 @@
 const { homebridge, Accessory, UUIDGen, Categories } = require('./types')
 const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorModels,
   TemperatureHumidityModels, LockModels, LockBoltV2Models, MotionSensorModels, ContactSensorModels, LightModels,
-  LightStripModels, MeshLightModels, ThermostatModels, S1GatewayModels,
+  LightStripModels, MeshLightModels, ThermostatModels, ThermostatRoomSensor, S1GatewayModels,
   VacuumModels, IrrigationModels } = require('./enums')
 
 //const WyzeAPI = require('wyze-api') // Uncomment for Release
@@ -20,6 +20,7 @@ const WyzeCamera = require('./accessories/WyzeCamera')
 const WyzeSwitch = require('./accessories/WyzeSwitch')
 const WyzeHMS = require('./accessories/WyzeHMS')
 const WyzeThermostat = require('./accessories/WyzeThermostat')
+const WyzeRoomSensor = require('./accessories/WyzeRoomSensor')
 const WyzeVacuum = require('./accessories/WyzeVacuum')
 const WyzeIrrigation = require('./accessories/WyzeIrrigation')
 
@@ -127,11 +128,89 @@ module.exports = class WyzeSmartHome {
       }
 
       if (this.config.pluginLoggingEnabled) this.log(`Found ${devices.length} device(s)`)
+
+      // Wyze Room Sensors (CO_TH1) aren't returned by the bulk getObjectList
+      // — they hang off a thermostat as sub-devices. Discover them via
+      // getThermostatSensors and synthesize device entries so they flow
+      // through the same loadDevice / accessory-update path as everything
+      // else. Opt-in via config so users without room sensors don't pay
+      // for the extra API call per refresh.
+      if (this.config.enableThermostatRoomSensors) {
+        const roomSensors = await this.discoverRoomSensors(devices)
+        for (const rs of roomSensors) devices.push(rs)
+      }
+
       await this.loadDevices(devices, timestamp)
     } catch (e) {
       this.log.error(`Error getting devices: ${e}`)
       throw e
     }
+  }
+
+  /**
+   * For each thermostat in `devices`, fetch its paired Wyze Room Sensors
+   * (CO_TH1) via the Earth `get_sub_device` endpoint and return them as
+   * synthetic device entries that loadDevice can consume.
+   *
+   * One extra API call per thermostat per refresh cycle.
+   */
+  async discoverRoomSensors(devices) {
+    const thermostats = devices.filter(
+      (d) => d.product_type === 'Thermostat' && Object.values(ThermostatModels).includes(d.product_model)
+    )
+    if (thermostats.length === 0) return []
+
+    const out = []
+    for (const t of thermostats) {
+      let response
+      try {
+        response = await this.client.getThermostatSensors(t.mac)
+      } catch (err) {
+        this.log.error(`[RoomSensor] discovery failed for thermostat ${t.nickname}: ${err.message || err}`)
+        continue
+      }
+
+      // The Earth endpoint returns its payload under various shapes across
+      // firmware versions — accept all the ones we've seen in the wild.
+      const list =
+        response?.data?.sensor_list ||
+        response?.data?.sub_device_list ||
+        response?.data?.sub_devices ||
+        (Array.isArray(response?.data) ? response.data : []) ||
+        []
+
+      for (const s of list) {
+        const mac = s.device_id || s.device_mac || s.mac
+        if (!mac) continue
+        const props = s.props || s.device_params || s
+        const iotState = props.iot_state ?? s.iot_state
+        const conn_state = iotState === 'connect' || iotState === 1 ? 1 : 0
+
+        out.push({
+          mac,
+          nickname: s.name || s.nickname || `Room Sensor ${mac.slice(-4)}`,
+          product_type: 'ThermostatRoomSensor',
+          product_model: ThermostatRoomSensor.CO_TH1,
+          firmware_ver: s.firmware_ver || t.firmware_ver,
+          conn_state,
+          // Thermostat is the parent — useful context if anything later
+          // wants to map sensor → thermostat.
+          parent_device_mac: t.mac,
+          device_params: {
+            temperature: props.temperature,
+            humidity: props.humidity,
+            battery: props.battery,
+            rssi: props.rssi,
+            iot_state: iotState,
+          },
+        })
+      }
+    }
+
+    if (out.length > 0 && this.config.pluginLoggingEnabled) {
+      this.log(`[RoomSensor] Discovered ${out.length} room sensor(s) across ${thermostats.length} thermostat(s)`)
+    }
+    return out
   }
 
   async loadDevices(devices, timestamp) {
@@ -232,6 +311,9 @@ module.exports = class WyzeSmartHome {
         break
       case 'TemperatureHumidity':
         if (matches(TemperatureHumidityModels)) return WyzeTemperatureHumidity
+        break
+      case 'ThermostatRoomSensor':
+        if (matches(ThermostatRoomSensor)) return WyzeRoomSensor
         break
       case 'LeakSensor':
         if (matches(LeakSensorModels)) return WyzeLeakSensor
