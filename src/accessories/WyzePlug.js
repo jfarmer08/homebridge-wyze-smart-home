@@ -7,42 +7,13 @@ module.exports = class WyzePlug extends WyzeAccessory {
     super(plugin, homeKitAccessory);
 
     this.getOnCharacteristic().on("set", this.set.bind(this));
-    this.getOutletService().getCharacteristic(Characteristic.OutletInUse)
+    this.getOutletService()
+      .getCharacteristic(Characteristic.OutletInUse)
       .onGet(this.getOutletInUse.bind(this));
   }
 
-  async getOutletInUse() {
-    return this.outletInUse ?? false;
-  }
-
-  updateCharacteristics(device) {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Plug] Updating status of "${this.display_name} (${this.mac})"`
-      );
-    markServiceOnline(this.getOutletService(), device.conn_state !== 0);
-    if (device.conn_state === 0) {
-      if (this.plugin.config.pluginLoggingEnabled)
-        this.plugin.log(
-          `[Plug] ${this.mac} is offline — keeping last known state, marked inactive`
-        );
-    } else {
-      const isOn = device.device_params.switch_state === 1;
-      this.outletInUse = isOn;
-      this.getOnCharacteristic().updateValue(device.device_params.switch_state);
-      this.getOutletService()
-        .getCharacteristic(Characteristic.OutletInUse)
-        .updateValue(isOn);
-    }
-  }
-
   getOutletService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Plug] Retrieving previous service for "${this.display_name} (${this.mac})"`
-      );
     let service = this.homeKitAccessory.getService(Service.Outlet);
-
     if (!service) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
@@ -50,24 +21,48 @@ module.exports = class WyzePlug extends WyzeAccessory {
         );
       service = this.homeKitAccessory.addService(Service.Outlet);
     }
-
     return service;
   }
 
   getOnCharacteristic() {
+    return this.getOutletService().getCharacteristic(Characteristic.On);
+  }
+
+  async getOutletInUse() {
+    return this.outletInUse ?? false;
+  }
+
+  updateCharacteristics(device) {
+    const online = device.conn_state !== 0;
+    markServiceOnline(this.getOutletService(), online);
+
+    if (!online) {
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
+          `[Plug] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
+        );
+      return;
+    }
+
+    // Wyze switch_state: 0 = off, 1 = on. Coerce explicitly.
+    const isOn = device.device_params.switch_state === 1;
+    this.outletInUse = isOn;
+    this.getOnCharacteristic().updateValue(isOn);
+    this.getOutletService()
+      .getCharacteristic(Characteristic.OutletInUse)
+      .updateValue(isOn);
+
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
-        `[Plug] Fetching status of "${this.display_name} (${this.mac})"`
+        `[Plug] ${this.mac} (${this.display_name}): ${isOn ? "on" : "off"}`
       );
-    return this.getOutletService().getCharacteristic(Characteristic.On);
   }
 
   async set(value, callback) {
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
-        `[Plug] Setting power for "${this.display_name} (${this.mac})" to ${value}`
+        `[Plug] Setting power for "${this.display_name} (${this.mac})" to ${value ? "on" : "off"}`
       );
-
     try {
       await this.plugin.client.plugPower(
         this.mac,
@@ -76,6 +71,9 @@ module.exports = class WyzePlug extends WyzeAccessory {
       );
       callback();
     } catch (e) {
+      this.plugin.log.error(
+        `[Plug] Set failed for "${this.display_name}": ${e.message || e}`
+      );
       callback(e);
     }
   }

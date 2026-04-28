@@ -1,11 +1,12 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
-
+const { markServiceOnline } = require("./offlineIndicator");
 
 module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
+    // Touch each characteristic once so HAP adds it to the service if missing.
     this.getTemperatureCharacteristic();
     this.getHumidityCharacteristic();
     this.getTemperatureStatusActiveCharacteristic();
@@ -14,76 +15,48 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
     this.getIsBatteryLowCharacteristic();
   }
 
-  getHumiditySensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Humidity] Retrieving previous service for "${this.display_name} (${this.mac})"`
-      );
-    let service = this.homeKitAccessory.getService(Service.HumiditySensor);
-
-    if (!service) {
-      if (this.plugin.config.pluginLoggingEnabled)
-        this.plugin.log(
-          `[Humidity] Adding service for "${this.display_name} (${this.mac})"`
-        );
-      service = this.homeKitAccessory.addService(Service.HumiditySensor);
-    }
-
-    return service;
-  }
-
   getTemperatureSensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Temperature] Retrieving previous service for "${this.display_name} (${this.mac})"`
-      );
     let service = this.homeKitAccessory.getService(Service.TemperatureSensor);
-
     if (!service) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Temperature] Adding service for "${this.display_name} (${this.mac})"`
+          `[TemperatureHumidity] Adding Temperature service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.TemperatureSensor);
     }
-
     return service;
   }
 
-  getBatterySensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Temperature Humidity] [Battery] Retrieving previous service for "${this.display_name} (${this.mac})"`
-      );
-    let service = this.homeKitAccessory.getService(Service.Battery);
-
+  getHumiditySensorService() {
+    let service = this.homeKitAccessory.getService(Service.HumiditySensor);
     if (!service) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Temperature Humidity] [Battery] Adding service for "${this.display_name} (${this.mac})"`
+          `[TemperatureHumidity] Adding Humidity service for "${this.display_name} (${this.mac})"`
         );
-      service = this.homeKitAccessory.addService(Service.Battery);
+      service = this.homeKitAccessory.addService(Service.HumiditySensor);
     }
-
     return service;
   }
 
-  getIsBatteryLowSensorService() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Temperature Humidity] [Low Battery] Retrieving previous service for "${this.display_name} (${this.mac})"`
-      );
+  getBatteryService() {
     let service = this.homeKitAccessory.getService(Service.Battery);
-
     if (!service) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Temperature Humidity] [Low Battery] Adding service for "${this.display_name} (${this.mac})"`
+          `[TemperatureHumidity] Adding Battery service for "${this.display_name} (${this.mac})"`
         );
       service = this.homeKitAccessory.addService(Service.Battery);
     }
-
     return service;
+  }
+
+  getTemperatureCharacteristic() {
+    return this.getTemperatureSensorService().getCharacteristic(Characteristic.CurrentTemperature);
+  }
+
+  getHumidityCharacteristic() {
+    return this.getHumiditySensorService().getCharacteristic(Characteristic.CurrentRelativeHumidity);
   }
 
   getTemperatureStatusActiveCharacteristic() {
@@ -94,75 +67,42 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
     return this.getHumiditySensorService().getCharacteristic(Characteristic.StatusActive);
   }
 
-  getHumidityCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Temperature Humidity] Fetching status of "${this.display_name} (${this.mac})"`
-      );
-    return this.getHumiditySensorService().getCharacteristic(
-      Characteristic.CurrentRelativeHumidity
-    );
-  }
-
-  getTemperatureCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Temperature Humidity] Fetching status of "${this.display_name} (${this.mac})"`
-      );
-    return this.getTemperatureSensorService().getCharacteristic(
-      Characteristic.CurrentTemperature
-    );
-  }
-
   getBatteryCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Temperature Humidity] [Battery] Fetching status of "${this.display_name} (${this.mac})"`
-      );
-    return this.getBatterySensorService().getCharacteristic(
-      Characteristic.BatteryLevel
-    );
+    return this.getBatteryService().getCharacteristic(Characteristic.BatteryLevel);
   }
 
   getIsBatteryLowCharacteristic() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Temperature Humidity] [Low Battery] Fetching status of "${this.display_name} (${this.mac})"`
-      );
-    return this.getIsBatteryLowSensorService().getCharacteristic(
-      Characteristic.StatusLowBattery
-    );
+    return this.getBatteryService().getCharacteristic(Characteristic.StatusLowBattery);
   }
 
   updateCharacteristics(device) {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Temperature Humidity] Updating status of "${this.display_name} (${this.mac})"`
-      );
     const online = device.conn_state !== 0;
-    this.getTemperatureStatusActiveCharacteristic().updateValue(online);
-    this.getHumidityStatusActiveCharacteristic().updateValue(online);
+    markServiceOnline(this.getTemperatureSensorService(), online);
+    markServiceOnline(this.getHumiditySensorService(), online);
+
     if (!online) {
-      // StatusActive set above on both temp and humidity services already
-      // signals offline. Skip the value updates so the last known readings
-      // stay visible.
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Temperature Humidity] ${this.mac} is offline — keeping last known values, marked inactive`
+          `[TemperatureHumidity] ${this.mac} (${this.display_name}) is offline — keeping last known values, marked inactive`
         );
-    } else {
-      this.getHumidityCharacteristic().updateValue(
-        device.device_params.th_sensor_humidity
-      );
-      this.getTemperatureCharacteristic().updateValue(
-        this.plugin.client.wyzeTemperatureToHomeKit(device.device_params.th_sensor_temperature)
-      );
-      this.getBatteryCharacteristic().updateValue(
-        this.plugin.client.checkBatteryVoltage(device.device_params.voltage)
-      );
-      this.getIsBatteryLowCharacteristic().updateValue(
-        this.plugin.client.checkLowBattery(device.device_params.voltage)
-      );
+      return;
     }
+
+    const tempC = this.plugin.client.wyzeTemperatureToHomeKit(device.device_params.th_sensor_temperature);
+    const humidityPct = device.device_params.th_sensor_humidity;
+    const batteryPct = this.plugin.client.checkBatteryVoltage(device.device_params.voltage);
+    const batteryLow = this.plugin.client.checkLowBattery(device.device_params.voltage);
+
+    this.getTemperatureCharacteristic().updateValue(tempC);
+    this.getHumidityCharacteristic().updateValue(humidityPct);
+    this.getBatteryCharacteristic().updateValue(batteryPct);
+    this.getIsBatteryLowCharacteristic().updateValue(batteryLow);
+
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
+        `[TemperatureHumidity] ${this.mac} (${this.display_name}): ` +
+          `${tempC.toFixed(1)}°C, ${humidityPct}% RH, ` +
+          `battery ${batteryPct}%${batteryLow ? " (low)" : ""}`
+      );
   }
 };
