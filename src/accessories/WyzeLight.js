@@ -1,13 +1,7 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
+const { propertyIds: PIDs } = require("wyze-api");
 const { markServiceOnline } = require("./offlineIndicator");
-
-const WYZE_API_BRIGHTNESS_PROPERTY = "P1501";
-const WYZE_API_COLOR_TEMP_PROPERTY = "P1502";
-const WYZE_COLOR_TEMP_MIN = 2700;
-const WYZE_COLOR_TEMP_MAX = 6500;
-const HOMEKIT_COLOR_TEMP_MIN = 500;
-const HOMEKIT_COLOR_TEMP_MAX = 140;
 
 module.exports = class WyzeLight extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -72,14 +66,16 @@ module.exports = class WyzeLight extends WyzeAccessory {
     let colorTempK = null;
     for (const property of propertyList?.data?.property_list ?? []) {
       switch (property.pid) {
-        case WYZE_API_BRIGHTNESS_PROPERTY:
+        case PIDs.BRIGHTNESS:
           brightness = Number(property.value);
-          this.getCharacteristic(Characteristic.Brightness).updateValue(brightness);
+          this.getCharacteristic(Characteristic.Brightness).updateValue(
+            this.plugin.client.checkBrightnessValue(brightness)
+          );
           break;
-        case WYZE_API_COLOR_TEMP_PROPERTY:
+        case PIDs.COLOR_TEMP:
           colorTempK = Number(property.value);
           this.getCharacteristic(Characteristic.ColorTemperature).updateValue(
-            this.plugin.client.kelvinToMired(colorTempK)
+            this.plugin.client.checkColorTemp(this.plugin.client.kelvinToMired(colorTempK))
           );
           break;
       }
@@ -122,19 +118,13 @@ module.exports = class WyzeLight extends WyzeAccessory {
     }
   }
 
-  // TODO: Issues when Color Temp higher then
   async setColorTemperature(value, callback) {
     await this.sleep(500);
-    const floatValue = this.plugin.client.rangeToFloat(
-      value,
-      HOMEKIT_COLOR_TEMP_MIN,
-      HOMEKIT_COLOR_TEMP_MAX
-    );
-    const wyzeValue = this.plugin.client.floatToRange(
-      floatValue,
-      WYZE_COLOR_TEMP_MIN,
-      WYZE_COLOR_TEMP_MAX
-    );
+    // homeKitColorTempToWyze stretches HomeKit's wider mireds range
+    // (140–500) linearly across Wyze's narrower Kelvin range (2700–6500)
+    // so the slider feels native even though Wyze's bulbs can't reach
+    // either extreme of the HomeKit slider.
+    const wyzeValue = this.plugin.client.homeKitColorTempToWyze(value);
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
         `[Light] Setting color temp for ${this.mac} (${this.display_name}) to ${value} mireds (${wyzeValue}K)`
