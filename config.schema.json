@@ -114,6 +114,17 @@
             "type": "boolean",
             "default": false,
             "description": "Discover CO_TH1 room sensors paired to each Wyze Thermostat and surface them as separate Temperature/Humidity tiles. Adds one extra API call per thermostat per refresh cycle."
+          },
+          "mode": {
+            "title": "Mode Restriction",
+            "type": "string",
+            "default": "auto",
+            "oneOf": [
+              { "enum": ["auto"], "title": "auto — show all modes" },
+              { "enum": ["heat-only"], "title": "heat-only — hide Cool + Auto (e.g. gas furnace, no AC)" },
+              { "enum": ["cool-only"], "title": "cool-only — hide Heat + Auto (e.g. AC only)" }
+            ],
+            "description": "If your physical setup only supports one side, restrict HomeKit's mode picker to match. Default 'auto' shows everything."
           }
         }
       },

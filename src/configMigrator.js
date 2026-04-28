@@ -141,10 +141,20 @@ function normalize(input) {
 
   // --- Thermostat ---
   const thermostat = isPlainObject(c.thermostat) ? c.thermostat : {};
+  // mode: undefined/auto → no restriction, "heat-only" / "cool-only"
+  // hide the unsupported sides in HomeKit. Useful when the physical
+  // wiring is one-sided (gas furnace with no AC, etc.).
+  let tmode = thermostat.mode ?? c.thermostatMode;
+  if (tmode != null) {
+    tmode = String(tmode).toLowerCase();
+    if (!['auto', 'heat-only', 'cool-only'].includes(tmode)) tmode = 'auto';
+  }
   c.thermostat = {
     exposeRoomSensors: thermostat.exposeRoomSensors ?? c.enableThermostatRoomSensors ?? false,
+    mode: tmode || 'auto',
   };
   c.enableThermostatRoomSensors = c.thermostat.exposeRoomSensors;
+  c.thermostatMode = c.thermostat.mode;
 
   // --- HMS ---
   const hmsBlock = isPlainObject(c.hms) ? c.hms : null;
@@ -227,7 +237,10 @@ function toCanonical2x(normalized, platformMeta) {
       lowBatteryPercentage: normalized.polling.lowBatteryPercentage,
     },
     cameras: normalized.cameras,
-    thermostat: { exposeRoomSensors: normalized.thermostat.exposeRoomSensors },
+    thermostat: {
+      exposeRoomSensors: normalized.thermostat.exposeRoomSensors,
+      mode: normalized.thermostat.mode || 'auto',
+    },
     hms: { enabled: normalized.hms.enabled },
     excludes: { macs: normalized.excludes.macs, types: normalized.excludes.types },
     logging: {

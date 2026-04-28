@@ -39,10 +39,21 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
       .getCharacteristic(Characteristic.CurrentTemperature)
       .onGet(this.handleCurrentTemperatureGet.bind(this));
 
-    this.service
-      .getCharacteristic(Characteristic.TargetHeatingCoolingState)
+    // TargetHeatingCoolingState: 0=OFF, 1=HEAT, 2=COOL, 3=AUTO.
+    // Honor optional config.thermostat.mode for users whose physical
+    // setup only supports one side (e.g. gas furnace, no AC):
+    //   "heat-only" → HomeKit hides COOL + AUTO
+    //   "cool-only" → HomeKit hides HEAT + AUTO
+    //   "auto" / unset → no restriction (current default behavior)
+    const targetMode = this.service.getCharacteristic(Characteristic.TargetHeatingCoolingState)
       .onGet(this.handleTargetHeatingCoolingStateGet.bind(this))
       .onSet(this.handleTargetHeatingCoolingStateSet.bind(this));
+    const restrictMode = this.plugin?.config?.thermostat?.mode;
+    if (restrictMode === 'heat-only') {
+      targetMode.setProps({ validValues: [0, 1] });
+    } else if (restrictMode === 'cool-only') {
+      targetMode.setProps({ validValues: [0, 2] });
+    }
 
     this.service
       .getCharacteristic(Characteristic.TargetTemperature)
