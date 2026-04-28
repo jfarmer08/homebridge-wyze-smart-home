@@ -11,7 +11,12 @@ module.exports = class WyzeIrrigation extends WyzeAccessory {
     // Zone number from plugin config; each MAC can have one zone configured.
     // config.irrigationZone: { [mac]: zoneNumber } — defaults to zone 1.
     this.zoneNumber = this.plugin.config.irrigationZone?.[this.mac] ?? 1;
-    this.setDuration = DEFAULT_DURATION_SECONDS;
+    // Restore the user's last-set duration across reboots so they don't
+    // have to re-set it every restart. Active / InUse / RemainingDuration
+    // are intentionally NOT persisted — a homebridge restart shouldn't
+    // pretend a zone is mid-run since the timer state is gone.
+    const persisted = this.loadPersistedState();
+    this.setDuration = persisted.setDuration ?? DEFAULT_DURATION_SECONDS;
     this.remainingDuration = 0;
     this.isActive = false;
     this.isInUse = false;
@@ -117,6 +122,7 @@ module.exports = class WyzeIrrigation extends WyzeAccessory {
 
   async handleSetDuration(value) {
     this.setDuration = value;
+    this.persistState({ setDuration: value });
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
         `[Irrigation] SetDuration for "${this.display_name}" zone ${this.zoneNumber}: ${value}s`

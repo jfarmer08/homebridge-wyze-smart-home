@@ -10,6 +10,17 @@ module.exports = class WyzeLock extends WyzeAccessory {
     this.contactService = this._getOrAddService(Service.ContactSensor, "Door Contact");
     this.batteryService = this._getOrAddService(Service.Battery, "Battery");
 
+    // Restore from disk so HomeKit shows real state immediately on
+    // reboot — critical for a safety device. Otherwise the lock could
+    // briefly show "unlocked" right after restart even though it's
+    // actually locked.
+    const persisted = this.loadPersistedState();
+    this.hardlock = persisted.hardlock;
+    this.door_open_status = persisted.door_open_status;
+    this.lockPower = persisted.lockPower;
+    this.lockOnOffline = persisted.lockOnOffline;
+    this.trash_mode = persisted.trash_mode;
+
     this.lockService
       .getCharacteristic(Characteristic.LockCurrentState)
       .onGet(this.getLockCurrentState.bind(this));
@@ -109,6 +120,16 @@ module.exports = class WyzeLock extends WyzeAccessory {
         .getCharacteristic(Characteristic.LockCurrentState)
         .updateValue(this.plugin.client.getLockState(this.hardlock));
     }
+
+    // Persist so the next reboot shows real state instead of undefined
+    // until the first refresh completes.
+    this.persistState({
+      hardlock: this.hardlock,
+      door_open_status: this.door_open_status,
+      lockPower: this.lockPower,
+      lockOnOffline: this.lockOnOffline,
+      trash_mode: this.trash_mode,
+    });
 
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(

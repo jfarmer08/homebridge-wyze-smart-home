@@ -6,9 +6,13 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
-    this.isLocked = true;
-    this.isDoorOpen = false;
-    this.batteryLevel = 100;
+    // Restore from disk so HomeKit shows real lock state immediately on
+    // reboot. Default to "locked" (the safer assumption) and "closed"
+    // for a brand-new install where we have no prior reading yet.
+    const persisted = this.loadPersistedState();
+    this.isLocked = persisted.isLocked ?? true;
+    this.isDoorOpen = persisted.isDoorOpen ?? false;
+    this.batteryLevel = persisted.batteryLevel ?? 100;
 
     this.lockService = this._getOrAddService(Service.LockMechanism, "LockMechanism");
     this.contactService = this._getOrAddService(Service.ContactSensor, "Door Contact");
@@ -114,6 +118,13 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
         .getCharacteristic(Characteristic.StatusLowBattery)
         .updateValue(this.plugin.client.checkLowBattery(this.batteryLevel));
     }
+
+    // Persist for next reboot.
+    this.persistState({
+      isLocked: this.isLocked,
+      isDoorOpen: this.isDoorOpen,
+      batteryLevel: this.batteryLevel,
+    });
 
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(

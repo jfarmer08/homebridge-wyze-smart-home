@@ -13,6 +13,17 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     this._cameraControllerReady = false;
     this.cameraOnline = false;
 
+    // Restore last-known characteristic values from disk so HomeKit shows
+    // the right state immediately on reboot instead of "undefined" until
+    // the first refresh cycle runs.
+    const persisted = this.loadPersistedState();
+    this.on = persisted.on;                       // privacy (PID-driven)
+    this.power_switch = persisted.power_switch;   // privacy (bulk-list)
+    this.notification = persisted.notification;
+    this.siren = persisted.siren;
+    this.floodLight = persisted.floodLight;       // shared with spotlight (P1056)
+    this.garageDoor = persisted.garageDoor;
+
     // Remove any MotionSensor service left over from earlier plugin versions —
     // we don't have a reliable way to detect motion so we no longer expose it.
     const staleMotion = this.homeKitAccessory.getService(Service.MotionSensor);
@@ -241,6 +252,7 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       const powerSwitch = device.device_params?.power_switch;
       this.power_switch = powerSwitch;
       this.privacySwitch?.getCharacteristic(Characteristic.On).updateValue(powerSwitch);
+      this.persistState({ power_switch: powerSwitch });
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
           `[Camera] ${this.mac} (${this.display_name}): privacy ${powerSwitch ? "on" : "off"}`
@@ -309,6 +321,17 @@ module.exports = class WyzeCamera extends WyzeAccessory {
           break;
       }
     }
+
+    // Persist whatever fields we successfully read so the next reboot
+    // gets accurate values immediately instead of "undefined" until the
+    // first refresh.
+    this.persistState({
+      on: this.on,
+      notification: this.notification,
+      siren: this.siren,
+      floodLight: this.floodLight,
+      garageDoor: this.garageDoor,
+    });
 
     if (this.plugin.config.pluginLoggingEnabled && summary.length > 0)
       this.plugin.log(

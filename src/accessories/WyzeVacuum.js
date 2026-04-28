@@ -6,10 +6,13 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
-    this.suctionLevel = 2; // STANDARD
-    this.batteryLevel = 100;
-    this.isCharging = false;
-    this.isCleaning = false;
+    // Restore from disk so the Get handlers return real values on
+    // reboot instead of the static defaults below.
+    const persisted = this.loadPersistedState();
+    this.suctionLevel = persisted.suctionLevel ?? 2; // 2 = STANDARD
+    this.batteryLevel = persisted.batteryLevel ?? 100;
+    this.isCharging = persisted.isCharging ?? false;
+    this.isCleaning = persisted.isCleaning ?? false;
 
     this.fanService =
       this.homeKitAccessory.getService(Service.Fan) ||
@@ -111,6 +114,13 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
           ? Characteristic.ChargingState.CHARGING
           : Characteristic.ChargingState.NOT_CHARGING
       );
+
+    this.persistState({
+      suctionLevel: this.suctionLevel,
+      batteryLevel: this.batteryLevel,
+      isCharging: this.isCharging,
+      isCleaning: this.isCleaning,
+    });
 
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(

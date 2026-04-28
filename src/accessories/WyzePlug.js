@@ -6,6 +6,11 @@ module.exports = class WyzePlug extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
+    // Restore from disk so OutletInUse Get returns the right value on
+    // reboot instead of false (the JS-default for an undefined ?? false).
+    const persisted = this.loadPersistedState();
+    this.outletInUse = persisted.outletInUse;
+
     this.getOnCharacteristic().on("set", this.set.bind(this));
     this.getOutletService()
       .getCharacteristic(Characteristic.OutletInUse)
@@ -51,6 +56,7 @@ module.exports = class WyzePlug extends WyzeAccessory {
     this.getOutletService()
       .getCharacteristic(Characteristic.OutletInUse)
       .updateValue(isOn);
+    this.persistState({ outletInUse: isOn });
 
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(

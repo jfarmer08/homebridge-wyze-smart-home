@@ -18,14 +18,16 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
 
-    // Sensible defaults until the first thermostatGetIotProp succeeds.
-    this.thermostatTemperature = 69.0;
-    this.thermostatCoolSetpoint = 65.0;
-    this.thermostatHeatSetpoint = 72.0;
-    this.thermostatModeSys = "auto";
-    this.thermostatWorkingState = "idle";
-    this.thermostatTempUnit = "F";
-    this.thermostatHumidity = 50;
+    // Restore from disk so HomeKit shows real values on reboot. Falls
+    // back to sensible defaults on first install only.
+    const persisted = this.loadPersistedState();
+    this.thermostatTemperature = persisted.thermostatTemperature ?? 69.0;
+    this.thermostatCoolSetpoint = persisted.thermostatCoolSetpoint ?? 65.0;
+    this.thermostatHeatSetpoint = persisted.thermostatHeatSetpoint ?? 72.0;
+    this.thermostatModeSys = persisted.thermostatModeSys ?? "auto";
+    this.thermostatWorkingState = persisted.thermostatWorkingState ?? "idle";
+    this.thermostatTempUnit = persisted.thermostatTempUnit ?? "F";
+    this.thermostatHumidity = persisted.thermostatHumidity ?? 50;
 
     this.service = this.getThermostatService();
 
@@ -262,6 +264,18 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     this.service
       .getCharacteristic(Characteristic.HeatingThresholdTemperature)
       .updateValue(c.fahrenheitToCelsius(this.thermostatHeatSetpoint));
+
+    // Persist so the next reboot has real values immediately instead of
+    // the hardcoded constructor defaults.
+    this.persistState({
+      thermostatTemperature: this.thermostatTemperature,
+      thermostatCoolSetpoint: this.thermostatCoolSetpoint,
+      thermostatHeatSetpoint: this.thermostatHeatSetpoint,
+      thermostatModeSys: this.thermostatModeSys,
+      thermostatWorkingState: this.thermostatWorkingState,
+      thermostatTempUnit: this.thermostatTempUnit,
+      thermostatHumidity: this.thermostatHumidity,
+    });
 
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
