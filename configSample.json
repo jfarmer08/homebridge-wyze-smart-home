@@ -49,9 +49,25 @@
             ],
             "enableThermostatRoomSensors": false,
             "deviceTypeOverrides": {
-                "_comment": "Optional. Route an unrecognized Wyze product code to an existing accessory class — useful for testing a brand-new model before official support lands. Two accepted shapes per category: an array of codes, or a {FriendlyName: code} object.",
-                "CameraModels": ["HL_NEW_CAM"],
-                "ContactSensorModels": { "MyNewDoorSensor": "DWS9X" }
+                "_comment": "Optional. Route an unrecognized Wyze product code to an existing accessory class — useful for testing a brand-new model before official support lands. Each category accepts either an array of codes (['ABC', 'XYZ']) or an object of {FriendlyName: 'CODE'}. Delete any category you don't need.",
+                "CameraModels": [],
+                "OutdoorPlugModels": [],
+                "PlugModels": [],
+                "LightModels": [],
+                "MeshLightModels": [],
+                "LightStripModels": [],
+                "ContactSensorModels": [],
+                "MotionSensorModels": [],
+                "LockModels": [],
+                "LockBoltV2Models": [],
+                "TemperatureHumidityModels": [],
+                "LeakSensorModels": [],
+                "CommonModels": [],
+                "S1GatewayModels": [],
+                "ThermostatModels": [],
+                "ThermostatRoomSensor": [],
+                "VacuumModels": [],
+                "IrrigationModels": []
             },
             "platform": "WyzeSmartHome"
         }
