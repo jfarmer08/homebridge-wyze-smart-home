@@ -4,18 +4,15 @@ const { markServiceOnline } = require("./offlineIndicator");
 
 // Future ideas:
 //   - Fan mode switch (auto / circ / on)
-//   - Per-room temp sensors that report under the same accessory
+//   - Per-room temp sensors (see WyzeRoomSensor)
 //   - "Time-to-temperature" estimate as a custom characteristic
 
-const Wyze2HomekitUnits = { C: 0, F: 1 };
-const Wyze2HomekitStates = { off: 0, heat: 1, cool: 2, auto: 3 };
-const Wyze2HomekitWorkingStates = { idle: 0, heating: 1, cooling: 2 };
-
-// Inverted lookup so we can convert HomeKit numeric state → Wyze string mode
-// without relying on Object.keys() insertion order.
-const HomekitState2Wyze = Object.fromEntries(
-  Object.entries(Wyze2HomekitStates).map(([k, v]) => [v, k])
-);
+// HomeKit constants we reference by name. These match what
+// wyzeThermostatModeToHomeKit / homeKitThermostatModeToWyze produce.
+const HK_MODE_OFF = 0;
+const HK_MODE_HEAT = 1;
+const HK_MODE_COOL = 2;
+const HK_MODE_AUTO = 3;
 
 module.exports = class WyzeThermostat extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -86,15 +83,15 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   // ---- Get handlers ---------------------------------------------------------
 
   async handleCurrentTemperatureGet() {
-    return this.f2c(this.thermostatTemperature);
+    return this.plugin.client.fahrenheitToCelsius(this.thermostatTemperature);
   }
 
   async handleCurrentHeatingCoolingStateGet() {
-    return Wyze2HomekitWorkingStates[this.thermostatWorkingState] ?? Wyze2HomekitWorkingStates.idle;
+    return this.plugin.client.wyzeThermostatWorkingStateToHomeKit(this.thermostatWorkingState);
   }
 
   async handleTargetHeatingCoolingStateGet() {
-    return Wyze2HomekitStates[this.thermostatModeSys] ?? Wyze2HomekitStates.off;
+    return this.plugin.client.wyzeThermostatModeToHomeKit(this.thermostatModeSys);
   }
 
   async handleTargetTemperatureGet() {
@@ -102,11 +99,11 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   }
 
   async handleCoolingThresholdTemperatureGet() {
-    return this.f2c(this.thermostatCoolSetpoint);
+    return this.plugin.client.fahrenheitToCelsius(this.thermostatCoolSetpoint);
   }
 
   async handleHeatingThresholdTemperatureGet() {
-    return this.f2c(this.thermostatHeatSetpoint);
+    return this.plugin.client.fahrenheitToCelsius(this.thermostatHeatSetpoint);
   }
 
   async handleCurrentHumidityGet() {
@@ -114,17 +111,13 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   }
 
   async handleTemperatureDisplayUnitsGet() {
-    return Wyze2HomekitUnits[this.thermostatTempUnit] ?? Wyze2HomekitUnits.F;
+    return this.plugin.client.wyzeTempUnitToHomeKit(this.thermostatTempUnit);
   }
 
   // ---- Set handlers ---------------------------------------------------------
 
   async handleTargetHeatingCoolingStateSet(value) {
-    const targetState = HomekitState2Wyze[value];
-    if (!targetState) {
-      this.plugin.log.error(`[Thermostat] Unknown HomeKit state: ${value}`);
-      return;
-    }
+    const targetState = this.plugin.client.homeKitThermostatModeToWyze(value);
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(`[Thermostat] Set mode "${this.display_name}": ${targetState}`);
     try {
@@ -140,14 +133,14 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   }
 
   async handleTargetTemperatureSet(value) {
-    const currentStateNumber = Wyze2HomekitStates[this.thermostatModeSys];
+    const currentMode = this.plugin.client.wyzeThermostatModeToHomeKit(this.thermostatModeSys);
     // In auto/off, HomeKit shouldn't let you slide TargetTemperature, but
     // some clients do. Only act on heat/cool — auto uses the cooling/heating
     // threshold characteristics directly.
-    switch (currentStateNumber) {
-      case Wyze2HomekitStates.cool:
+    switch (currentMode) {
+      case HK_MODE_COOL:
         return this.handleCoolingThresholdTemperatureSet(value);
-      case Wyze2HomekitStates.heat:
+      case HK_MODE_HEAT:
         return this.handleHeatingThresholdTemperatureSet(value);
       default:
         if (this.plugin.config.pluginLoggingEnabled)
@@ -159,7 +152,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
 
   async handleCoolingThresholdTemperatureSet(value) {
     const c = this.clamp(value, 10, 35);
-    const valF = Math.round(this.c2f(c));
+    const valF = Math.round(this.plugin.client.celsiusToFahrenheit(c));
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(`[Thermostat] Set cool setpoint "${this.display_name}": ${valF}°F`);
     try {
@@ -174,7 +167,7 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
 
   async handleHeatingThresholdTemperatureSet(value) {
     const c = this.clamp(value, 0, 35);
-    const valF = Math.round(this.c2f(c));
+    const valF = Math.round(this.plugin.client.celsiusToFahrenheit(c));
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(`[Thermostat] Set heat setpoint "${this.display_name}": ${valF}°F`);
     try {
@@ -247,27 +240,28 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
     // Push every read characteristic so HomeKit reflects the new state
     // immediately (was previously only humidity — others stayed stale
     // until HomeKit happened to call onGet).
+    const c = this.plugin.client;
     this.service
       .getCharacteristic(Characteristic.CurrentTemperature)
-      .updateValue(this.f2c(this.thermostatTemperature));
+      .updateValue(c.fahrenheitToCelsius(this.thermostatTemperature));
     this.service
       .getCharacteristic(Characteristic.CurrentRelativeHumidity)
       .updateValue(this.thermostatHumidity);
     this.service
       .getCharacteristic(Characteristic.CurrentHeatingCoolingState)
-      .updateValue(Wyze2HomekitWorkingStates[this.thermostatWorkingState] ?? Wyze2HomekitWorkingStates.idle);
+      .updateValue(c.wyzeThermostatWorkingStateToHomeKit(this.thermostatWorkingState));
     this.service
       .getCharacteristic(Characteristic.TargetHeatingCoolingState)
-      .updateValue(Wyze2HomekitStates[this.thermostatModeSys] ?? Wyze2HomekitStates.off);
+      .updateValue(c.wyzeThermostatModeToHomeKit(this.thermostatModeSys));
     this.service
       .getCharacteristic(Characteristic.TargetTemperature)
       .updateValue(this.getTargetTemperatureForSystemState());
     this.service
       .getCharacteristic(Characteristic.CoolingThresholdTemperature)
-      .updateValue(this.f2c(this.thermostatCoolSetpoint));
+      .updateValue(c.fahrenheitToCelsius(this.thermostatCoolSetpoint));
     this.service
       .getCharacteristic(Characteristic.HeatingThresholdTemperature)
-      .updateValue(this.f2c(this.thermostatHeatSetpoint));
+      .updateValue(c.fahrenheitToCelsius(this.thermostatHeatSetpoint));
 
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
@@ -306,18 +300,16 @@ module.exports = class WyzeThermostat extends WyzeAccessory {
   getTargetTemperatureForSystemState() {
     // Wyze doesn't reliably push working-state, so derive a reasonable
     // target from the current mode + setpoints + measured temp.
-    const s = Wyze2HomekitStates[this.thermostatModeSys];
-    if (s === Wyze2HomekitStates.cool) return this.f2c(this.thermostatCoolSetpoint);
-    if (s === Wyze2HomekitStates.heat) return this.f2c(this.thermostatHeatSetpoint);
-    if (s === Wyze2HomekitStates.auto) {
-      if (this.thermostatCoolSetpoint < this.thermostatTemperature) return this.f2c(this.thermostatCoolSetpoint);
-      if (this.thermostatHeatSetpoint > this.thermostatTemperature) return this.f2c(this.thermostatHeatSetpoint);
+    const c = this.plugin.client;
+    const s = c.wyzeThermostatModeToHomeKit(this.thermostatModeSys);
+    if (s === HK_MODE_COOL) return c.fahrenheitToCelsius(this.thermostatCoolSetpoint);
+    if (s === HK_MODE_HEAT) return c.fahrenheitToCelsius(this.thermostatHeatSetpoint);
+    if (s === HK_MODE_AUTO) {
+      if (this.thermostatCoolSetpoint < this.thermostatTemperature) return c.fahrenheitToCelsius(this.thermostatCoolSetpoint);
+      if (this.thermostatHeatSetpoint > this.thermostatTemperature) return c.fahrenheitToCelsius(this.thermostatHeatSetpoint);
     }
-    return this.f2c(this.thermostatTemperature);
+    return c.fahrenheitToCelsius(this.thermostatTemperature);
   }
-
-  f2c(fahrenheit) { return (fahrenheit - 32.0) / 1.8; }
-  c2f(celsius)    { return celsius * 1.8 + 32.0; }
 
   clamp(number, min, max) {
     if (number < min || number > max) {

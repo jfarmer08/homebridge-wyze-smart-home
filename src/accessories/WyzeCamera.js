@@ -331,15 +331,11 @@ module.exports = class WyzeCamera extends WyzeAccessory {
   async getNotification()         { return this.notification ?? 0; }
 
   async getGarageCurrentState() {
-    return this.garageDoor == 1
-      ? Characteristic.CurrentDoorState.OPEN
-      : Characteristic.CurrentDoorState.CLOSED;
+    return this.plugin.client.wyzeGarageDoorStateToHomeKit(this.garageDoor);
   }
 
   async getGarageTargetState() {
-    return this.garageDoor == 1
-      ? Characteristic.TargetDoorState.OPEN
-      : Characteristic.TargetDoorState.CLOSED;
+    return this.plugin.client.wyzeGarageDoorStateToHomeKit(this.garageDoor);
   }
 
   async handleObstructionDetectedGet() {

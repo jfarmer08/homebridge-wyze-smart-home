@@ -90,10 +90,12 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
     this.batteryLevel = battery;
     this.suctionLevel = suction;
     this.isCharging = charging;
-    this.isCleaning = modeName === "CLEANING" || modeName === "MAPPING";
+    this.isCleaning = this.plugin.client.wyzeVacuumModeIsCleaning(modeName);
 
     this.fanService.getCharacteristic(Characteristic.On).updateValue(this.isCleaning);
-    this.fanService.getCharacteristic(Characteristic.RotationSpeed).updateValue(this.suctionLevel * 33);
+    this.fanService
+      .getCharacteristic(Characteristic.RotationSpeed)
+      .updateValue(this.plugin.client.wyzeVacuumSuctionToHomeKit(this.suctionLevel));
     this.batteryService.getCharacteristic(Characteristic.BatteryLevel).updateValue(battery);
     this.batteryService
       .getCharacteristic(Characteristic.StatusLowBattery)
@@ -137,12 +139,11 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
   }
 
   async getSuctionSpeed() {
-    return this.suctionLevel * 33;
+    return this.plugin.client.wyzeVacuumSuctionToHomeKit(this.suctionLevel);
   }
 
   async setSuctionSpeed(value) {
-    // HomeKit sends 0-100; map to Wyze suction level 1-3.
-    const level = value <= 33 ? 1 : value <= 66 ? 2 : 3;
+    const level = this.plugin.client.homeKitRotationSpeedToWyzeSuction(value);
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
         `[Vacuum] Setting suction for "${this.display_name}" to level ${level} (HomeKit speed ${value})`
