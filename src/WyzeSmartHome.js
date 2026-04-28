@@ -396,8 +396,7 @@ module.exports = class WyzeSmartHome {
         if (matches(ThermostatModels)) return WyzeThermostat
         break
       // Wyze reports the vacuum's product_type as the model code itself
-      // ("JA_RO2") rather than "Vacuum" like other accessories — match either.
-      case 'Vacuum':
+      // ("JA_RO2"), not "Vacuum" like every other accessory class.
       case VacuumModels.JA_RO2:
         if (matches(VacuumModels)) return WyzeVacuum
         break
