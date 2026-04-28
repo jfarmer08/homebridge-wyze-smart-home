@@ -92,6 +92,15 @@
           "functionBody": "return model.showAdvancedOptions === true;"
         }
       },
+      "deviceTypeOverrides": {
+        "title": "Device Type Overrides (advanced — for testing unsupported models)",
+        "description": "Route an unrecognized Wyze product code to an existing accessory class. Useful when Wyze releases a new model that hasn't been added to the plugin yet. Example: {\"CameraModels\": [\"HL_NEW_CAM\"]}. Valid keys: CameraModels, OutdoorPlugModels, PlugModels, LightModels, MeshLightModels, LightStripModels, ContactSensorModels, MotionSensorModels, LockModels, LockBoltV2Models, TemperatureHumidityModels, LeakSensorModels, CommonModels, S1GatewayModels, ThermostatModels, ThermostatRoomSensor, VacuumModels, IrrigationModels. The model may not work end-to-end if its API surface differs from what the chosen handler expects.",
+        "type": "object",
+        "required": false,
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
       "enableThermostatRoomSensors": {
         "title": "Expose Wyze Thermostat Room Sensors",
         "description": "Discover CO_TH1 room sensors paired to each Wyze Thermostat and surface them in HomeKit as separate Temperature/Humidity tiles. Adds one extra API call per thermostat per refresh cycle.",

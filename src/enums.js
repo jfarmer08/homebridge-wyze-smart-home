@@ -1,94 +1,138 @@
-const CameraModels = {
-  WyzeCamv1Hd: "WYZEC1",
-  WyzeCamV2: "WYZEC1-JZ",
-  WyzeCamV3: "WYZE_CAKP2JFUS",
-  WyzeCamV3Pro: "HL_CAM3P",
-  WyzeCamV4: "HL_CAM4",
-  WyzeCamFloodlight: "WYZE_CAKP2JFUS",
-  WyzeCamFloodlightPro: "LD_CFP",
-  WyzeCamPan: "WYZECP1_JEF",
-  WyzeCamPanv2: "HL_PAN2",
-  WyzeCamPanv3: "HL_PAN3",
-  WyzeCamPanPro: "HL_PANP",
-  WyzeCamOutdoor: "WVOD1",
-  WyzeCamOutdoor2: "HL_WCO2",
-  WyzeCamDoorbell: "WYZEDB3",
-  WyzeCamDoorbellPro: "GW_BE1",
-  WyzeCamDoorbellPro2: "AN_RDB1",
-  WyzeBatteryCamPro: "AN_RSCW",
-  WyzeCamOG: "GW_GC1",
-  WyzeCamOGTelephoto3x: "GW_GC",
-}
-exports.CameraModels = CameraModels;
+/**
+ * Per-accessory product-model lookups used by getAccessoryClass to route
+ * a Wyze device to the right HomeKit accessory class.
+ *
+ * Source of truth lives in the wyze-api submodule
+ * (`WyzeAccessoryModels`). This module shallow-clones each map so the
+ * plugin can extend them at runtime via `applyConfigOverrides()` —
+ * useful when Wyze releases a new product code that hasn't been added
+ * to the upstream module yet, so users can route the new model to an
+ * existing handler class for testing without waiting for a release.
+ */
 
-const OutdoorPlugModels = {
-  WLPPOSUB: "WLPPO-SUB"
+//const { WyzeAccessoryModels } = require('wyze-api') // Uncomment for Release
+const { WyzeAccessoryModels } = require('./wyze-api/src') // Comment for Release
+
+// Shallow clone every category so applyConfigOverrides can add entries
+// without mutating the upstream frozen object.
+const CameraModels             = { ...WyzeAccessoryModels.CameraModels }
+const OutdoorPlugModels        = { ...WyzeAccessoryModels.OutdoorPlugModels }
+const PlugModels               = { ...WyzeAccessoryModels.PlugModels }
+const LightModels              = { ...WyzeAccessoryModels.LightModels }
+const MeshLightModels          = { ...WyzeAccessoryModels.MeshLightModels }
+const LightStripModels         = { ...WyzeAccessoryModels.LightStripModels }
+const ContactSensorModels      = { ...WyzeAccessoryModels.ContactSensorModels }
+const MotionSensorModels       = { ...WyzeAccessoryModels.MotionSensorModels }
+const LockModels               = { ...WyzeAccessoryModels.LockModels }
+const LockBoltV2Models         = { ...WyzeAccessoryModels.LockBoltV2Models }
+const TemperatureHumidityModels = { ...WyzeAccessoryModels.TemperatureHumidityModels }
+const LeakSensorModels         = { ...WyzeAccessoryModels.LeakSensorModels }
+const CommonModels             = { ...WyzeAccessoryModels.CommonModels }
+const S1GatewayModels          = { ...WyzeAccessoryModels.S1GatewayModels }
+const ThermostatModels         = { ...WyzeAccessoryModels.ThermostatModels }
+const ThermostatRoomSensor     = { ...WyzeAccessoryModels.ThermostatRoomSensor }
+const VacuumModels             = { ...WyzeAccessoryModels.VacuumModels }
+const IrrigationModels         = { ...WyzeAccessoryModels.IrrigationModels }
+
+const _MAP_BY_NAME = {
+  CameraModels,
+  OutdoorPlugModels,
+  PlugModels,
+  LightModels,
+  MeshLightModels,
+  LightStripModels,
+  ContactSensorModels,
+  MotionSensorModels,
+  LockModels,
+  LockBoltV2Models,
+  TemperatureHumidityModels,
+  LeakSensorModels,
+  CommonModels,
+  S1GatewayModels,
+  ThermostatModels,
+  ThermostatRoomSensor,
+  VacuumModels,
+  IrrigationModels,
 }
+
+/**
+ * Merge user-supplied product codes into the existing model maps so an
+ * unsupported device can be routed to an existing accessory class for
+ * testing. Idempotent — safe to call multiple times.
+ *
+ * Two accepted shapes per category:
+ *
+ *   "deviceTypeOverrides": {
+ *     "CameraModels": ["NEW_MODEL_1", "NEW_MODEL_2"],
+ *     "ContactSensorModels": { "MyNewSensor": "DWS9X" }
+ *   }
+ *
+ * Array entries get auto-keyed; object entries keep the user-chosen
+ * friendly name. The friendly name is purely cosmetic — the matcher
+ * only looks at values.
+ *
+ * Unknown category names are ignored with a warning so a typo doesn't
+ * kill startup. Existing model codes aren't overwritten.
+ *
+ * @param {Object} [overrides] — config.deviceTypeOverrides
+ * @param {Function} [log] — optional logger (defaults to console.warn)
+ * @returns {{added: number, skipped: number, unknownCategories: string[]}}
+ */
+function applyConfigOverrides(overrides, log) {
+  const result = { added: 0, skipped: 0, unknownCategories: [] }
+  if (!overrides || typeof overrides !== 'object') return result
+  const warn = (msg) => {
+    if (log?.warn) return log.warn(msg)
+    if (typeof log === 'function') return log(msg)
+    return console.warn(msg)
+  }
+
+  for (const [category, extras] of Object.entries(overrides)) {
+    const target = _MAP_BY_NAME[category]
+    if (!target) {
+      result.unknownCategories.push(category)
+      warn(`[enums] Unknown deviceTypeOverrides category "${category}" — ignored. ` +
+           `Valid categories: ${Object.keys(_MAP_BY_NAME).join(', ')}`)
+      continue
+    }
+
+    const codes = Array.isArray(extras)
+      ? Object.fromEntries(extras.map((c, i) => [`Override${i}`, String(c)]))
+      : (extras && typeof extras === 'object' ? extras : null)
+
+    if (!codes) {
+      warn(`[enums] deviceTypeOverrides["${category}"] must be an array or object — ignored.`)
+      continue
+    }
+
+    for (const [name, code] of Object.entries(codes)) {
+      if (Object.values(target).includes(code)) {
+        result.skipped++
+        continue
+      }
+      target[name] = String(code)
+      result.added++
+    }
+  }
+  return result
+}
+
+exports.CameraModels = CameraModels
 exports.OutdoorPlugModels = OutdoorPlugModels
-
-const PlugModels = { WLPP1: "WLPP1", WLPP1CFH: "WLPP1CFH" }
 exports.PlugModels = PlugModels
-
-const LightModels = { BULB_WHITE: "WLPA19", BULB_WHITE_V2: "HL_HWB2" }
 exports.LightModels = LightModels
-
-const MeshLightModels = { MESH_BULB: "WLPA19C", HL_BR30C: "HL_BR30C", HL_A19C2: 'HL_A19C2' }
 exports.MeshLightModels = MeshLightModels
-
-const LightStripModels = { LIGHT_STRIP: "HL_LSL", LIGHT_STRIP_PRO: "HL_LSLP" }
 exports.LightStripModels = LightStripModels
-
-const ContactSensorModels = { "V1": "DWS2U", "V2": "DWS3U" }
 exports.ContactSensorModels = ContactSensorModels
-
-const MotionSensorModels = { V1: "PIR2U", V2: "PIR3U" }
 exports.MotionSensorModels = MotionSensorModels
-
-const LockModels = { YDLO1: "YD.LO1" }
 exports.LockModels = LockModels
-
-const LockBoltV2Models = { DX_LB2: "DX_LB2", DX_PVLOC: "DX_PVLOC" }
 exports.LockBoltV2Models = LockBoltV2Models
-
-const TemperatureHumidityModels = { TH3U: "TH3U" }
 exports.TemperatureHumidityModels = TemperatureHumidityModels
-
-const LeakSensorModels = { WS3U: "WS3U" }
 exports.LeakSensorModels = LeakSensorModels
-
-const CommonModels = { "LightSwitch": "LD_SS1", "Palm": "DX_PVLOC" }
 exports.CommonModels = CommonModels
-
-const S1GatewayModels = { 'GW3U': 'GW3U' }
 exports.S1GatewayModels = S1GatewayModels
-
-const ThermostatModels = { CO_EA1: "CO_EA1" }
 exports.ThermostatModels = ThermostatModels
-
-const ThermostatRoomSensor = { CO_TH1: "CO_TH1" }
 exports.ThermostatRoomSensor = ThermostatRoomSensor
-
-const VacuumModels = { JA_RO2: "JA_RO2" }
 exports.VacuumModels = VacuumModels
-
-const IrrigationModels = { BS_WK1: "BS_WK1" }
 exports.IrrigationModels = IrrigationModels
-
-//"OutdoorPlugMain" : "WLPPO", "ChimeSensor" : "CHIME", "HeadPhones":"JA_HP","YDGW1":"YD.GW1",
-//"Scale_S":"WL_SC3","WL_SC2":"WL_SC2", "JA_RO2":"JA_RO2", "Sprinkler":"BS_WK1", "ThermostatRoomSensor":"CO_TH1",
-//"BLE_Lock":"YD_BT1","JA_SL10":"JA_SL10"}
-//WyzeCamPanPro: "HL_PANP",
-//WyzeCamOutdoov2: "HL_WCO2",
-//WyzeCamDoorbell: "WYZEDB3",
-//WyzeBatteryCamPro: "AN_RSCW",
-//WyzeCamDoorbellPro2: "AN_RDB1",
-//WyzeCamFloodLightPro: "LD_CFP",
-//WyzeCamDoorbellPro: "GW_BE1",
-//WyzeCamOG: "GW_GC1",
-//WyzeCamOGTelephoto3x: "GW_GC"
-//VACUUM = ['JA_RO2']
-//WyzeScale = ['JA.SC', 'JA.SC2']
-//SCALE_S = ['WL_SC2']
-//SCALE_X = ['WL_SC22135']
-//WATCH = ['RA.WP1', 'RY.WA1']
-//Wrist = ['RY.HP1']
+exports.applyConfigOverrides = applyConfigOverrides

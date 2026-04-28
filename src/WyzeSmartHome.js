@@ -1,8 +1,9 @@
 const { homebridge, Accessory, UUIDGen, Categories } = require('./types')
+const enums = require('./enums')
 const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorModels,
   TemperatureHumidityModels, LockModels, LockBoltV2Models, MotionSensorModels, ContactSensorModels, LightModels,
   LightStripModels, MeshLightModels, ThermostatModels, ThermostatRoomSensor, S1GatewayModels,
-  VacuumModels, IrrigationModels } = require('./enums')
+  VacuumModels, IrrigationModels } = enums
 
 //const WyzeAPI = require('wyze-api') // Uncomment for Release
 const WyzeAPI = require('./wyze-api/src') // Comment for Release
@@ -45,6 +46,20 @@ module.exports = class WyzeSmartHome {
     this.config = resolveSecrets(config, this.log)
     Object.assign(this.config, getValidatedBaseUrls(this.config, this.log))
     this.api = api
+
+    // Apply user-supplied product-code overrides BEFORE constructing the
+    // client or scanning devices, so getAccessoryClass sees the extended
+    // model maps. Lets users route a brand-new Wyze model to an existing
+    // handler class for testing without waiting for a plugin release.
+    const overrideResult = enums.applyConfigOverrides(this.config.deviceTypeOverrides, this.log)
+    if (overrideResult.added > 0) {
+      this.log.info?.(
+        `[enums] Applied ${overrideResult.added} model override(s) from config` +
+        (overrideResult.skipped > 0 ? `; ${overrideResult.skipped} already present` : '') +
+        (overrideResult.unknownCategories.length ? `; ignored unknown categor${overrideResult.unknownCategories.length === 1 ? 'y' : 'ies'}: ${overrideResult.unknownCategories.join(', ')}` : '')
+      )
+    }
+
     this.client = this.getClient()
 
     this.accessories = []
