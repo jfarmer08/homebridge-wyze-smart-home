@@ -1,0 +1,153 @@
+# Beta npm release: publishes to the `beta` tag.
+#
+# Trigger: GitHub release published WITH the "Pre-release" checkbox.
+# Stable releases (checkbox unchecked) are handled by npm-publish-stable.yml.
+#
+# Bridge-specific:
+#   * Reads the wyze-api submodule's package.json version and pins
+#     `dependencies.wyze-api` to it (runner-only edit, never committed).
+#   * Verifies that the bridge's beta version aligns with the submodule's
+#     beta version. If you're cutting bridge 2.0.0-beta.1, the submodule
+#     pointer must be at wyze-api 2.0.0-beta.1 (or 2.0.0-beta.0 etc. as
+#     long as it's also a beta of the same MAJOR.MINOR.PATCH).
+#   * Verifies wyze-api@$VERSION is published on the `beta` tag — guards
+#     against a bridge beta pinning an api version that isn't actually
+#     in the npm `beta` tag.
+#
+# Users on `npm install homebridge-wyze-smart-home` keep getting
+# `latest` — `beta` releases are only seen by users who explicitly opt
+# in with `npm install homebridge-wyze-smart-home@beta`.
+
+name: npm publish (beta)
+
+on:
+  workflow_dispatch: {}
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.release.prerelease == true }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      apiVersion: ${{ steps.api.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Read package version
+        id: read
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Require pre-release identifier on bridge
+        run: |
+          VERSION="${{ steps.read.outputs.version }}"
+          if [[ "$VERSION" != *-beta.* ]] && [[ "$VERSION" != *-alpha.* ]] && [[ "$VERSION" != *-rc.* ]]; then
+            echo "Version $VERSION has no pre-release identifier (e.g. -beta.1) but the GitHub release is marked Pre-release."
+            echo "Either bump package.json to e.g. 2.0.0-beta.1, or uncheck the Pre-release box (and use the stable workflow)."
+            exit 1
+          fi
+      - name: Verify submodule is present
+        run: |
+          if [ ! -f src/wyze-api/package.json ]; then
+            echo "src/wyze-api/package.json not found. The wyze-api submodule must be checked out for the version-pin step."
+            exit 1
+          fi
+      - name: Read submodule wyze-api version
+        id: api
+        run: echo "version=$(node -p "require('./src/wyze-api/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Verify api version is also a pre-release
+        # Beta bridge MUST pin a beta api. Otherwise the bridge tarball
+        # ships with a stable api dep, which means users `@beta`-ing the
+        # bridge get a mix of beta plugin code + stable api code.
+        run: |
+          API_VERSION="${{ steps.api.outputs.version }}"
+          if [[ "$API_VERSION" != *-beta.* ]] && [[ "$API_VERSION" != *-alpha.* ]] && [[ "$API_VERSION" != *-rc.* ]]; then
+            echo "Submodule wyze-api version is $API_VERSION — not a pre-release."
+            echo "Bump the submodule to a matching pre-release version (e.g. 2.0.0-beta.1) and publish it to npm beta first."
+            exit 1
+          fi
+      - name: Verify bridge and api MAJOR.MINOR.PATCH align
+        # Soft alignment check: the base version (everything before -beta.X)
+        # of the bridge and api should match. Catches the case where bridge
+        # is on 2.0.0-beta.1 but submodule is still on 1.x-beta.X.
+        run: |
+          BRIDGE_BASE=$(echo "${{ steps.read.outputs.version }}" | sed 's/-.*//')
+          API_BASE=$(echo "${{ steps.api.outputs.version }}" | sed 's/-.*//')
+          if [ "$BRIDGE_BASE" != "$API_BASE" ]; then
+            echo "Bridge base version is $BRIDGE_BASE but submodule wyze-api base is $API_BASE."
+            echo "For aligned beta releases, bump the submodule to match the bridge's MAJOR.MINOR.PATCH first."
+            exit 1
+          fi
+      - run: npm ci
+
+  publish:
+    needs: guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+          always-auth: true
+      - name: Pin wyze-api dep to submodule version
+        run: |
+          API_VERSION="${{ needs.guard.outputs.apiVersion }}"
+          node -e "
+            const fs = require('fs');
+            const pj = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const old = pj.dependencies['wyze-api'];
+            pj.dependencies['wyze-api'] = '$API_VERSION';
+            fs.writeFileSync('package.json', JSON.stringify(pj, null, 2) + '\n');
+            console.log('Pinned wyze-api: ' + old + ' → ' + '$API_VERSION');
+          "
+      - run: npm install --package-lock-only
+      - run: npm ci
+      - name: Verify the pinned wyze-api version exists on npm beta tag
+        run: |
+          API_VERSION="${{ needs.guard.outputs.apiVersion }}"
+          # Look up which dist-tag this version is on. Empty result
+          # means the version doesn't exist at all; "latest" means it's
+          # only on the stable tag (we expected beta).
+          BETA_VERSION=$(npm view wyze-api@beta version 2>/dev/null || true)
+          if [ -z "$BETA_VERSION" ]; then
+            echo "wyze-api has no version on the beta tag. Publish the api beta first."
+            exit 1
+          fi
+          if [ "$BETA_VERSION" != "$API_VERSION" ]; then
+            echo "Submodule says wyze-api $API_VERSION but npm beta tag is at $BETA_VERSION."
+            echo "Either re-publish wyze-api $API_VERSION to beta, or bump the submodule to match $BETA_VERSION."
+            exit 1
+          fi
+      - name: Ensure NPM_TOKEN is configured
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "NPM_TOKEN secret is missing."
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Validate npm auth
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Validate bridge version is unpublished
+        run: |
+          VERSION="${{ needs.guard.outputs.version }}"
+          if npm view "homebridge-wyze-smart-home@$VERSION" version >/dev/null 2>&1; then
+            echo "Version $VERSION is already published to npm. Bump package.json version first."
+            exit 1
+          fi
+          echo "Publishing homebridge-wyze-smart-home@$VERSION to beta tag (pinning wyze-api@${{ needs.guard.outputs.apiVersion }})"
+      - run: npm publish --access public --tag beta
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

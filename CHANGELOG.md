@@ -8,6 +8,81 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v2.0.0-beta.1
+
+First 2.0 beta. Available on npm via `npm install homebridge-wyze-smart-home@beta` (or homebridge-config-ui-x → "Install Beta Version"). Stable users on the default `latest` tag are unaffected. Pairs with `wyze-api@2.0.0-beta.1`.
+
+#### Migrating from 1.x
+
+**No manual config edits required.** On first launch, the plugin detects a 1.x flat config in your `homebridge/config.json`, atomically rewrites it to the 2.0 nested shape, and saves a backup at `config.json.pre-2.0.bak`. A single warn line in the log tells you when it happened. Re-running on already-migrated config is a no-op.
+
+The new shape:
+
+```jsonc
+{
+  "auth":     { "username", "password", "keyId", "apiKey", "secretsFile?" },
+  "polling":  { "refreshInterval", "lowBatteryPercentage" },
+  "cameras":  [{ "mac", "name?", "garage", "spotlight", "floodlight", "siren", "notifications", "motionDetection" }],
+  "thermostat": { "exposeRoomSensors", "mode": "auto|heat-only|cool-only" },
+  "vacuum":   { "perRoomSwitches" },
+  "hms":      { "enabled" },
+  "excludes": { "macs": [], "types": [] },
+  "logging":  { "level": "error|warn|info|debug", "disableRedaction" },
+  "advanced": { "deviceTypeOverrides", "dangerouslyAllowCustomBaseUrls", "authBaseUrl", "apiBaseUrl" }
+}
+```
+
+#### Breaking
+
+- **Config restructured.** Old top-level keys (`username`, `garageDoorAccessory`, `excludeMacAddress`, `apiLogEnabled`, `pluginLoggingEnabled`, etc.) are auto-migrated and back-filled in memory so all existing accessory code keeps working.
+- **`homebridge-config-ui-x` moved to `devDependencies`.** Was a runtime dep, which forced npm to compile `node-pty` during install — broke installs on Pi / arm64 / newer Node. End-user installs no longer touch node-pty. (#286, #281)
+- **`engines.homebridge`** bumped to `^1.6.0 || ^2.0.0`. (#290)
+- **`engines.node`** updated to `^18.20.4 || ^20.15.1 || ^22.0.0 || ^24`. (#281)
+- **Logger output format changed** to match Homebridge style (timestamp, cyan prefix, color-coded level tag). The legacy `apiLogEnabled` boolean still works but is deprecated in favor of `logging.level`.
+- **Removed unused dependencies:** `aws-sdk`, `base64-js`, `colorsys`, `crypto-js`, `inherits`, `md5`, `moment`, `urllib`, `uuid` (the standalone one). Cleared two critical CVEs (`crypto-js` PBKDF2, `form-data` via `aws-sdk`).
+- **Comment-toggle requires removed.** `WyzeSmartHome.js` and `enums.js` no longer have the "uncomment for release" gymnastics. Single canonical `require('wyze-api')` everywhere; dev mode uses `npm run dev-link` once after cloning to symlink the submodule.
+
+#### New features
+
+- **Sectioned 2.0 config UI.** Account / Polling / Cameras / Thermostat / Vacuum / HMS / Excludes / Logging / Advanced — replaces the single flat form gated on `showAdvancedOptions`. Cameras get a per-MAC table with capability checkboxes (was five parallel top-level MAC arrays).
+- **Per-camera Motion Detection switch** — toggles whether the camera looks for motion at all, distinct from the Notifications switch. Lets users pause motion-driven HomeKit automation while keeping the camera powered on. (#231)
+- **Per-room Robot Vacuum sweep switches** — opt-in via `vacuum.perRoomSwitches`. Adds one HomeKit Switch per room in the vacuum's current map, enabling voice control like "Hey Siri, vacuum kitchen". Uses Wyze's `vacuumSweepRooms(mac, [roomId])` endpoint. (#274)
+- **Thermostat heat-only / cool-only mode** — `thermostat.mode: "heat-only"` hides Cool + Auto in HomeKit; `"cool-only"` hides Heat + Auto. Useful when the physical setup is one-sided (gas furnace, AC-only). (#272)
+- **Vacuum fault codes surfaced.** `fault_code: 514` ("Wheels stuck") etc. now show as `StatusFault.GENERAL_FAULT` on the Fan tile (warning triangle in Home app) and log a warn-level line. Repeat-suppressed so the log doesn't fill up while the vacuum is stuck.
+- **`logging.disableRedaction`** escape hatch — set true to bypass log scrubbing when capturing raw payloads for your own debugging. Off by default; tokens, credentials, GPS, emails, and MAC addresses are scrubbed.
+- **`auth.secretsFile`** option — load credentials from a mode-600 JSON file instead of putting them in `homebridge/config.json`.
+
+#### Reliability fixes
+
+- **HOOBS persist-dir `mkdir -p` fix** — token persistence path is now `mkdir -p`'d before write. Was throwing ENOENT under HOOBS because the persist dir didn't exist; the plugin never recovered. (#201, #236)
+- **Refresh-token failure falls back to fresh login** — when Wyze invalidates the refresh token early (which they do regularly), the plugin clears the dead tokens and re-logs-in with stored credentials transparently. No more crash loops or "Invalid Credentials" cascades. (#258, #277)
+- **Color-change crash loop fixed** — `colorsys.hex2Hsv(null)` no longer takes down the plugin when Wyze returns a null/empty color value mid-state-change. (#251, #232)
+- **Thermostat reboot-loop fixed** — the `device_params.temperature = ...` setter was crashing when Wyze returned a response without `device_params`. Refactored to store on the instance directly. (#228)
+- **Plugin-wide unhandled-rejection / uncaught-exception handlers** — a single bad accessory can no longer silently kill the homebridge child process.
+- **Vacuum `lowBatteryPercentage`** — was hardcoded at `<20`; now honors the configured threshold like every other battery accessory.
+- **Axios redirect guard** — strict allowlist of Wyze hostnames; any 3xx redirect to a non-Wyze host is refused. Allowlist auto-derives from `*BaseUrl` constants in wyze-api so adding a new endpoint can't accidentally bypass it.
+
+#### Device support added / verified
+
+Cameras (all published as external accessories with live-stream + per-camera capability switches):
+- Wyze Cam V4 (`HL_CAM4`) (#256)
+- Wyze Battery Cam Pro (`AN_RSCW`) (#260)
+- Wyze Cam Pan v3 (`HL_PAN3`) (#275)
+- Wyze Cam Floodlight Pro (`LD_CFP`) (#276, #233)
+- Wyze Cam OG (`GW_GC1`) + OG Telephoto 3x (`GW_GC`) (#278, #273)
+- Plus the existing V3, V2, Pan v1/v2/Pro, Outdoor / Outdoor 2, Doorbell / Doorbell Pro / Doorbell Pro 2, Floodlight v1
+
+Other:
+- Palm Lock (`DX_PVLOC`) routed to the Lock Bolt V2 accessory class (#285)
+- Robot Vacuum (`JA_RO2`) (#274)
+- Sprinkler Controller (`BS_WK1`) (#282)
+
+#### Internal
+
+- 178/178 wyze-api tests pass.
+- Production npm audit: 13 → 4 issues. Both criticals cleared (`crypto-js`, `form-data`). Remaining 4 are the `werift` WebRTC chain (transitive `ip` SSRF + `uuid` bounds); no upstream fix available, deferred.
+- Two GitHub Actions workflows added: `npm-publish-stable.yml` (latest tag) and `npm-publish-beta.yml` (beta tag). Beta workflow auto-pins the `wyze-api` dep to the submodule version and verifies the api beta is published before publishing the bridge.
+
 ### v0.5.47
 - Add Wyze Lock Bolt v2 (DX_LB2) support via IoT3 API
 - Add Palm Lock (DX_PVLOC) support via IoT3 API
