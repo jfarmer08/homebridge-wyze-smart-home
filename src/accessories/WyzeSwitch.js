@@ -21,6 +21,14 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
       this.wallSwitch = this.homeKitAccessory.addService(Service.Switch);
     }
 
+    // Restore last-known state from disk so the Get handler returns the
+    // real value immediately on reboot instead of "undefined" while we
+    // wait for the first refresh cycle to complete.
+    const persisted = this.loadPersistedState();
+    this.switch_power = persisted.switch_power;
+    this.single_press_type = persisted.single_press_type;
+    this.switch_iot = persisted.switch_iot;
+
     this.wallSwitch
       .getCharacteristic(Characteristic.On)
       .onGet(this.handleOnGetWallSwitch.bind(this))
@@ -89,6 +97,14 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
       this.switch_power = false;
       this.wallSwitch.getCharacteristic(Characteristic.On).updateValue(false);
     }
+
+    // Persist so HomeKit gets the right value immediately after a reboot
+    // instead of "undefined" until the first refresh.
+    this.persistState({
+      switch_power: this.switch_power,
+      single_press_type: this.single_press_type,
+      switch_iot: this.switch_iot,
+    });
 
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(

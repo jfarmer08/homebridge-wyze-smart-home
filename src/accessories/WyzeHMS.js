@@ -13,6 +13,13 @@ module.exports = class WyzeHMS extends WyzeAccessory {
       this.securityService = this.homeKitAccessory.addService(Service.SecuritySystem);
     }
 
+    // Restore last-known state from disk so the Get handler returns the
+    // real arm mode immediately on reboot instead of "(unknown — awaiting
+    // first refresh)" while we wait for the first state-status fetch.
+    const persisted = this.loadPersistedState();
+    this.hmsStatus = persisted.hmsStatus;
+    this.hmsId = persisted.hmsId; // saves an API call to re-resolve
+
     this.securityService
       .getCharacteristic(Characteristic.SecuritySystemCurrentState)
       .onGet(this.handleStateGet.bind(this));
@@ -45,6 +52,8 @@ module.exports = class WyzeHMS extends WyzeAccessory {
       this.securityService
         .getCharacteristic(Characteristic.SecuritySystemCurrentState)
         .updateValue(this.plugin.client.wyzeHmsStateToHomeKit(this.hmsStatus));
+      // Persist so HomeKit gets the right value immediately after a reboot.
+      this.persistState({ hmsStatus: this.hmsStatus, hmsId: this.hmsId });
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(`[HMS] ${this.display_name}: ${this.hmsStatus}`);
     } catch (err) {

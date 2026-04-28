@@ -36,18 +36,18 @@ module.exports = class WyzeAccessory {
     // (device_params, camera_thumbnails, etc.) without re-fetching the
     // device list from Wyze on every characteristic read.
     this.device = device;
-    const productType = device.product_type;
 
-    switch (productType) {
-      default:
-        this.homeKitAccessory.context = {
-          mac: device.mac,
-          product_type: device.product_type,
-          product_model: device.product_model,
-          nickname: device.nickname,
-        };
-        break;
-    }
+    // Merge identifying fields into context — DON'T replace the whole
+    // object, since accessories also stash persisted state in
+    // context.lastState that needs to survive across refreshes (and
+    // reboots — homebridge serializes context to disk for cached
+    // accessories).
+    Object.assign(this.homeKitAccessory.context, {
+      mac: device.mac,
+      product_type: device.product_type,
+      product_model: device.product_model,
+      nickname: device.nickname,
+    });
 
     this.homeKitAccessory
       .getService(Service.AccessoryInformation)
@@ -85,6 +85,31 @@ module.exports = class WyzeAccessory {
 
   updateCharacteristics(device) {
     //
+  }
+
+  /**
+   * Read state previously saved to homeKitAccessory.context.lastState by
+   * persistState(). Survives plugin restarts because homebridge serializes
+   * the accessory context to disk for cached accessories. Returns an empty
+   * object on first run.
+   */
+  loadPersistedState() {
+    return this.homeKitAccessory.context.lastState || {};
+  }
+
+  /**
+   * Merge `state` into homeKitAccessory.context.lastState so that on the
+   * next plugin start, loadPersistedState() returns it. The Get handlers
+   * can then return the cached value immediately instead of "undefined"
+   * while waiting for the first post-restart refresh to complete.
+   *
+   * Pass partial updates — only the keys you provide are overwritten.
+   */
+  persistState(state) {
+    this.homeKitAccessory.context.lastState = {
+      ...this.homeKitAccessory.context.lastState,
+      ...state,
+    };
   }
 
   sleep(ms) {
