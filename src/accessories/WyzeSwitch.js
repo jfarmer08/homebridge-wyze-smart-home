@@ -113,10 +113,10 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   }
 
   async handleOnGetWallSwitch() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Switch] Get "${this.display_name} (${this.mac})": ${this.switch_power}`
-      );
+    // No log here on purpose — HomeKit calls onGet repeatedly per
+    // characteristic (every iOS client + hub independently polls), so
+    // logging would spam several lines per second per switch. State
+    // changes are already logged in updateCharacteristics each refresh.
     return this.switch_power ?? false;
   }
 

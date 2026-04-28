@@ -65,10 +65,10 @@ module.exports = class WyzeHMS extends WyzeAccessory {
   }
 
   async handleStateGet() {
-    if (this.plugin.config.pluginLoggingEnabled) {
-      const display = this.hmsStatus || "(unknown — awaiting first refresh)";
-      this.plugin.log(`[HMS] Get "${this.display_name}": ${display}`);
-    }
+    // No log here on purpose — HomeKit calls onGet repeatedly per
+    // characteristic (every iOS client + hub independently polls), so
+    // logging would spam several lines per second. State changes are
+    // already logged in updateCharacteristics each refresh.
     return this.plugin.client.wyzeHmsStateToHomeKit(this.hmsStatus);
   }
 
