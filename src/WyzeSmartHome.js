@@ -86,7 +86,10 @@ module.exports = class WyzeSmartHome {
       mfaCode: this.config.mfaCode,
       keyId: this.config.keyId,
       apiKey: this.config.apiKey,
-      //Logging
+      //Logging — the API uses its own @ptkdev/logger for colored
+      // terminal output. logLevel filters that output; apiLogEnabled is
+      // the legacy true/false toggle (true → debug, false → info).
+      logLevel: this.config.logLevel,
       apiLogEnabled: this.config.apiLogEnabled,
       //App Config
       lowBatteryPercentage: this.config.lowBatteryPercentage,

@@ -29,6 +29,7 @@
             "refreshInterval": 20000,
             "entryExitDelay": 30,
             "apiLogEnabled": true,
+            "logLevel": "info",
             "pluginLoggingEnabled": true,
             "showAdvancedOptions": true,
             "excludeMacAddress": false,

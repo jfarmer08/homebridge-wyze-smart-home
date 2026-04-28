@@ -92,6 +92,22 @@
           "functionBody": "return model.showAdvancedOptions === true;"
         }
       },
+      "logLevel": {
+        "title": "API Log Level",
+        "description": "Verbosity for the wyze-api submodule's @ptkdev/logger output. Each level shows its own messages plus everything more severe. Set to 'debug' to log every API request and response (replaces the legacy apiLogEnabled flag).",
+        "type": "string",
+        "default": "info",
+        "oneOf": [
+          { "enum": ["error"], "title": "error — only failures" },
+          { "enum": ["warn"], "title": "warn — failures + warnings" },
+          { "enum": ["info"], "title": "info — default; lifecycle + warnings + errors" },
+          { "enum": ["debug"], "title": "debug — full request/response dumps" }
+        ],
+        "required": false,
+        "condition": {
+          "functionBody": "return model.showAdvancedOptions === true;"
+        }
+      },
       "deviceTypeOverrides": {
         "title": "Device Type Overrides (advanced — for testing unsupported models)",
         "description": "Route an unrecognized Wyze product code to an existing accessory class. Useful when Wyze releases a new model that hasn't been added to the plugin yet. Example: {\"CameraModels\": [\"HL_NEW_CAM\"]}. Valid keys: CameraModels, OutdoorPlugModels, PlugModels, LightModels, MeshLightModels, LightStripModels, ContactSensorModels, MotionSensorModels, LockModels, LockBoltV2Models, TemperatureHumidityModels, LeakSensorModels, CommonModels, S1GatewayModels, ThermostatModels, ThermostatRoomSensor, VacuumModels, IrrigationModels. The model may not work end-to-end if its API surface differs from what the chosen handler expects.",
