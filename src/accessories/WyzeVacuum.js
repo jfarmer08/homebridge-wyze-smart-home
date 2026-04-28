@@ -98,13 +98,31 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
     }
     for (const room of rooms) {
       const subtype = `vacuum-room-${room.id}`;
-      const displayName = `${this.display_name}: ${room.name}`;
-      let service =
-        this.homeKitAccessory.getServiceById(Service.Switch, subtype) ||
-        this.homeKitAccessory.addService(Service.Switch, displayName, subtype);
-      // Keep the display name in sync if the user renamed the room in
-      // the Wyze app since last boot.
-      service.setCharacteristic(Characteristic.Name, displayName);
+      // Use just the room name as the tile label — HomeKit already
+      // groups all sub-services under the vacuum accessory's name, so
+      // prefixing with the vacuum name is redundant noise. Result:
+      // a "Karen" accessory containing tiles labeled "Living Room",
+      // "Kitchen", "Bedroom", etc.
+      const displayName = room.name || `Room ${room.id}`;
+      let isNew = false;
+      let service = this.homeKitAccessory.getServiceById(Service.Switch, subtype);
+      if (!service) {
+        isNew = true;
+        service = this.homeKitAccessory.addService(Service.Switch, displayName, subtype);
+      }
+      // ConfiguredName is what the Home app actually renders for the
+      // tile — without it every Switch falls back to the accessory's
+      // main name and they all read as "Karen". Set on first creation
+      // OR on services from before this fix shipped that never had
+      // ConfiguredName set. Don't overwrite an existing value, since
+      // a user may have renamed the tile in the Home app.
+      if (Characteristic.ConfiguredName) {
+        const cn = service.getCharacteristic(Characteristic.ConfiguredName);
+        const existing = cn.value;
+        if (isNew || !existing) {
+          service.setCharacteristic(Characteristic.ConfiguredName, displayName);
+        }
+      }
       service
         .getCharacteristic(Characteristic.On)
         .onGet(() => this._isSweepingRoom(room.id))
