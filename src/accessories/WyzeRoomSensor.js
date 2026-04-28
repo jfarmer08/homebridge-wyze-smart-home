@@ -2,13 +2,6 @@ const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 const { markServiceOnline } = require("./offlineIndicator");
 
-// Wyze CO_TH1 (Room Sensor) reports battery as a 4-level enum, not a
-// percentage. Map to plausible percentages so HomeKit's BatteryLevel
-// characteristic shows something useful.
-//   1 = EMPTY, 2 = LOW, 3 = HALF, 4 = FULL
-const ROOM_SENSOR_BATTERY_PCT = { 1: 5, 2: 25, 3: 60, 4: 100 };
-const ROOM_SENSOR_BATTERY_LOW = { 1: true, 2: true, 3: false, 4: false };
-
 module.exports = class WyzeRoomSensor extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
@@ -109,51 +102,38 @@ module.exports = class WyzeRoomSensor extends WyzeAccessory {
       return;
     }
 
-    // Wyze typically reports temperature in tenths of °F (e.g. 712 = 71.2°F).
-    // Some firmwares may report in whole °F or °C — sanity-check the
-    // resulting Celsius value and warn if it's clearly nonsense so we know
-    // to revisit the conversion.
-    const rawTemp = params.temperature;
-    let tempC = null;
-    let tempLogF = null;
-    if (typeof rawTemp === "number") {
-      const tempF = rawTemp / 10;
-      tempC = (tempF - 32) / 1.8;
-      tempLogF = tempF;
-      if (tempC < -50 || tempC > 80) {
-        this.plugin.log.warn?.(
-          `[RoomSensor] "${this.display_name}" temperature out of plausible range — ` +
-          `raw=${rawTemp} → ${tempF.toFixed(1)}°F / ${tempC.toFixed(1)}°C. ` +
-          `Wyze may be reporting whole degrees instead of tenths on this firmware.`
-        );
-      }
-    } else if (rawTemp != null) {
+    // Conversions live in the API's homekit helper module. We just sanity-
+    // check the results and warn loudly if anything looks off so we can
+    // diagnose firmware-specific quirks from a user's log dump.
+    const tempC = this.plugin.client.wyzeRoomSensorTemperatureToHomeKit(params.temperature);
+    if (tempC != null && (tempC < -50 || tempC > 80)) {
       this.plugin.log.warn?.(
-        `[RoomSensor] "${this.display_name}" non-numeric temperature: ${JSON.stringify(rawTemp)}`
+        `[RoomSensor] "${this.display_name}" temperature out of plausible range — ` +
+        `raw=${params.temperature} → ${tempC.toFixed(1)}°C. ` +
+        `Wyze may be reporting whole degrees instead of tenths on this firmware.`
+      );
+    } else if (tempC == null && params.temperature != null) {
+      this.plugin.log.warn?.(
+        `[RoomSensor] "${this.display_name}" non-numeric temperature: ${JSON.stringify(params.temperature)}`
       );
     }
 
-    const rawHumidity = params.humidity;
-    let humidityPct = null;
-    if (typeof rawHumidity === "number") {
-      humidityPct = rawHumidity;
-      if (humidityPct < 0 || humidityPct > 100) {
-        this.plugin.log.warn?.(
-          `[RoomSensor] "${this.display_name}" humidity out of range: ${humidityPct}%`
-        );
-      }
-    } else if (rawHumidity != null) {
+    const humidityPct = typeof params.humidity === "number" ? params.humidity : null;
+    if (humidityPct != null && (humidityPct < 0 || humidityPct > 100)) {
       this.plugin.log.warn?.(
-        `[RoomSensor] "${this.display_name}" non-numeric humidity: ${JSON.stringify(rawHumidity)}`
+        `[RoomSensor] "${this.display_name}" humidity out of range: ${humidityPct}%`
+      );
+    } else if (humidityPct == null && params.humidity != null) {
+      this.plugin.log.warn?.(
+        `[RoomSensor] "${this.display_name}" non-numeric humidity: ${JSON.stringify(params.humidity)}`
       );
     }
 
-    const batteryEnum = params.battery;
-    const batteryPct = ROOM_SENSOR_BATTERY_PCT[batteryEnum] ?? null;
-    const batteryLow = ROOM_SENSOR_BATTERY_LOW[batteryEnum] ?? false;
-    if (batteryPct == null && batteryEnum != null) {
+    const batteryPct = this.plugin.client.wyzeRoomSensorBatteryToHomeKit(params.battery);
+    const batteryLow = this.plugin.client.wyzeRoomSensorBatteryIsLow(params.battery);
+    if (batteryPct == null && params.battery != null) {
       this.plugin.log.warn?.(
-        `[RoomSensor] "${this.display_name}" unknown battery enum value: ${JSON.stringify(batteryEnum)}. ` +
+        `[RoomSensor] "${this.display_name}" unknown battery enum value: ${JSON.stringify(params.battery)}. ` +
         `Expected 1 (EMPTY), 2 (LOW), 3 (HALF), or 4 (FULL).`
       );
     }
@@ -169,13 +149,15 @@ module.exports = class WyzeRoomSensor extends WyzeAccessory {
       );
     }
 
-    if (this.plugin.config.pluginLoggingEnabled)
+    if (this.plugin.config.pluginLoggingEnabled) {
+      const tempF = typeof params.temperature === "number" ? params.temperature / 10 : null;
       this.plugin.log(
         `[RoomSensor] ${this.mac} (${this.display_name}): ` +
-          (tempLogF != null ? `${tempLogF.toFixed(1)}°F, ` : "temp=? ") +
+          (tempF != null ? `${tempF.toFixed(1)}°F, ` : "temp=? ") +
           (humidityPct != null ? `${humidityPct}% RH, ` : "humidity=? ") +
           (batteryPct != null ? `battery ${batteryPct}%${batteryLow ? " (low)" : ""}` : `battery=?`) +
           ` (rssi=${params.rssi ?? "?"})`
       );
+    }
   }
 };
