@@ -40,7 +40,7 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
     this.batteryService
       .getCharacteristic(Characteristic.StatusLowBattery)
       .onGet(() =>
-        this.batteryLevel < 20
+        this.plugin.client.checkLowBattery(this.batteryLevel)
           ? Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
           : Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
       );
@@ -249,7 +249,7 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
     this.batteryService
       .getCharacteristic(Characteristic.StatusLowBattery)
       .updateValue(
-        battery < 20
+        this.plugin.client.checkLowBattery(battery)
           ? Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
           : Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
       );
