@@ -1,10 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
 
 module.exports = class WyzeLock extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -85,15 +81,14 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Lock] Updating status "${this.display_name} (${this.mac}) to noResponse"`
-      );
     if (device.conn_state === 0) {
-      //this.getLockCurrentState().updateValue(noResponse)
-      this.lockService
-        .getCharacteristic(Characteristic.LockCurrentState)
-        .updateValue(noResponse);
+      // Don't push `noResponse` — that triggers HomeKit's unreachable
+      // banner. Just skip the update so the last known state stays
+      // visible until the device comes back online.
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
+          `[Lock] "${this.display_name} (${this.mac})" is offline — keeping last known state`
+        );
     } else {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(

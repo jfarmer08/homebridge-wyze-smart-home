@@ -3,11 +3,6 @@ const WyzeAccessory = require("./WyzeAccessory");
 const enums = require("../enums");
 const WyzeCameraStreamingDelegate = require("../camera/WyzeCameraStreamingDelegate");
 
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
-
 module.exports = class WyzeCamera extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
@@ -300,26 +295,13 @@ module.exports = class WyzeCamera extends WyzeAccessory {
     }
 
     if (!this.cameraOnline) {
+      // Don't push `noResponse` — that triggers HomeKit's red unreachable
+      // banner. Just leave the existing characteristic values in place so
+      // the user sees the last-known state until the camera comes back.
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Camera] Updating status ${this.mac} (${this.display_name}) to noResponse`
+          `[Camera] ${this.mac} (${this.display_name}) is offline — keeping last known state`
         );
-      this.privacySwitch?.getCharacteristic(Characteristic.On).updateValue(noResponse);
-      if (this.plugin.config.sirenAccessory?.find((d) => d === device.mac)) {
-        this.sirenSwitch?.getCharacteristic(Characteristic.On).updateValue(noResponse);
-      }
-      if (this.plugin.config.floodLightAccessory?.find((d) => d === this.mac)) {
-        this.floodLightService?.getCharacteristic(Characteristic.On).updateValue(noResponse);
-      }
-      if (this.plugin.config.spotLightAccessory?.find((d) => d === this.mac)) {
-        this.spotLightService?.getCharacteristic(Characteristic.On).updateValue(noResponse);
-      }
-      if (this.plugin.config.garageDoorAccessory?.find((d) => d === this.mac)) {
-        this.garageDoorService?.getCharacteristic(Characteristic.CurrentDoorState).updateValue(noResponse);
-      }
-      if (this.plugin.config.notificationAccessory?.find((d) => d === this.mac)) {
-        this.notificationSwitch?.getCharacteristic(Characteristic.On).updateValue(noResponse);
-      }
     } else {
       if (this.cameraAccessoryAttached()) {
         let propertyList;
