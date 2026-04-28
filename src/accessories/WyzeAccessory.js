@@ -98,18 +98,36 @@ module.exports = class WyzeAccessory {
   }
 
   /**
-   * Merge `state` into homeKitAccessory.context.lastState so that on the
-   * next plugin start, loadPersistedState() returns it. The Get handlers
-   * can then return the cached value immediately instead of "undefined"
-   * while waiting for the first post-restart refresh to complete.
+   * Merge `state` into homeKitAccessory.context.lastState AND flush the
+   * cached-accessory file to disk so the value survives even an
+   * unclean shutdown (kill, crash). Without the explicit
+   * updatePlatformAccessories call, homebridge only writes the cache
+   * on clean SIGTERM — and the user just restarting from the UI counts
+   * as unclean for our purposes.
    *
    * Pass partial updates — only the keys you provide are overwritten.
+   * Skipped silently if `state` is identical to what's already cached
+   * (avoids unnecessary disk writes every refresh cycle).
    */
   persistState(state) {
-    this.homeKitAccessory.context.lastState = {
-      ...this.homeKitAccessory.context.lastState,
-      ...state,
-    };
+    const prev = this.homeKitAccessory.context.lastState || {};
+    let changed = false;
+    for (const k of Object.keys(state)) {
+      if (prev[k] !== state[k]) { changed = true; break; }
+    }
+    if (!changed) return;
+
+    this.homeKitAccessory.context.lastState = { ...prev, ...state };
+
+    // Flush. Only valid for bridged accessories — externals (cameras)
+    // are persisted differently, so we no-op on those without erroring.
+    try {
+      this.plugin.api.updatePlatformAccessories?.([this.homeKitAccessory]);
+    } catch (_) {
+      // Likely an external accessory or homebridge variant that doesn't
+      // expose updatePlatformAccessories. Context mutation is in memory
+      // and will still be saved on clean shutdown.
+    }
   }
 
   sleep(ms) {
