@@ -5,10 +5,14 @@ const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorMod
   LightStripModels, MeshLightModels, ThermostatModels, ThermostatRoomSensor, S1GatewayModels,
   VacuumModels, IrrigationModels } = enums
 
-//const WyzeAPI = require('wyze-api') // Uncomment for Release
-const WyzeAPI = require('./wyze-api/src') // Comment for Release
-const { resolveSecrets, getValidatedBaseUrls, sanitizeDeviceName } = require('./wyze-api/src/util/security')
-const { WyzeLogger } = require('./wyze-api/src/util/wyzeLogger')
+// Single canonical require path. In dev, `npm link wyze-api` (run once
+// after cloning) symlinks node_modules/wyze-api → src/wyze-api so the
+// same string resolves to the local submodule. In published builds it
+// resolves to whatever wyze-api version is pinned in package.json.
+// See README "Development setup" or `npm run dev-link`.
+const WyzeAPI = require('wyze-api')
+const { resolveSecrets, getValidatedBaseUrls, sanitizeDeviceName } = require('wyze-api/src/util/security')
+const { WyzeLogger } = require('wyze-api/src/util/wyzeLogger')
 const configMigrator = require('./configMigrator')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')

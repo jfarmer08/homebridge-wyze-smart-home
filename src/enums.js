@@ -10,8 +10,8 @@
  * existing handler class for testing without waiting for a release.
  */
 
-//const { WyzeAccessoryModels } = require('wyze-api') // Uncomment for Release
-const { WyzeAccessoryModels } = require('./wyze-api/src') // Comment for Release
+// Single canonical require path — see WyzeSmartHome.js for details.
+const { WyzeAccessoryModels } = require('wyze-api')
 
 // Shallow clone every category so applyConfigOverrides can add entries
 // without mutating the upstream frozen object.
