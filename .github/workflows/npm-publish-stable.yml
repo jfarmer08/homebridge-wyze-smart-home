@@ -60,7 +60,6 @@ jobs:
       - name: Read submodule wyze-api version
         id: api
         run: echo "version=$(node -p "require('./src/wyze-api/package.json').version")" >> "$GITHUB_OUTPUT"
-      - run: npm ci
 
   publish:
     needs: guard

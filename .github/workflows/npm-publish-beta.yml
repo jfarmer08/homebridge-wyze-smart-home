@@ -85,7 +85,6 @@ jobs:
             echo "For aligned beta releases, bump the submodule to match the bridge's MAJOR.MINOR.PATCH first."
             exit 1
           fi
-      - run: npm ci
 
   publish:
     needs: guard
