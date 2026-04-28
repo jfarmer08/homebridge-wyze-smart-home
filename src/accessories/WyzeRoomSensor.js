@@ -88,39 +88,94 @@ module.exports = class WyzeRoomSensor extends WyzeAccessory {
     markServiceOnline(this.getTemperatureSensorService(), online);
     markServiceOnline(this.getHumiditySensorService(), online);
 
+    // Log the raw params payload once per accessory per startup. If a
+    // user reports the wrong temperature scale or a stuck battery
+    // reading, this is what we ask them to share.
+    if (!this._loggedRawOnce) {
+      this._loggedRawOnce = true;
+      this.plugin.log.info(
+        `[RoomSensor] First update for "${this.display_name}" (${this.mac}). ` +
+        `Save this if you're debugging:\n${JSON.stringify(params, null, 2)}`
+      );
+    }
+
     if (!online) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[RoomSensor] ${this.mac} (${this.display_name}) is offline — keeping last known values, marked inactive`
+          `[RoomSensor] ${this.mac} (${this.display_name}) is offline ` +
+          `(iot_state=${JSON.stringify(params.iot_state)}, conn_state=${device.conn_state}) — ` +
+          `keeping last known values, marked inactive`
         );
       return;
     }
 
-    // Temperature comes from Wyze in tenths-of-°F (e.g. 712 = 71.2°F).
-    // Convert to °F first, then to °C for HomeKit (which uses °C internally).
-    const tempF = typeof params.temperature === "number" ? params.temperature / 10 : null;
-    const tempC = tempF != null ? (tempF - 32) / 1.8 : null;
-    const humidityPct = typeof params.humidity === "number" ? params.humidity : null;
+    // Wyze typically reports temperature in tenths of °F (e.g. 712 = 71.2°F).
+    // Some firmwares may report in whole °F or °C — sanity-check the
+    // resulting Celsius value and warn if it's clearly nonsense so we know
+    // to revisit the conversion.
+    const rawTemp = params.temperature;
+    let tempC = null;
+    let tempLogF = null;
+    if (typeof rawTemp === "number") {
+      const tempF = rawTemp / 10;
+      tempC = (tempF - 32) / 1.8;
+      tempLogF = tempF;
+      if (tempC < -50 || tempC > 80) {
+        this.plugin.log.warn?.(
+          `[RoomSensor] "${this.display_name}" temperature out of plausible range — ` +
+          `raw=${rawTemp} → ${tempF.toFixed(1)}°F / ${tempC.toFixed(1)}°C. ` +
+          `Wyze may be reporting whole degrees instead of tenths on this firmware.`
+        );
+      }
+    } else if (rawTemp != null) {
+      this.plugin.log.warn?.(
+        `[RoomSensor] "${this.display_name}" non-numeric temperature: ${JSON.stringify(rawTemp)}`
+      );
+    }
+
+    const rawHumidity = params.humidity;
+    let humidityPct = null;
+    if (typeof rawHumidity === "number") {
+      humidityPct = rawHumidity;
+      if (humidityPct < 0 || humidityPct > 100) {
+        this.plugin.log.warn?.(
+          `[RoomSensor] "${this.display_name}" humidity out of range: ${humidityPct}%`
+        );
+      }
+    } else if (rawHumidity != null) {
+      this.plugin.log.warn?.(
+        `[RoomSensor] "${this.display_name}" non-numeric humidity: ${JSON.stringify(rawHumidity)}`
+      );
+    }
 
     const batteryEnum = params.battery;
-    const batteryPct = ROOM_SENSOR_BATTERY_PCT[batteryEnum] ?? 100;
+    const batteryPct = ROOM_SENSOR_BATTERY_PCT[batteryEnum] ?? null;
     const batteryLow = ROOM_SENSOR_BATTERY_LOW[batteryEnum] ?? false;
+    if (batteryPct == null && batteryEnum != null) {
+      this.plugin.log.warn?.(
+        `[RoomSensor] "${this.display_name}" unknown battery enum value: ${JSON.stringify(batteryEnum)}. ` +
+        `Expected 1 (EMPTY), 2 (LOW), 3 (HALF), or 4 (FULL).`
+      );
+    }
 
     if (tempC != null) this.getTemperatureCharacteristic().updateValue(tempC);
     if (humidityPct != null) this.getHumidityCharacteristic().updateValue(humidityPct);
-    this.getBatteryCharacteristic().updateValue(batteryPct);
-    this.getIsBatteryLowCharacteristic().updateValue(
-      batteryLow
-        ? Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
-        : Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
-    );
+    if (batteryPct != null) {
+      this.getBatteryCharacteristic().updateValue(batteryPct);
+      this.getIsBatteryLowCharacteristic().updateValue(
+        batteryLow
+          ? Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
+          : Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
+      );
+    }
 
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
         `[RoomSensor] ${this.mac} (${this.display_name}): ` +
-          (tempF != null ? `${tempF.toFixed(1)}°F, ` : "") +
-          (humidityPct != null ? `${humidityPct}% RH, ` : "") +
-          `battery ${batteryPct}%${batteryLow ? " (low)" : ""}`
+          (tempLogF != null ? `${tempLogF.toFixed(1)}°F, ` : "temp=? ") +
+          (humidityPct != null ? `${humidityPct}% RH, ` : "humidity=? ") +
+          (batteryPct != null ? `battery ${batteryPct}%${batteryLow ? " (low)" : ""}` : `battery=?`) +
+          ` (rssi=${params.rssi ?? "?"})`
       );
   }
 };

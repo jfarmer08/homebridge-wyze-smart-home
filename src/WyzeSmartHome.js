@@ -153,6 +153,11 @@ module.exports = class WyzeSmartHome {
    * synthetic device entries that loadDevice can consume.
    *
    * One extra API call per thermostat per refresh cycle.
+   *
+   * The Earth endpoint shape isn't publicly documented and varies across
+   * firmwares — this method logs aggressively (once per startup per
+   * thermostat) so unexpected shapes are easy to diagnose from a user's
+   * log dump.
    */
   async discoverRoomSensors(devices) {
     const thermostats = devices.filter(
@@ -160,41 +165,82 @@ module.exports = class WyzeSmartHome {
     )
     if (thermostats.length === 0) return []
 
+    if (!this._roomSensorRawLogged) this._roomSensorRawLogged = new Set()
     const out = []
+
     for (const t of thermostats) {
       let response
       try {
         response = await this.client.getThermostatSensors(t.mac)
       } catch (err) {
-        this.log.error(`[RoomSensor] discovery failed for thermostat ${t.nickname}: ${err.message || err}`)
+        this.log.error(
+          `[RoomSensor] discovery API call failed for thermostat ${t.nickname} (${t.mac}): ${err.message || err}`
+        )
+        if (err?.response?.data) {
+          this.log.error(`[RoomSensor]   Earth response body: ${JSON.stringify(err.response.data)}`)
+        }
         continue
       }
 
-      // The Earth endpoint returns its payload under various shapes across
-      // firmware versions — accept all the ones we've seen in the wild.
-      const list =
-        response?.data?.sensor_list ||
-        response?.data?.sub_device_list ||
-        response?.data?.sub_devices ||
-        (Array.isArray(response?.data) ? response.data : []) ||
-        []
+      // Log the raw response once per thermostat per startup. This is the
+      // single most useful artifact when the API shape doesn't match our
+      // expectations — without it we're guessing.
+      if (!this._roomSensorRawLogged.has(t.mac)) {
+        this._roomSensorRawLogged.add(t.mac)
+        this.log.info(
+          `[RoomSensor] First discovery response for thermostat "${t.nickname}" (${t.mac}). ` +
+          `Save this if you're debugging:\n${JSON.stringify(response, null, 2)}`
+        )
+      }
+
+      // Accept any of the response shapes we've seen across firmwares.
+      // If yours isn't here, the raw log above will tell us what to add.
+      let list = null
+      let shapeUsed = null
+      if (Array.isArray(response?.data?.sensor_list))     { list = response.data.sensor_list;     shapeUsed = 'data.sensor_list' }
+      else if (Array.isArray(response?.data?.sub_device_list)) { list = response.data.sub_device_list; shapeUsed = 'data.sub_device_list' }
+      else if (Array.isArray(response?.data?.sub_devices))     { list = response.data.sub_devices;     shapeUsed = 'data.sub_devices' }
+      else if (Array.isArray(response?.data?.sub_device))      { list = response.data.sub_device;      shapeUsed = 'data.sub_device' }
+      else if (Array.isArray(response?.data))                  { list = response.data;                 shapeUsed = 'data (array)' }
+      else if (Array.isArray(response))                        { list = response;                       shapeUsed = '(array)' }
+      else                                                     { list = [];                             shapeUsed = 'unknown — see raw log above' }
+
+      if (this.config.pluginLoggingEnabled) {
+        this.log(
+          `[RoomSensor] Thermostat "${t.nickname}": parsed ${list.length} sensor(s) from response shape "${shapeUsed}"`
+        )
+      }
+      if (list.length === 0 && response && this.config.pluginLoggingEnabled) {
+        // We got something back but couldn't find a list — most likely a
+        // shape we haven't catalogued. Log enough to add a new branch.
+        this.log.warn?.(
+          `[RoomSensor] Empty parse for "${t.nickname}". Top-level response keys: ${Object.keys(response || {}).join(', ') || '(none)'}; ` +
+          `data keys: ${response?.data && typeof response.data === 'object' ? Object.keys(response.data).join(', ') : '(none)'}`
+        )
+      }
 
       for (const s of list) {
         const mac = s.device_id || s.device_mac || s.mac
-        if (!mac) continue
-        const props = s.props || s.device_params || s
+        if (!mac) {
+          this.log.warn?.(
+            `[RoomSensor] Skipping sensor under "${t.nickname}" with no MAC. Entry keys: ${Object.keys(s || {}).join(', ')}`
+          )
+          continue
+        }
+
+        // The per-sensor properties may be nested or inline. Try the most
+        // specific containers first; fall through to the entry itself.
+        const props = s.props || s.device_params || s.device_info || s
         const iotState = props.iot_state ?? s.iot_state
         const conn_state = iotState === 'connect' || iotState === 1 ? 1 : 0
 
-        out.push({
+        const synthesized = {
           mac,
-          nickname: s.name || s.nickname || `Room Sensor ${mac.slice(-4)}`,
+          nickname: s.name || s.nickname || `Room Sensor ${String(mac).slice(-4)}`,
           product_type: 'ThermostatRoomSensor',
           product_model: ThermostatRoomSensor.CO_TH1,
           firmware_ver: s.firmware_ver || t.firmware_ver,
           conn_state,
-          // Thermostat is the parent — useful context if anything later
-          // wants to map sensor → thermostat.
           parent_device_mac: t.mac,
           device_params: {
             temperature: props.temperature,
@@ -203,11 +249,29 @@ module.exports = class WyzeSmartHome {
             rssi: props.rssi,
             iot_state: iotState,
           },
-        })
+        }
+
+        // Warn loudly if any of the four headline fields is missing — that's
+        // a sign the Wyze schema differs from what we're assuming and the
+        // tile will show a stale or default value.
+        const missing = []
+        if (synthesized.device_params.temperature == null) missing.push('temperature')
+        if (synthesized.device_params.humidity == null) missing.push('humidity')
+        if (synthesized.device_params.battery == null) missing.push('battery')
+        if (synthesized.device_params.iot_state == null) missing.push('iot_state')
+        if (missing.length > 0 && this.config.pluginLoggingEnabled) {
+          this.log.warn?.(
+            `[RoomSensor] "${synthesized.nickname}" (${mac}) missing fields [${missing.join(', ')}]. ` +
+            `Sensor entry keys: ${Object.keys(s || {}).join(', ')}; ` +
+            `props keys: ${props && typeof props === 'object' ? Object.keys(props).join(', ') : '(none)'}`
+          )
+        }
+
+        out.push(synthesized)
       }
     }
 
-    if (out.length > 0 && this.config.pluginLoggingEnabled) {
+    if (this.config.pluginLoggingEnabled) {
       this.log(`[RoomSensor] Discovered ${out.length} room sensor(s) across ${thermostats.length} thermostat(s)`)
     }
     return out
