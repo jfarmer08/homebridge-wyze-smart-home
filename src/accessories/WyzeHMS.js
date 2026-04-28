@@ -56,8 +56,10 @@ module.exports = class WyzeHMS extends WyzeAccessory {
   }
 
   async handleStateGet() {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(`[HMS] Get "${this.display_name}": ${this.hmsStatus}`);
+    if (this.plugin.config.pluginLoggingEnabled) {
+      const display = this.hmsStatus || "(unknown — awaiting first refresh)";
+      this.plugin.log(`[HMS] Get "${this.display_name}": ${display}`);
+    }
     return this.plugin.client.wyzeHmsStateToHomeKit(this.hmsStatus);
   }
 
@@ -78,7 +80,37 @@ module.exports = class WyzeHMS extends WyzeAccessory {
   async getHmsID() {
     if (this.hmsId) return this.hmsId;
     const response = await this.plugin.client.getPlanBindingListByUser();
-    this.hmsId = response.data[0].deviceList[0].device_id;
+    const plans = Array.isArray(response?.data) ? response.data : [];
+
+    // Wyze returns a list of plans (sometimes multiple — e.g. an expired
+    // Annual Plan plus an active one). Find the first plan that actually
+    // has a device bound to it instead of indexing [0] blindly.
+    let foundPlan = null;
+    let foundDevice = null;
+    for (const plan of plans) {
+      const dev = Array.isArray(plan?.deviceList) ? plan.deviceList[0] : null;
+      if (dev?.device_id) {
+        foundPlan = plan;
+        foundDevice = dev;
+        break;
+      }
+    }
+
+    if (!foundDevice) {
+      throw new Error(
+        `[HMS] No HMS device found in plan list. Got ${plans.length} plan(s); ` +
+        `none had a non-empty deviceList. Is your HMS subscription active?`
+      );
+    }
+
+    if (foundPlan.service_status && foundPlan.service_status !== "ACTIVE") {
+      this.plugin.log.warn?.(
+        `[HMS] HMS subscription for "${this.display_name}" is ${foundPlan.service_status}. ` +
+        `State queries may fail until the subscription is renewed.`
+      );
+    }
+
+    this.hmsId = foundDevice.device_id;
     return this.hmsId;
   }
 };
