@@ -211,6 +211,12 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
     const modeName = this.plugin.client.vacuumGetMode(info);
     const suction = info.cleanlevel ?? this.suctionLevel;
     const charging = !!info.chargeState;
+    // Fault: e.g. 514 = "Wheels stuck". When present, Wyze reports
+    // mode=PAUSED (or similar) which makes the vacuum look intentionally
+    // idle. The fault tells the real story — surface it on the Fan
+    // service via StatusFault so the Home app shows the warning
+    // triangle, and log loudly so it's visible without needing debug.
+    const fault = this.plugin.client.vacuumGetFault(info);
 
     this.batteryLevel = battery;
     this.suctionLevel = suction;
@@ -252,10 +258,42 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
       lastSweepRoomId: this.lastSweepRoomId,
     });
 
+    // Show the warning triangle in HomeKit when faulted, the active
+    // dot when clear. markServiceOnline already handled the
+    // online-from-list case above; this layers the fault check on top.
+    if (!this.fanService.testCharacteristic(Characteristic.StatusFault)) {
+      this.fanService.addCharacteristic(Characteristic.StatusFault);
+    }
+    this.fanService
+      .getCharacteristic(Characteristic.StatusFault)
+      .updateValue(
+        fault
+          ? Characteristic.StatusFault.GENERAL_FAULT
+          : Characteristic.StatusFault.NO_FAULT
+      );
+
+    if (fault) {
+      // Warn-level so users see it without enabling debug. Repeat-suppress
+      // so the log doesn't fill up while the vacuum is stuck — only print
+      // when the code changes (cleared, or shifted to a different fault).
+      if (this._lastReportedFaultCode !== fault.code) {
+        this._lastReportedFaultCode = fault.code;
+        const desc = fault.description || `unknown fault code ${fault.code}`;
+        this.plugin.log.warn?.(
+          `[Vacuum] "${this.display_name}": FAULT ${fault.code} — ${desc}. ` +
+          `Wyze reports the vacuum as ${modeName.toLowerCase()}; check the Wyze app for the full message.`
+        );
+      }
+    } else if (this._lastReportedFaultCode != null) {
+      this._lastReportedFaultCode = null;
+      this.plugin.log.info?.(`[Vacuum] "${this.display_name}": fault cleared`);
+    }
+
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
-        `[Vacuum] ${this.mac} (${this.display_name}): ${modeName.toLowerCase()}, ` +
-          `suction L${suction}, battery ${battery}%${charging ? " ⚡" : ""}`
+        `[Vacuum] ${this.mac} (${this.display_name}): ${modeName.toLowerCase()}` +
+          (fault ? ` (FAULT ${fault.code}: ${fault.description || "unknown"})` : "") +
+          `, suction L${suction}, battery ${battery}%${charging ? " ⚡" : ""}`
       );
   }
 
