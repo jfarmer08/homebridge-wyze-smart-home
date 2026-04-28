@@ -52,9 +52,6 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(`[Vacuum] Updating "${this.display_name} (${this.mac})"`);
-
     // Reflect bulk-list connectivity on the fan service. The detailed
     // getVacuumInfo call below will mark inactive too if it fails.
     const onlineFromList = device.conn_state !== 0;
@@ -62,51 +59,62 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
     if (!onlineFromList) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Vacuum] ${this.mac} is offline — keeping last known state, marked inactive`
+          `[Vacuum] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
         );
       return;
     }
 
+    // NOTE: one extra getVacuumInfo API call per refresh — the bulk
+    // getObjectList doesn't include vacuum mode / battery / charge state.
+    let info;
     try {
-      const info = await this.plugin.client.getVacuumInfo(this.mac);
-      if (!info) {
-        markServiceOnline(this.fanService, false);
-        return;
-      }
-
-      // `battary` is the Wyze API field name (typo in their API)
-      const battery = info.battary ?? this.batteryLevel;
-      const modeName = this.plugin.client.vacuumGetMode(info);
-      const suction = info.cleanlevel ?? this.suctionLevel;
-      const charging = !!(info.chargeState);
-
-      this.batteryLevel = battery;
-      this.suctionLevel = suction;
-      this.isCharging = charging;
-      this.isCleaning = modeName === "CLEANING" || modeName === "MAPPING";
-
-      this.fanService.getCharacteristic(Characteristic.On).updateValue(this.isCleaning);
-      this.fanService.getCharacteristic(Characteristic.RotationSpeed).updateValue(this.suctionLevel * 33);
-
-      this.batteryService.getCharacteristic(Characteristic.BatteryLevel).updateValue(battery);
-      this.batteryService
-        .getCharacteristic(Characteristic.StatusLowBattery)
-        .updateValue(
-          battery < 20
-            ? Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
-            : Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
-        );
-      this.batteryService
-        .getCharacteristic(Characteristic.ChargingState)
-        .updateValue(
-          charging
-            ? Characteristic.ChargingState.CHARGING
-            : Characteristic.ChargingState.NOT_CHARGING
-        );
+      info = await this.plugin.client.getVacuumInfo(this.mac);
     } catch (e) {
-      this.plugin.log.error(`[Vacuum] Error updating "${this.display_name}": ${e}`);
+      this.plugin.log.error(
+        `[Vacuum] getVacuumInfo failed for "${this.display_name}": ${e.message || e}`
+      );
       markServiceOnline(this.fanService, false);
+      return;
     }
+    if (!info) {
+      markServiceOnline(this.fanService, false);
+      return;
+    }
+
+    // `battary` is the Wyze API field name (typo in their API).
+    const battery = info.battary ?? this.batteryLevel;
+    const modeName = this.plugin.client.vacuumGetMode(info);
+    const suction = info.cleanlevel ?? this.suctionLevel;
+    const charging = !!info.chargeState;
+
+    this.batteryLevel = battery;
+    this.suctionLevel = suction;
+    this.isCharging = charging;
+    this.isCleaning = modeName === "CLEANING" || modeName === "MAPPING";
+
+    this.fanService.getCharacteristic(Characteristic.On).updateValue(this.isCleaning);
+    this.fanService.getCharacteristic(Characteristic.RotationSpeed).updateValue(this.suctionLevel * 33);
+    this.batteryService.getCharacteristic(Characteristic.BatteryLevel).updateValue(battery);
+    this.batteryService
+      .getCharacteristic(Characteristic.StatusLowBattery)
+      .updateValue(
+        battery < 20
+          ? Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW
+          : Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
+      );
+    this.batteryService
+      .getCharacteristic(Characteristic.ChargingState)
+      .updateValue(
+        charging
+          ? Characteristic.ChargingState.CHARGING
+          : Characteristic.ChargingState.NOT_CHARGING
+      );
+
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
+        `[Vacuum] ${this.mac} (${this.display_name}): ${modeName.toLowerCase()}, ` +
+          `suction L${suction}, battery ${battery}%${charging ? " ⚡" : ""}`
+      );
   }
 
   async getIsActive() {
@@ -115,13 +123,17 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
 
   async setIsActive(value) {
     if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(`[Vacuum] Setting active for "${this.display_name}" to ${value}`);
-    if (value) {
-      await this.plugin.client.vacuumClean(this.mac);
-    } else {
-      await this.plugin.client.vacuumDock(this.mac);
+      this.plugin.log(`[Vacuum] ${value ? "Cleaning" : "Docking"} "${this.display_name}"`);
+    try {
+      if (value) await this.plugin.client.vacuumClean(this.mac);
+      else await this.plugin.client.vacuumDock(this.mac);
+      this.isCleaning = !!value;
+    } catch (e) {
+      this.plugin.log.error(
+        `[Vacuum] ${value ? "Clean" : "Dock"} failed for "${this.display_name}": ${e.message || e}`
+      );
+      throw e;
     }
-    this.isCleaning = !!value;
   }
 
   async getSuctionSpeed() {
@@ -129,13 +141,20 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
   }
 
   async setSuctionSpeed(value) {
-    // HomeKit sends 0-100; map to Wyze suction level 1-3
+    // HomeKit sends 0-100; map to Wyze suction level 1-3.
     const level = value <= 33 ? 1 : value <= 66 ? 2 : 3;
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(
-        `[Vacuum] Setting suction for "${this.display_name}" to level ${level} (speed ${value})`
+        `[Vacuum] Setting suction for "${this.display_name}" to level ${level} (HomeKit speed ${value})`
       );
-    this.suctionLevel = level;
-    await this.plugin.client.vacuumSetSuctionLevel(this.mac, this.product_model, level);
+    try {
+      await this.plugin.client.vacuumSetSuctionLevel(this.mac, this.product_model, level);
+      this.suctionLevel = level;
+    } catch (e) {
+      this.plugin.log.error(
+        `[Vacuum] Suction set failed for "${this.display_name}": ${e.message || e}`
+      );
+      throw e;
+    }
   }
 };

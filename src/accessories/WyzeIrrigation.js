@@ -46,14 +46,14 @@ module.exports = class WyzeIrrigation extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Irrigation] Updating "${this.display_name} (${this.mac})" zone ${this.zoneNumber}`
-      );
-    // Reflect connectivity via StatusActive instead of forcing Active/InUse
-    // to 0, which would falsely look like the user stopped the run.
-    markServiceOnline(this.valveService, device.conn_state !== 0);
-    if (device.conn_state === 0 && this.plugin.config.pluginLoggingEnabled) {
+    // The bulk getObjectList doesn't include zone-run state for irrigation.
+    // We track Active / InUse / RemainingDuration locally via setActive +
+    // the countdown timer, so the only thing the cycle does here is reflect
+    // connectivity via StatusActive — forcing Active=0 / InUse=0 would
+    // falsely look like the user stopped a running zone.
+    const online = device.conn_state !== 0;
+    markServiceOnline(this.valveService, online);
+    if (!online && this.plugin.config.pluginLoggingEnabled) {
       this.plugin.log(
         `[Irrigation] ${this.mac} zone ${this.zoneNumber} is offline — keeping last known state, marked inactive`
       );
@@ -73,18 +73,25 @@ module.exports = class WyzeIrrigation extends WyzeAccessory {
         `[Irrigation] ${starting ? "Starting" : "Stopping"} "${this.display_name}" zone ${this.zoneNumber}`
       );
 
-    if (starting) {
-      await this.plugin.client.irrigationQuickRun(this.mac, this.zoneNumber, this.setDuration);
-      this.isActive = true;
-      this.isInUse = true;
-      this.remainingDuration = this.setDuration;
-      this._startCountdown();
-    } else {
-      await this.plugin.client.irrigationStop(this.mac);
-      this._clearCountdown();
-      this.isActive = false;
-      this.isInUse = false;
-      this.remainingDuration = 0;
+    try {
+      if (starting) {
+        await this.plugin.client.irrigationQuickRun(this.mac, this.zoneNumber, this.setDuration);
+        this.isActive = true;
+        this.isInUse = true;
+        this.remainingDuration = this.setDuration;
+        this._startCountdown();
+      } else {
+        await this.plugin.client.irrigationStop(this.mac);
+        this._clearCountdown();
+        this.isActive = false;
+        this.isInUse = false;
+        this.remainingDuration = 0;
+      }
+    } catch (error) {
+      this.plugin.log.error(
+        `[Irrigation] ${starting ? "Start" : "Stop"} failed for "${this.display_name}" zone ${this.zoneNumber}: ${error.message || error}`
+      );
+      throw error;
     }
 
     this.valveService
