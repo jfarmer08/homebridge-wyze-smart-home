@@ -7,7 +7,9 @@ const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorMod
 
 //const WyzeAPI = require('wyze-api') // Uncomment for Release
 const WyzeAPI = require('./wyze-api/src') // Comment for Release
-const { wrapLogger, resolveSecrets, getValidatedBaseUrls, sanitizeDeviceName } = require('./security')
+const { resolveSecrets, getValidatedBaseUrls, sanitizeDeviceName } = require('./wyze-api/src/util/security')
+const { WyzeLogger } = require('./wyze-api/src/util/wyzeLogger')
+const configMigrator = require('./configMigrator')
 const WyzePlug = require('./accessories/WyzePlug')
 const WyzeLight = require('./accessories/WyzeLight')
 const WyzeMeshLight = require('./accessories/WyzeMeshLight')
@@ -36,14 +38,54 @@ function delay(ms) {
 
 module.exports = class WyzeSmartHome {
   constructor(log, config, api) {
-    // Sanitize all log output: redact bearer tokens, access_token / refresh_token,
-    // passwords, API keys, and MAC addresses. Strips control chars and bounds line
-    // length. Applies to every downstream consumer that uses this.log (including
-    // the WyzeAPI client, which we pass it to below).
-    this.log = wrapLogger(log)
+    // Run the 2.0 normalizer first so the rest of the constructor sees a
+    // single canonical shape regardless of whether the user is on 1.x
+    // flat or 2.x nested config. normalize() also back-fills the legacy
+    // top-level fields, so accessory code that reads e.g.
+    // `this.plugin.config.pluginLoggingEnabled` keeps working unchanged.
+    const normalized = configMigrator.normalize(config)
+
+    // Use WyzeLogger — it sanitizes bearer tokens, credentials, GPS,
+    // emails, and MACs at write time, so plugin-side log calls get the same
+    // protection the API logger does. Set logging.disableRedaction=true in
+    // config to bypass when capturing raw output for your own debugging.
+    //
+    // Wrap the instance in a callable so accessory code that uses the
+    // legacy homebridge log shape (`this.plugin.log("msg")` as a function,
+    // treated as info) keeps working alongside the leveled methods
+    // (`this.log.debug(...)` etc.).
+    const _wyzeLogger = new WyzeLogger({
+      level: normalized.logging.level,
+      prefix: 'homebridge-wyze-smart-home',
+      redact: !normalized.logging.disableRedaction,
+    })
+    const callableLog = (...args) => _wyzeLogger.info(...args)
+    for (const m of ['error', 'warn', 'warning', 'info', 'debug', 'setLevel']) {
+      callableLog[m] = (...args) => _wyzeLogger[m](...args)
+    }
+    this.log = callableLog
+
+    // One-shot disk rewrite: if the user is still on the 1.x flat shape,
+    // rewrite their homebridge config.json to the 2.0 nested shape so the
+    // config-ui-x form has something pretty to render. Failure is
+    // non-fatal — the in-memory normalized config above keeps the running
+    // plugin happy either way.
+    try {
+      const status = configMigrator.rewriteHomebridgeConfigOnDisk({
+        configPath: api?.user?.configPath?.(),
+        platformAlias: PLATFORM_NAME,
+        log: this.log,
+      })
+      if (status !== 'already-migrated' && status !== 'migrated') {
+        this.log.debug?.(`[config] auto-migration ${status}`)
+      }
+    } catch (e) {
+      this.log.warn?.(`[config] auto-migration threw: ${e.message}`)
+    }
+
     // Merge in credentials from secretsFile (if configured) and WYZE_* env vars,
     // and validate / lock down the auth/api base URLs to known Wyze hosts.
-    this.config = resolveSecrets(config, this.log)
+    this.config = resolveSecrets(normalized, this.log)
     Object.assign(this.config, getValidatedBaseUrls(this.config, this.log))
     this.api = api
 
@@ -331,7 +373,7 @@ module.exports = class WyzeSmartHome {
       if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is in the Ignore Device list`)
       return
     }
-    else if (device.product_type == 'S1Gateway' && this.config.hms == false) {
+    else if (device.product_type == 'S1Gateway' && !this.config.hmsEnabled) {
       if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Ignoring (${device.nickname}) (MAC: ${device.mac}) because it is not enabled`)
       return
     }

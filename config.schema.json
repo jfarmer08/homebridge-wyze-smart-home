@@ -2,241 +2,335 @@
   "pluginAlias": "WyzeSmartHome",
   "pluginType": "platform",
   "singular": true,
-  "headerDisplay": "Wyze plug-in for Homebridge. This is a custom component to allow control of various Wyze devices using the unofficial API. Please note this mimics the Wyze app and therefore access may be cut off at anytime. If you feel like my work has been valuable to you I welcome your support through Paypal. All funding goes back into product purchases. [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg?style=flat-square&maxAge=2592000)](https://www.paypal.com/paypalme/AllenFarmer)",
-  "footerDisplay": "For documentation please see GitHub repository",
+  "headerDisplay": "Wyze plug-in for Homebridge — control Wyze devices via the unofficial API. Wyze can change or revoke access at any time. If this plugin is useful to you, [donations](https://www.paypal.com/paypalme/AllenFarmer) help fund hardware for adding new device support.",
+  "footerDisplay": "[Documentation & troubleshooting on GitHub](https://github.com/jfarmer08/homebridge-wyze-smart-home).",
   "schema": {
     "type": "object",
     "properties": {
       "name": {
         "title": "Plugin Name",
-        "description": "This name will appear in your Homebridge log",
         "type": "string",
         "default": "Wyze",
         "required": true
       },
-      "username": {
-        "title": "Username (E-Mail Address)",
-        "description": "The e-mail address used for your Wyze account",
-        "type": "string",
-        "default": "",
-        "required": true
-      },
-      "password": {
-        "title": "Password",
-        "description": "The password used for your Wyze account",
-        "type": "string",
-        "default": "",
-        "required": true
-      },
-      "keyId": {
-        "title": "Key ID",
-        "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com",
-        "type": "string",
-        "required": true
-      },
-      "apiKey": {
-        "title": "API Key",
-        "description": "API Key/ID available from the official Wyze Portal https://developer-api-console.wyze.com/)",
-        "type": "string",
-        "required": true
-      },
-      "refreshInterval": {
-        "title": "Refresh Interval",
-        "description": "Specify the number of milliseconds to wait between updates, default is 60000 ms (60 seconds)",
-        "type": "integer",
-        "default": 60000,
-        "minimum": 60000,
-        "maximum": 180000,
-        "multipleOf": 10000,
-        "required": false
-      },
-      "hms": {
-        "title": "HMS Subscription",
-        "description": "Enable if HMS Subscription is current",
-        "type": "boolean",
-        "default": false
-      },
-      "showAdvancedOptions": {
-        "title": "Advance Options",
-        "default": false,
-        "type": "boolean"
-      },
-      "apiLogEnabled": {
-        "title": "Enable API logging",
-        "description": "",
-        "type": "boolean",
-        "default": false,
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
-        }
-      },
-      "pluginLoggingEnabled": {
-        "title": "Enable Plugin logging",
-        "description": "",
-        "type": "boolean",
-        "default": false,
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
-        }
-      },
-      "lowBatteryPercentage": {
-        "title": "Low Battery Percentage",
-        "description": "Specify the Percentage of battery when consider low, default is 30%",
-        "type": "integer",
-        "default": 30,
-        "minimum": 10,
-        "maximum": 100,
-        "multipleOf": 1,
-        "required": false,
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
-        }
-      },
-      "logLevel": {
-        "title": "API Log Level",
-        "description": "Verbosity for the wyze-api submodule's @ptkdev/logger output. Each level shows its own messages plus everything more severe. Set to 'debug' to log every API request and response (replaces the legacy apiLogEnabled flag).",
-        "type": "string",
-        "default": "info",
-        "oneOf": [
-          { "enum": ["error"], "title": "error — only failures" },
-          { "enum": ["warn"], "title": "warn — failures + warnings" },
-          { "enum": ["info"], "title": "info — default; lifecycle + warnings + errors" },
-          { "enum": ["debug"], "title": "debug — full request/response dumps" }
-        ],
-        "required": false,
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
-        }
-      },
-      "deviceTypeOverrides": {
-        "title": "Device Type Overrides (advanced — for testing unsupported models)",
-        "description": "Route an unrecognized Wyze product code to an existing accessory class. Useful when Wyze releases a new model that hasn't been added to the plugin yet. Example: {\"CameraModels\": [\"HL_NEW_CAM\"]}. Valid keys: CameraModels, OutdoorPlugModels, PlugModels, LightModels, MeshLightModels, LightStripModels, ContactSensorModels, MotionSensorModels, LockModels, LockBoltV2Models, TemperatureHumidityModels, LeakSensorModels, CommonModels, S1GatewayModels, ThermostatModels, ThermostatRoomSensor, VacuumModels, IrrigationModels. The model may not work end-to-end if its API surface differs from what the chosen handler expects.",
+
+      "auth": {
         "type": "object",
-        "required": false,
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
+        "title": "Account",
+        "properties": {
+          "username": {
+            "title": "Email Address",
+            "type": "string",
+            "required": true,
+            "format": "email",
+            "description": "The email address used for your Wyze account."
+          },
+          "password": {
+            "title": "Password",
+            "type": "string",
+            "required": true,
+            "description": "Your Wyze account password."
+          },
+          "keyId": {
+            "title": "Key ID",
+            "type": "string",
+            "required": true,
+            "description": "API Key ID from the official Wyze portal: https://developer-api-console.wyze.com"
+          },
+          "apiKey": {
+            "title": "API Key",
+            "type": "string",
+            "required": true,
+            "description": "API Key from the official Wyze portal."
+          },
+          "secretsFile": {
+            "title": "Secrets File (optional)",
+            "type": "string",
+            "description": "Path to a mode-600 JSON file containing any of the credentials above. If set, values from this file override the fields above. Useful for keeping credentials out of homebridge config.json."
+          }
         }
       },
-      "enableThermostatRoomSensors": {
-        "title": "Expose Wyze Thermostat Room Sensors",
-        "description": "Discover CO_TH1 room sensors paired to each Wyze Thermostat and surface them in HomeKit as separate Temperature/Humidity tiles. Adds one extra API call per thermostat per refresh cycle.",
-        "type": "boolean",
-        "default": false,
-        "required": false,
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
+
+      "polling": {
+        "type": "object",
+        "title": "Polling",
+        "properties": {
+          "refreshInterval": {
+            "title": "Refresh Interval (ms)",
+            "type": "integer",
+            "default": 30000,
+            "minimum": 15000,
+            "maximum": 300000,
+            "multipleOf": 1000,
+            "description": "How often to poll Wyze for device updates. Lower = faster updates but more API calls."
+          },
+          "lowBatteryPercentage": {
+            "title": "Low Battery Threshold (%)",
+            "type": "integer",
+            "default": 30,
+            "minimum": 5,
+            "maximum": 100,
+            "multipleOf": 1,
+            "description": "Percentage at which battery-powered devices report low battery to HomeKit."
+          }
         }
       },
-      "garageDoorAccessory": {
+
+      "cameras": {
         "type": "array",
-        "title": "Wyze Garage Door Controller",
+        "title": "Cameras",
+        "description": "Per-camera capability switches. Each row toggles which extra HomeKit accessories appear for that camera (garage door opener, spotlight, floodlight, siren, notification switch). Cameras not listed here are exposed as plain camera tiles.",
         "items": {
-          "title": "Device MAC Address with accessory attached",
-          "type": "string"
-        },
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
+          "type": "object",
+          "title": "Camera",
+          "properties": {
+            "mac": {
+              "title": "MAC Address",
+              "type": "string",
+              "required": true,
+              "placeholder": "AA:BB:CC:DD:EE:FF",
+              "description": "MAC address of the Wyze camera (find it in the Wyze app under device info)."
+            },
+            "name": {
+              "title": "Friendly Name (optional)",
+              "type": "string",
+              "description": "Reminder label — does not change the HomeKit name."
+            },
+            "garage": { "title": "Expose Garage Door Opener", "type": "boolean", "default": false },
+            "spotlight": { "title": "Expose Spotlight Switch", "type": "boolean", "default": false },
+            "floodlight": { "title": "Expose Floodlight Switch", "type": "boolean", "default": false },
+            "siren": { "title": "Expose Siren Switch", "type": "boolean", "default": false },
+            "notifications": { "title": "Expose Notifications Switch", "type": "boolean", "default": false }
+          }
         }
       },
-      "spotLightAccessory": {
-        "type": "array",
-        "title": "Wyze Camera Spotlight",
-        "items": {
-          "title": "Device MAC Address with accessory attached",
-          "type": "string"
-        },
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
+
+      "thermostat": {
+        "type": "object",
+        "title": "Thermostat",
+        "properties": {
+          "exposeRoomSensors": {
+            "title": "Expose Wyze Room Sensors",
+            "type": "boolean",
+            "default": false,
+            "description": "Discover CO_TH1 room sensors paired to each Wyze Thermostat and surface them as separate Temperature/Humidity tiles. Adds one extra API call per thermostat per refresh cycle."
+          }
         }
       },
-      "floodLightAccessory": {
-        "type": "array",
-        "title": "Wyze Camera Floodlight",
-        "items": {
-          "title": "Device MAC Address with accessory attached",
-          "type": "string"
-        },
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
+
+      "hms": {
+        "type": "object",
+        "title": "Home Monitoring System (HMS)",
+        "properties": {
+          "enabled": {
+            "title": "Expose HMS",
+            "type": "boolean",
+            "default": false,
+            "description": "Enable only if you have an active HMS subscription. The S1 gateway is hidden from HomeKit unless this is on."
+          }
         }
       },
-      "sirenAccessory": {
-        "type": "array",
-        "title": "Wyze Camera Siren",
-        "items": {
-          "title": "Device MAC Address with accessory attached",
-          "type": "string"
-        },
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
+
+      "excludes": {
+        "type": "object",
+        "title": "Exclude Devices",
+        "properties": {
+          "macs": {
+            "type": "array",
+            "title": "Exclude by MAC Address",
+            "description": "Devices with these MAC addresses will be hidden from HomeKit.",
+            "items": { "type": "string", "title": "MAC Address" }
+          },
+          "types": {
+            "type": "array",
+            "title": "Exclude by Device Type",
+            "description": "All devices of the selected types will be hidden from HomeKit.",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "title": "Device Type",
+              "enum": [
+                "OutdoorPlug", "Plug",
+                "Light", "MeshLight", "LightStrip",
+                "ContactSensor", "MotionSensor",
+                "Lock",
+                "TemperatureHumidity", "LeakSensor",
+                "Camera",
+                "Thermostat", "ThermostatRoomSensor",
+                "Vacuum", "Irrigation",
+                "S1Gateway", "Common"
+              ]
+            }
+          }
         }
       },
-      "notificationAccessory": {
-        "type": "array",
-        "title": "Wyze Notification Switch",
-        "items": {
-          "title": "Device MAC Address of camera you want to control the Notification Switch",
-          "type": "string"
-        },
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
+
+      "logging": {
+        "type": "object",
+        "title": "Logging",
+        "properties": {
+          "level": {
+            "title": "Log Level",
+            "type": "string",
+            "default": "info",
+            "oneOf": [
+              { "enum": ["error"], "title": "error — only failures" },
+              { "enum": ["warn"], "title": "warn — failures + warnings" },
+              { "enum": ["info"], "title": "info — default lifecycle messages" },
+              { "enum": ["debug"], "title": "debug — full request/response dumps" }
+            ]
+          },
+          "disableRedaction": {
+            "title": "Disable Log Redaction (advanced)",
+            "type": "boolean",
+            "default": false,
+            "description": "By default the plugin redacts bearer tokens, credentials, GPS, emails, and MAC addresses from log output. Turn this off ONLY when you need raw payloads for your own debugging — never share resulting logs publicly."
+          }
         }
       },
-      "excludeMacAddress": {
-        "title": "Exclude by MAC Address",
-        "default": false,
-        "type": "boolean",
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
-        }
-      },
-      "filterByMacAddressList": {
-        "type": "array",
-        "title": "",
-        "items": {
-          "title": "Device MAC Address",
-          "type": "string"
-        },
-        "condition": {
-          "functionBody": "return model.excludeMacAddress === true;"
-        }
-      },
-      "excludedeviceType": {
-        "title": "Exclude Device by Type",
-        "default": false,
-        "type": "boolean",
-        "condition": {
-          "functionBody": "return model.showAdvancedOptions === true;"
-        }
-      },
-      "filterDeviceTypeList": {
-        "title": "Exclude Device by Type",
-        "type": "array",
-        "uniqueItems": true,
-        "items": {
-          "title": "Device Type",
-          "type": "string",
-          "enum": [
-            "OutdoorPlug",
-            "Plug",
-            "Light",
-            "MeshLight",
-            "LightStrip",
-            "ContactSensor",
-            "MotionSensor",
-            "Lock",
-            "TemperatureHumidity",
-            "LeakSensor",
-            "Camera",
-            "Common"
-          ]
-        },
-        "condition": {
-          "functionBody": "return model.excludedeviceType === true;"
+
+      "advanced": {
+        "type": "object",
+        "title": "Advanced",
+        "properties": {
+          "deviceTypeOverrides": {
+            "title": "Device Type Overrides",
+            "type": "object",
+            "description": "Route an unrecognized Wyze product code to an existing accessory class — useful for testing a brand-new model before official support lands. Example: {\"CameraModels\": [\"HL_NEW_CAM\"]}. Valid keys: CameraModels, OutdoorPlugModels, PlugModels, LightModels, MeshLightModels, LightStripModels, ContactSensorModels, MotionSensorModels, LockModels, LockBoltV2Models, TemperatureHumidityModels, LeakSensorModels, CommonModels, S1GatewayModels, ThermostatModels, ThermostatRoomSensor, VacuumModels, IrrigationModels."
+          },
+          "dangerouslyAllowCustomBaseUrls": {
+            "title": "Allow Custom Base URLs",
+            "type": "boolean",
+            "default": false,
+            "description": "Required to use the custom auth/api base URL fields below. Leave off unless you know exactly why you're changing them."
+          },
+          "authBaseUrl": {
+            "title": "Custom Auth Base URL",
+            "type": "string",
+            "condition": { "functionBody": "return model.advanced && model.advanced.dangerouslyAllowCustomBaseUrls === true;" }
+          },
+          "apiBaseUrl": {
+            "title": "Custom API Base URL",
+            "type": "string",
+            "condition": { "functionBody": "return model.advanced && model.advanced.dangerouslyAllowCustomBaseUrls === true;" }
+          }
         }
       }
     }
   },
-  "form": null,
-  "display": null
+
+  "form": [
+    {
+      "type": "tabarray",
+      "title": "{{ value.title }}",
+      "items": [
+        {
+          "type": "section",
+          "title": "Account",
+          "expandable": false,
+          "items": [
+            "auth.username",
+            "auth.password",
+            "auth.keyId",
+            "auth.apiKey",
+            {
+              "type": "section",
+              "title": "Use a secrets file instead",
+              "expandable": true,
+              "expanded": false,
+              "items": ["auth.secretsFile"]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Polling",
+          "expandable": false,
+          "items": [
+            "polling.refreshInterval",
+            "polling.lowBatteryPercentage"
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Cameras",
+          "expandable": false,
+          "items": [
+            {
+              "key": "cameras",
+              "type": "array",
+              "title": " ",
+              "buttonText": "Add Camera",
+              "items": [
+                {
+                  "type": "fieldset",
+                  "title": "{{ value.name || value.mac || 'Camera' }}",
+                  "items": [
+                    "cameras[].mac",
+                    "cameras[].name",
+                    {
+                      "type": "flex",
+                      "flex-flow": "row wrap",
+                      "items": [
+                        "cameras[].garage",
+                        "cameras[].spotlight",
+                        "cameras[].floodlight",
+                        "cameras[].siren",
+                        "cameras[].notifications"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Thermostat & HMS",
+          "expandable": false,
+          "items": [
+            "thermostat.exposeRoomSensors",
+            "hms.enabled"
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Excludes",
+          "expandable": true,
+          "expanded": false,
+          "items": [
+            {
+              "key": "excludes.macs",
+              "type": "array",
+              "buttonText": "Add MAC",
+              "items": ["excludes.macs[]"]
+            },
+            "excludes.types"
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Logging",
+          "expandable": false,
+          "items": [
+            "logging.level",
+            "logging.disableRedaction"
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Advanced",
+          "expandable": true,
+          "expanded": false,
+          "items": [
+            "advanced.deviceTypeOverrides",
+            "advanced.dangerouslyAllowCustomBaseUrls",
+            "advanced.authBaseUrl",
+            "advanced.apiBaseUrl"
+          ]
+        }
+      ]
+    }
+  ]
 }

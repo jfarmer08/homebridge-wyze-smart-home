@@ -1,76 +1,62 @@
 {
-    "bridge": {
-        "name": "Home Test",
-        "username": "0E:D1:4B:32:A8:65",
-        "port": 56666,
-        "pin": "935-15-250",
-        "advertiser": "bonjour-hap",
-        "bind": [
-            "en0"
-        ]
+  "bridge": {
+    "name": "Home Test",
+    "username": "0E:D1:4B:32:A8:65",
+    "port": 56666,
+    "pin": "935-15-250",
+    "advertiser": "bonjour-hap",
+    "bind": ["en0"]
+  },
+  "accessories": [],
+  "platforms": [
+    {
+      "name": "Config",
+      "port": 8581,
+      "auth": "form",
+      "theme": "auto",
+      "tempUnits": "f",
+      "lang": "auto",
+      "platform": "config"
     },
-    "accessories": [],
-    "platforms": [
+    {
+      "_comment": "Wyze 2.0 nested config shape. Old 1.x flat configs are auto-migrated on first run; a backup is saved to homebridge config.json.pre-2.0.bak.",
+      "name": "Wyze",
+      "platform": "WyzeSmartHome",
+      "auth": {
+        "username": "you@example.com",
+        "password": "your-wyze-password",
+        "keyId": "your-key-id",
+        "apiKey": "your-api-key"
+      },
+      "polling": {
+        "refreshInterval": 30000,
+        "lowBatteryPercentage": 30
+      },
+      "cameras": [
         {
-            "name": "Config",
-            "port": 8581,
-            "auth": "form",
-            "theme": "auto",
-            "tempUnits": "f",
-            "lang": "auto",
-            "platform": "config"
-        },
-        {
-            "name": "Wyze",
-            "username": "email",
-            "password": "password",
-            "keyId": "keyID",
-            "apiKey": "apiKey",
-            "refreshInterval": 20000,
-            "entryExitDelay": 30,
-            "apiLogEnabled": true,
-            "logLevel": "info",
-            "pluginLoggingEnabled": true,
-            "showAdvancedOptions": true,
-            "excludeMacAddress": false,
-            "excludedeviceType": true,
-            "filterDeviceTypeList": [
-                "OutdoorPlug",
-                "Plug",
-                "Light",
-                "MeshLight",
-                "LightStrip",
-                "ContactSensor",
-                "MotionSensor",
-                "Lock",
-                "TemperatureHumidity",
-                "LeakSensor",
-                "S1Gateway",
-                "Common"
-            ],
-            "enableThermostatRoomSensors": false,
-            "deviceTypeOverrides": {
-                "_comment": "Optional. Route an unrecognized Wyze product code to an existing accessory class — useful for testing a brand-new model before official support lands. Each category accepts either an array of codes (['ABC', 'XYZ']) or an object of {FriendlyName: 'CODE'}. Delete any category you don't need.",
-                "CameraModels": [],
-                "OutdoorPlugModels": [],
-                "PlugModels": [],
-                "LightModels": [],
-                "MeshLightModels": [],
-                "LightStripModels": [],
-                "ContactSensorModels": [],
-                "MotionSensorModels": [],
-                "LockModels": [],
-                "LockBoltV2Models": [],
-                "TemperatureHumidityModels": [],
-                "LeakSensorModels": [],
-                "CommonModels": [],
-                "S1GatewayModels": [],
-                "ThermostatModels": [],
-                "ThermostatRoomSensor": [],
-                "VacuumModels": [],
-                "IrrigationModels": []
-            },
-            "platform": "WyzeSmartHome"
+          "mac": "AA:BB:CC:DD:EE:FF",
+          "name": "Front Garage",
+          "garage": true,
+          "spotlight": false,
+          "floodlight": false,
+          "siren": false,
+          "notifications": true
         }
-    ]
+      ],
+      "thermostat": {
+        "exposeRoomSensors": false
+      },
+      "hms": {
+        "enabled": false
+      },
+      "excludes": {
+        "macs": [],
+        "types": []
+      },
+      "logging": {
+        "level": "info",
+        "disableRedaction": false
+      }
+    }
+  ]
 }
