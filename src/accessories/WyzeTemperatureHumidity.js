@@ -1,10 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
 
 module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -147,7 +143,13 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
     this.getTemperatureStatusActiveCharacteristic().updateValue(online);
     this.getHumidityStatusActiveCharacteristic().updateValue(online);
     if (!online) {
-      this.getHumidityCharacteristic().updateValue(noResponse);
+      // StatusActive set above on both temp and humidity services already
+      // signals offline. Skip the value updates so the last known readings
+      // stay visible.
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
+          `[Temperature Humidity] ${this.mac} is offline — keeping last known values, marked inactive`
+        );
     } else {
       this.getHumidityCharacteristic().updateValue(
         device.device_params.th_sensor_humidity

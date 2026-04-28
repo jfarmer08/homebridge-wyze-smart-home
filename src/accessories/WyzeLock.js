@@ -1,5 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
+const { markServiceOnline } = require("./offlineIndicator");
 
 
 module.exports = class WyzeLock extends WyzeAccessory {
@@ -81,22 +82,16 @@ module.exports = class WyzeLock extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
+    // Use StatusFault on the lock — louder than StatusActive (renders as a
+    // ⚠️ triangle) so the user notices that a safety device is showing
+    // stale data, but the last known lock state stays visible instead of
+    // the alarming red unreachable banner.
+    markServiceOnline(this.lockService, device.conn_state !== 0, "fault");
+
     if (device.conn_state === 0) {
-      // If we've previously had real data, leave HomeKit on the last
-      // known state instead of the unreachable banner. But if we've
-      // never had good data (fresh install with the lock offline), let
-      // HomeKit show "unresponsive" so the user isn't shown a misleading
-      // default state (e.g. UNSECURED when we genuinely don't know).
-      if (!this._hasGoodData) {
-        const noResp = new Error("No Response");
-        noResp.toString = () => noResp.message;
-        this.lockService
-          .getCharacteristic(Characteristic.LockCurrentState)
-          .updateValue(noResp);
-      }
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Lock] "${this.display_name} (${this.mac})" is offline — ${this._hasGoodData ? "keeping last known state" : "showing as unreachable (no prior data)"}`
+          `[Lock] "${this.display_name} (${this.mac})" is offline — keeping last known state, marked with fault`
         );
     } else {
       if (this.plugin.config.pluginLoggingEnabled)
@@ -112,9 +107,6 @@ module.exports = class WyzeLock extends WyzeAccessory {
         this.plugin.log.error(`[Lock] getLockInfo returned no device data for ${this.display_name}`);
         return;
       }
-      // We've successfully fetched live state — from now on, transient
-      // offline cycles can keep the last known characteristics visible.
-      this._hasGoodData = true;
       const prop_key = Object.keys(lockProperties);
       for (const element of prop_key) {
         const prop = element;

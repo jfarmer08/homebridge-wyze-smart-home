@@ -2,6 +2,7 @@ const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 const enums = require("../enums");
 const WyzeCameraStreamingDelegate = require("../camera/WyzeCameraStreamingDelegate");
+const { markServiceOnline } = require("./offlineIndicator");
 
 module.exports = class WyzeCamera extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -294,39 +295,22 @@ module.exports = class WyzeCamera extends WyzeAccessory {
       this.cameraOnline = false;
     }
 
+    // Mark every service with StatusActive so the user sees an "inactive"
+    // badge when the camera is offline — the last known characteristic
+    // values stay visible (much friendlier than the noResponse red banner).
+    markServiceOnline(this.privacySwitch, this.cameraOnline);
+    markServiceOnline(this.sirenSwitch, this.cameraOnline);
+    markServiceOnline(this.floodLightService, this.cameraOnline);
+    markServiceOnline(this.spotLightService, this.cameraOnline);
+    markServiceOnline(this.garageDoorService, this.cameraOnline);
+    markServiceOnline(this.notificationSwitch, this.cameraOnline);
+
     if (!this.cameraOnline) {
-      // If we've previously had real data, leave HomeKit on the last
-      // known state instead of the unreachable banner. But on a fresh
-      // install with the camera already offline, we have no real state
-      // yet — fall back to the unreachable banner so the user isn't
-      // shown a misleading default (e.g. privacy switch reading "off"
-      // when we genuinely don't know).
-      if (!this._hasGoodData) {
-        const noResp = new Error("No Response");
-        noResp.toString = () => noResp.message;
-        this.privacySwitch?.getCharacteristic(Characteristic.On).updateValue(noResp);
-        if (this.plugin.config.sirenAccessory?.find((d) => d === device.mac)) {
-          this.sirenSwitch?.getCharacteristic(Characteristic.On).updateValue(noResp);
-        }
-        if (this.plugin.config.floodLightAccessory?.find((d) => d === this.mac)) {
-          this.floodLightService?.getCharacteristic(Characteristic.On).updateValue(noResp);
-        }
-        if (this.plugin.config.spotLightAccessory?.find((d) => d === this.mac)) {
-          this.spotLightService?.getCharacteristic(Characteristic.On).updateValue(noResp);
-        }
-        if (this.plugin.config.garageDoorAccessory?.find((d) => d === this.mac)) {
-          this.garageDoorService?.getCharacteristic(Characteristic.CurrentDoorState).updateValue(noResp);
-        }
-        if (this.plugin.config.notificationAccessory?.find((d) => d === this.mac)) {
-          this.notificationSwitch?.getCharacteristic(Characteristic.On).updateValue(noResp);
-        }
-      }
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Camera] ${this.mac} (${this.display_name}) is offline — ${this._hasGoodData ? "keeping last known state" : "showing as unreachable (no prior data)"}`
+          `[Camera] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
         );
     } else {
-      this._hasGoodData = true;
       if (this.cameraAccessoryAttached()) {
         let propertyList;
         try {

@@ -1,10 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
-
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
+const { markServiceOnline } = require("./offlineIndicator");
 
 module.exports = class WyzeHMS extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -38,12 +34,16 @@ module.exports = class WyzeHMS extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
+    // Security system is safety-critical — use StatusFault (⚠️ triangle)
+    // so the user notices stale state, but the last known armed mode
+    // stays visible instead of an unreachable banner.
+    markServiceOnline(this.securityService, device.conn_state !== 0, "fault");
+
     if (device.conn_state === 0) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[HMS] Updating status ${this.mac} (${this.display_name}) to noResponse`
+          `[HMS] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked with fault`
         );
-      this.getCharacteristic(Characteristic.SecuritySystemCurrentState).updateValue(noResponse);
     } else {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(

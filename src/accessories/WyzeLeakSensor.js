@@ -1,11 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
-
 module.exports = class WyzeHumidity extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
     super(plugin, homeKitAccessory);
@@ -108,11 +103,13 @@ module.exports = class WyzeHumidity extends WyzeAccessory {
     const online = device.conn_state !== 0;
     this.getStatusActiveCharacteristic().updateValue(online);
     if (!online) {
+      // StatusActive on the sensor service handles the offline indicator
+      // (set above). Skip the leak-state update so the last known reading
+      // stays visible instead of getting overwritten.
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[LeakSensor] Updating status ${this.mac} (${this.display_name}) to noResponse`
+          `[LeakSensor] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
         );
-      this.getOnCharacteristic().updateValue(noResponse);
     } else {
       if (this.plugin.config.pluginLoggingEnabled) {
         this.plugin.log(

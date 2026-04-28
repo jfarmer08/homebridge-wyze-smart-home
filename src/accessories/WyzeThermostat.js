@@ -6,10 +6,6 @@ const WyzeAccessory = require("./WyzeAccessory");
 // add switch maybe to control fan mode - switch on is fan auto and switch off is fan off
 // want to add temp sensors for all that are connected to thermostat as well
 
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
 
 module.exports = class WyzeThermostat extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {

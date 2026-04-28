@@ -1,5 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
+const { markServiceOnline } = require("./offlineIndicator");
 
 const WYZE_API_BRIGHTNESS_PROPERTY = "P1501";
 const WYZE_API_COLOR_TEMP_PROPERTY = "P1502";
@@ -7,11 +8,6 @@ const WYZE_COLOR_TEMP_MIN = 2700;
 const WYZE_COLOR_TEMP_MAX = 6500;
 const HOMEKIT_COLOR_TEMP_MIN = 500;
 const HOMEKIT_COLOR_TEMP_MAX = 140;
-
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
 
 module.exports = class WyzeLight extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -29,12 +25,13 @@ module.exports = class WyzeLight extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
+    markServiceOnline(this.getService(), device.conn_state !== 0);
+
     if (device.conn_state === 0) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[Light] Updating status ${this.mac} (${this.display_name}) to noResponse`
+          `[Light] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
         );
-      this.getCharacteristic(Characteristic.On).updateValue(noResponse);
     } else {
       if (this.plugin.config.pluginLoggingEnabled) {
         this.plugin.log(
