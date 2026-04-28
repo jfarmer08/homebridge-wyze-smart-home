@@ -1,10 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
 
 module.exports = class WyzeMotionSensor extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -112,7 +108,12 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
     const online = device.conn_state !== 0;
     this.getStatusActiveCharacteristic().updateValue(online);
     if (!online) {
-      this.getOnCharacteristic().updateValue(noResponse);
+      // StatusActive (set above) signals offline. Skip the motion-state
+      // update so the last reading stays visible.
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
+          `[MotionSensor] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
+        );
     } else {
       this.getOnCharacteristic().updateValue(device.device_params.motion_state);
       this.getBatteryCharacteristic().updateValue(

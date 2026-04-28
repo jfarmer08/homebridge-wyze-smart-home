@@ -1,5 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
+const { markServiceOnline } = require("./offlineIndicator");
 
 module.exports = class WyzeVacuum extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -54,9 +55,24 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(`[Vacuum] Updating "${this.display_name} (${this.mac})"`);
 
+    // Reflect bulk-list connectivity on the fan service. The detailed
+    // getVacuumInfo call below will mark inactive too if it fails.
+    const onlineFromList = device.conn_state !== 0;
+    markServiceOnline(this.fanService, onlineFromList);
+    if (!onlineFromList) {
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
+          `[Vacuum] ${this.mac} is offline — keeping last known state, marked inactive`
+        );
+      return;
+    }
+
     try {
       const info = await this.plugin.client.getVacuumInfo(this.mac);
-      if (!info) return;
+      if (!info) {
+        markServiceOnline(this.fanService, false);
+        return;
+      }
 
       // `battary` is the Wyze API field name (typo in their API)
       const battery = info.battary ?? this.batteryLevel;
@@ -89,6 +105,7 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
         );
     } catch (e) {
       this.plugin.log.error(`[Vacuum] Error updating "${this.display_name}": ${e}`);
+      markServiceOnline(this.fanService, false);
     }
   }
 

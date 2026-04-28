@@ -1,10 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
-
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
+const { markServiceOnline } = require("./offlineIndicator");
 
 module.exports = class WyzePlug extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -24,8 +20,12 @@ module.exports = class WyzePlug extends WyzeAccessory {
       this.plugin.log(
         `[Plug] Updating status of "${this.display_name} (${this.mac})"`
       );
+    markServiceOnline(this.getOutletService(), device.conn_state !== 0);
     if (device.conn_state === 0) {
-      this.getOnCharacteristic().updateValue(noResponse);
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
+          `[Plug] ${this.mac} is offline — keeping last known state, marked inactive`
+        );
     } else {
       const isOn = device.device_params.switch_state === 1;
       this.outletInUse = isOn;

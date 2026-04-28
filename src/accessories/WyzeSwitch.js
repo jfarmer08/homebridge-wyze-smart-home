@@ -1,15 +1,11 @@
 const { Service, Characteristic } = require("../types");
 const { CommonModels } = require("../enums");
 const WyzeAccessory = require("./WyzeAccessory");
+const { markServiceOnline } = require("./offlineIndicator");
 //A stateless programable switch is button that resets after pressing (think push button).
 const SinglePressType = {
   CLASSIC: 1, // Classic Control
   IOT: 2, // Smart Control
-};
-
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
 };
 
 module.exports = class WyzeSwitch extends WyzeAccessory {
@@ -38,10 +34,12 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
+    markServiceOnline(this.wallSwitch, device.conn_state !== 0);
     if (device.conn_state === 0) {
-      this.wallSwitch
-        .getCharacteristic(Characteristic.On)
-        .updateValue(noResponse);
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
+          `[Switch] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
+        );
     } else {
       try {
         if (this.plugin.config.pluginLoggingEnabled)
@@ -111,9 +109,9 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
         this.plugin.log.error?.(
           `[Switch] Failed to update "${this.display_name} (${this.mac})": ${error}`
         );
-        this.wallSwitch
-          .getCharacteristic(Characteristic.On)
-          .updateValue(noResponse);
+        // API call failed even though device shows online — flip StatusActive
+        // to false until we get a successful read.
+        markServiceOnline(this.wallSwitch, false);
       }
     }
   }

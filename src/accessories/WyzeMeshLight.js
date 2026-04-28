@@ -1,11 +1,7 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
 const { propertyIds: PIDs } = require("wyze-api");
-
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
+const { markServiceOnline } = require("./offlineIndicator");
 
 module.exports = class WyzeMeshLight extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -37,8 +33,12 @@ module.exports = class WyzeMeshLight extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
+    markServiceOnline(this.getService(), device.conn_state !== 0);
     if (device.conn_state == 0) {
-      this.getCharacteristic(Characteristic.On).updateValue(noResponse);
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
+          `[MeshLight] ${this.mac} (${this.display_name}) is offline — keeping last known state, marked inactive`
+        );
     } else {
       this.getCharacteristic(Characteristic.On).updateValue(
         device.device_params.switch_state

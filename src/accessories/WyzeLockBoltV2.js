@@ -1,10 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
-
-const noResponse = new Error("No Response");
-noResponse.toString = () => {
-  return noResponse.message;
-};
+const { markServiceOnline } = require("./offlineIndicator");
 
 module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
   constructor(plugin, homeKitAccessory) {
@@ -83,14 +79,14 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
   }
 
   async updateCharacteristics(device) {
+    // Lock is safety-critical — use StatusFault (⚠️) to flag stale data
+    // without hiding the last known lock state behind the unreachable banner.
+    markServiceOnline(this.lockService, device.conn_state !== 0, "fault");
     if (device.conn_state === 0) {
       if (this.plugin.config.pluginLoggingEnabled)
         this.plugin.log(
-          `[LockBoltV2] Updating status "${this.display_name} (${this.mac}) to noResponse"`
+          `[LockBoltV2] "${this.display_name} (${this.mac})" is offline — keeping last known state, marked with fault`
         );
-      this.lockService
-        .getCharacteristic(Characteristic.LockCurrentState)
-        .updateValue(noResponse);
       return;
     }
 

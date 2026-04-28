@@ -1,5 +1,6 @@
 const { Service, Characteristic } = require("../types");
 const WyzeAccessory = require("./WyzeAccessory");
+const { markServiceOnline } = require("./offlineIndicator");
 
 const DEFAULT_DURATION_SECONDS = 600; // 10 minutes
 
@@ -49,10 +50,13 @@ module.exports = class WyzeIrrigation extends WyzeAccessory {
       this.plugin.log(
         `[Irrigation] Updating "${this.display_name} (${this.mac})" zone ${this.zoneNumber}`
       );
-    // Reflect connectivity without disturbing active run timer
-    if (device.conn_state === 0) {
-      this.valveService.getCharacteristic(Characteristic.Active).updateValue(0);
-      this.valveService.getCharacteristic(Characteristic.InUse).updateValue(0);
+    // Reflect connectivity via StatusActive instead of forcing Active/InUse
+    // to 0, which would falsely look like the user stopped the run.
+    markServiceOnline(this.valveService, device.conn_state !== 0);
+    if (device.conn_state === 0 && this.plugin.config.pluginLoggingEnabled) {
+      this.plugin.log(
+        `[Irrigation] ${this.mac} zone ${this.zoneNumber} is offline — keeping last known state, marked inactive`
+      );
     }
   }
 
