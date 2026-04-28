@@ -16,3 +16,6 @@ bun.lockb
 accessories/*cachedAccessories*
 homebridge.log
 config.json.old
+
+# Claude Code worktree state
+.claude/
