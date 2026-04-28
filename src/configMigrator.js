@@ -156,6 +156,13 @@ function normalize(input) {
   c.enableThermostatRoomSensors = c.thermostat.exposeRoomSensors;
   c.thermostatMode = c.thermostat.mode;
 
+  // --- Vacuum ---
+  const vacuum = isPlainObject(c.vacuum) ? c.vacuum : {};
+  c.vacuum = {
+    perRoomSwitches: vacuum.perRoomSwitches ?? c.vacuumPerRoomSwitches ?? false,
+  };
+  c.vacuumPerRoomSwitches = c.vacuum.perRoomSwitches;
+
   // --- HMS ---
   const hmsBlock = isPlainObject(c.hms) ? c.hms : null;
   const hmsEnabled = hmsBlock ? !!hmsBlock.enabled : !!c.hms;
@@ -241,6 +248,7 @@ function toCanonical2x(normalized, platformMeta) {
       exposeRoomSensors: normalized.thermostat.exposeRoomSensors,
       mode: normalized.thermostat.mode || 'auto',
     },
+    vacuum: { perRoomSwitches: normalized.vacuum.perRoomSwitches },
     hms: { enabled: normalized.hms.enabled },
     excludes: { macs: normalized.excludes.macs, types: normalized.excludes.types },
     logging: {

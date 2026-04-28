@@ -52,9 +52,131 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
           ? Characteristic.ChargingState.CHARGING
           : Characteristic.ChargingState.NOT_CHARGING
       );
+
+    // Per-room sweep switches. roomSwitchesEnabled is a boolean opt-in
+    // because a vacuum with 10+ rooms creates 10+ extra HomeKit tiles —
+    // some users want that for "Hey Siri, vacuum kitchen", others would
+    // find it noisy. Honors per-vacuum config, falls back to global.
+    this.roomSwitchesEnabled =
+      this.plugin?.config?.vacuum?.perRoomSwitches === true;
+    this.roomServices = new Map(); // roomId → Service instance
+    this.lastSweepRoomId = persisted.lastSweepRoomId ?? null;
+    this._roomsLoaded = false;
+  }
+
+  /**
+   * Lazy room discovery — runs once on the first updateCharacteristics()
+   * call (constructors can't await). Pulls the current map's room list
+   * via getVacuumRooms() and adds one Switch service per room with a
+   * stable subtype `vacuum-room-${id}` so HomeKit treats it as the same
+   * accessory across restarts.
+   *
+   * If the room list changes (rooms added/removed in the Wyze app),
+   * we add new services and leave stale ones to be unregistered on the
+   * next homebridge restart — homebridge tolerates extra services more
+   * gracefully than mid-update removal.
+   */
+  async _ensureRoomServices() {
+    if (this._roomsLoaded || !this.roomSwitchesEnabled) return;
+    this._roomsLoaded = true; // set early so a failure doesn't retry every refresh
+    let rooms = [];
+    try {
+      rooms = await this.plugin.client.getVacuumRooms(this.mac);
+    } catch (e) {
+      this.plugin.log.warn?.(
+        `[Vacuum] Could not load room list for "${this.display_name}": ${e.message || e}. ` +
+        `Per-room switches will not be available until the next restart.`
+      );
+      return;
+    }
+    if (rooms.length === 0) {
+      this.plugin.log.info?.(
+        `[Vacuum] "${this.display_name}" has no rooms in its current map. ` +
+        `Per-room switches skipped until a map exists.`
+      );
+      return;
+    }
+    for (const room of rooms) {
+      const subtype = `vacuum-room-${room.id}`;
+      const displayName = `${this.display_name}: ${room.name}`;
+      let service =
+        this.homeKitAccessory.getServiceById(Service.Switch, subtype) ||
+        this.homeKitAccessory.addService(Service.Switch, displayName, subtype);
+      // Keep the display name in sync if the user renamed the room in
+      // the Wyze app since last boot.
+      service.setCharacteristic(Characteristic.Name, displayName);
+      service
+        .getCharacteristic(Characteristic.On)
+        .onGet(() => this._isSweepingRoom(room.id))
+        .onSet((value) => this._setRoomSweep(room.id, room.name, !!value));
+      this.roomServices.set(room.id, service);
+    }
+    if (this.plugin.config.pluginLoggingEnabled) {
+      this.plugin.log(
+        `[Vacuum] "${this.display_name}": exposed ${rooms.length} per-room switch(es) ` +
+        `(map "${rooms[0].mapName || rooms[0].mapId}")`
+      );
+    }
+  }
+
+  _isSweepingRoom(roomId) {
+    return this.isCleaning && this.lastSweepRoomId === roomId;
+  }
+
+  async _setRoomSweep(roomId, roomName, on) {
+    if (on) {
+      // Refuse if the vacuum is mid-sweep on a different room. HomeKit
+      // sees the switch flick back off; matches RMCob's behavior.
+      if (this.isCleaning && this.lastSweepRoomId && this.lastSweepRoomId !== roomId) {
+        this.plugin.log.warn?.(
+          `[Vacuum] "${this.display_name}": refusing room "${roomName}" — already sweeping a different room`
+        );
+        const svc = this.roomServices.get(roomId);
+        if (svc) setImmediate(() => svc.getCharacteristic(Characteristic.On).updateValue(false));
+        return;
+      }
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(`[Vacuum] "${this.display_name}": sweeping room "${roomName}" (id ${roomId})`);
+      try {
+        await this.plugin.client.vacuumSweepRooms(this.mac, [roomId]);
+        this.isCleaning = true;
+        this.lastSweepRoomId = roomId;
+        this.persistState({
+          suctionLevel: this.suctionLevel,
+          batteryLevel: this.batteryLevel,
+          isCharging: this.isCharging,
+          isCleaning: this.isCleaning,
+          lastSweepRoomId: this.lastSweepRoomId,
+        });
+      } catch (e) {
+        this.plugin.log.error(
+          `[Vacuum] Sweep room "${roomName}" failed: ${e.message || e}`
+        );
+        const svc = this.roomServices.get(roomId);
+        if (svc) setImmediate(() => svc.getCharacteristic(Characteristic.On).updateValue(false));
+        throw e;
+      }
+    } else {
+      // Toggle off → return to dock. Same semantics as flipping the
+      // main Fan service off mid-sweep.
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(`[Vacuum] "${this.display_name}": docking from room "${roomName}"`);
+      try {
+        await this.plugin.client.vacuumDock(this.mac);
+        this.isCleaning = false;
+        this.lastSweepRoomId = null;
+      } catch (e) {
+        this.plugin.log.error(`[Vacuum] Dock failed: ${e.message || e}`);
+        throw e;
+      }
+    }
   }
 
   async updateCharacteristics(device) {
+    // First-call: discover rooms and add per-room switches. Done here
+    // (not in the constructor) because it needs an async API call.
+    await this._ensureRoomServices();
+
     // Reflect bulk-list connectivity on the fan service. The detailed
     // getVacuumInfo call below will mark inactive too if it fails.
     const onlineFromList = device.conn_state !== 0;
@@ -115,11 +237,19 @@ module.exports = class WyzeVacuum extends WyzeAccessory {
           : Characteristic.ChargingState.NOT_CHARGING
       );
 
+    // If the vacuum stopped, clear the "last room being swept" so the
+    // per-room switch icons turn off once the sweep finishes.
+    if (!this.isCleaning) this.lastSweepRoomId = null;
+    for (const [roomId, svc] of this.roomServices) {
+      svc.getCharacteristic(Characteristic.On).updateValue(this._isSweepingRoom(roomId));
+    }
+
     this.persistState({
       suctionLevel: this.suctionLevel,
       batteryLevel: this.batteryLevel,
       isCharging: this.isCharging,
       isCleaning: this.isCleaning,
+      lastSweepRoomId: this.lastSweepRoomId,
     });
 
     if (this.plugin.config.pluginLoggingEnabled)

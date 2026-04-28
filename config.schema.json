@@ -129,6 +129,19 @@
         }
       },
 
+      "vacuum": {
+        "type": "object",
+        "title": "Robot Vacuum",
+        "properties": {
+          "perRoomSwitches": {
+            "title": "Expose per-room switches",
+            "type": "boolean",
+            "default": false,
+            "description": "Add one HomeKit Switch per room in the vacuum's current map (in addition to the whole-vacuum Fan tile). Enables voice control like 'Hey Siri, vacuum kitchen'. Adds extra HomeKit tiles per room — leave off if your map has many rooms or you only ever want to clean the whole house."
+          }
+        }
+      },
+
       "hms": {
         "type": "object",
         "title": "Home Monitoring System (HMS)",
@@ -298,10 +311,26 @@
         },
         {
           "type": "section",
-          "title": "Thermostat & HMS",
+          "title": "Thermostat",
           "expandable": false,
           "items": [
             "thermostat.exposeRoomSensors",
+            "thermostat.mode"
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Robot Vacuum",
+          "expandable": false,
+          "items": [
+            "vacuum.perRoomSwitches"
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Home Monitoring System (HMS)",
+          "expandable": false,
+          "items": [
             "hms.enabled"
           ]
         },
