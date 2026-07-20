@@ -66,7 +66,12 @@ module.exports = class WyzeSmartHome {
       persistPath: homebridge.user.persistPath(),
       //URLs
       authBaseUrl: this.config.authBaseUrl,
-      apiBaseUrl: this.config.apiBaseUrl,
+      // Default the /app API to app.wyzecam.com (DigiCert Global Root G2) instead of the
+      // wyze-api default api.wyzecam.com (legacy DigiCert Global Root G1). Node 24.18.0+
+      // dropped the G1 root from its bundled trust store, breaking get_object_list with
+      // UNABLE_TO_GET_ISSUER_CERT_LOCALLY. app.wyzecam.com serves the same API over a G2
+      // chain that Node still trusts. Still overridable via config.apiBaseUrl.
+      apiBaseUrl: this.config.apiBaseUrl || 'https://app.wyzecam.com',
       // App emulation constants
       authApiKey: this.config.authApiKey,
       phoneId: this.config.phoneId,
