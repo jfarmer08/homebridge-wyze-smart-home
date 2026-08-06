@@ -8,6 +8,18 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v2.0.0-beta.2
+
+Merges `main`'s unreleased 0.5.x hardening work (24 commits since the branches last synced at `412b891`) into the 2.0.0 line. Manual reconciliation across 18 conflicting files, not a mechanical merge — `main` and `2.0.0` had independently built overlapping features (most notably two separate Lock Bolt V2/Palm Lock implementations and two separate Thermostat fan/emheat/hold/kidlock implementations) that needed combining rather than picking one side.
+
+- **Optimistic non-blocking setters + command grace periods** ported to `WyzePlug`, `WyzeLight`, `WyzeMeshLight`, `WyzeSwitch`, `WyzeHMS`, `WyzeLock`, and `WyzeLockBoltV2` — previously only locks had this on the 2.0.0 line. A Set now updates HomeKit immediately and fires the API call in the background, with a grace window (differentiated 15s lock / 90s unlock) so a poll landing before Wyze's API propagates the change doesn't revert the optimistic state.
+- `WyzeLockBoltV2` gained `main`'s `ChargingState`/firmware-version reporting and fast IoT3 `iot-device::iot-state` offline detection, layered onto 2.0.0's persistence/`StatusFault` architecture.
+- `WyzeThermostat` gained `main`'s fan mode / emergency heat / hold / keypad-lock / scenario switches, rewritten against 2.0.0's delegated `wyze-api` conversion helpers instead of `main`'s local `colorsys`-era ones.
+- `ModelNames` lookup table and standardized log prefixes across all accessories.
+- Log-noise reduction and an accessory-routing fix (2.0.0's dispatch logic was already immune to the specific bug `main` fixed, so no functional change needed there — just confirmed).
+- Several null-guard / bug fixes from `main`'s code-review passes.
+- Bumped to `v2.0.0-beta.2`.
+
 ### v2.0.0-beta.1
 
 First 2.0 beta. Available on npm via `npm install homebridge-wyze-smart-home@beta` (or homebridge-config-ui-x → "Install Beta Version"). Stable users on the default `latest` tag are unaffected. Pairs with `wyze-api@2.0.0-beta.1`.
