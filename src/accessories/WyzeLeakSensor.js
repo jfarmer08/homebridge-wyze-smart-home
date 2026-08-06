@@ -65,6 +65,7 @@ module.exports = class WyzeLeakSensor extends WyzeAccessory {
         );
       return;
     }
+    if (!device.device_params) return;
 
     // Wyze ws_detect_state: 0 = dry, 1 = wet. The helper also collapses
     // any unknown value (>= 2) to "leak detected" as a fail-safe — better
