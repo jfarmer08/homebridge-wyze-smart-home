@@ -125,32 +125,29 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
       this.plugin.log(
         `[Switch] Set "${this.display_name} (${this.mac})": ${value ? "on" : "off"}`
       );
-    try {
-      // Palm devices need IoT vs Classic routing; LightSwitch always uses
-      // single_press_type to decide. Both branches converge on the same
-      // two backend calls.
-      const isPalm = this.product_model === CommonModels.Palm;
-      const prefersIot = isPalm
-        ? this.single_press_type == SinglePressType.IOT || this.switch_iot !== undefined
-        : this.single_press_type == SinglePressType.IOT;
 
-      if (prefersIot) {
-        await this.plugin.client.wallSwitchIot(this.mac, this.product_model, !!value);
-      } else {
-        await this.plugin.client.wallSwitchPower(this.mac, this.product_model, !!value);
-      }
+    // Reflect the user's intent immediately — Wyze doesn't push a fast
+    // state update back through the bulk list, so waiting for the next
+    // poll would show a stale/reverted tile until the next refresh.
+    this.switch_power = !!value;
+    this.wallSwitch.getCharacteristic(Characteristic.On).updateValue(this.switch_power);
 
-      if (isPalm) {
-        // Palm doesn't push a state update back through the bulk list right
-        // away, so reflect the user's intent immediately on the local cache.
-        this.switch_power = !!value;
-        this.wallSwitch.getCharacteristic(Characteristic.On).updateValue(this.switch_power);
-      }
-    } catch (error) {
+    // Palm devices need IoT vs Classic routing; LightSwitch always uses
+    // single_press_type to decide. Both branches converge on the same
+    // two backend calls.
+    const isPalm = this.product_model === CommonModels.Palm;
+    const prefersIot = isPalm
+      ? this.single_press_type == SinglePressType.IOT || this.switch_iot !== undefined
+      : this.single_press_type == SinglePressType.IOT;
+
+    const call = prefersIot
+      ? this.plugin.client.wallSwitchIot(this.mac, this.product_model, !!value)
+      : this.plugin.client.wallSwitchPower(this.mac, this.product_model, !!value);
+
+    call.catch((error) => {
       this.plugin.log.error?.(
         `[Switch] Set failed for "${this.display_name} (${this.mac})": ${error.message || error}`
       );
-      throw error;
-    }
+    });
   }
 };

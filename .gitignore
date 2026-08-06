@@ -18,4 +18,4 @@ homebridge.log
 config.json.old
 
 # Claude Code worktree state
-.claude/
+/.claude

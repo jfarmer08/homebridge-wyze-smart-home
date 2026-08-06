@@ -11,10 +11,35 @@ module.exports = class WyzePlug extends WyzeAccessory {
     const persisted = this.loadPersistedState();
     this.outletInUse = persisted.outletInUse;
 
-    this.getOnCharacteristic().on("set", this.set.bind(this));
+    this.getOnCharacteristic()
+      .onGet(this.getOn.bind(this))
+      .onSet(this.setOn.bind(this));
     this.getOutletService()
       .getCharacteristic(Characteristic.OutletInUse)
       .onGet(this.getOutletInUse.bind(this));
+  }
+
+  async getOn() {
+    return this._switchState === 1;
+  }
+
+  async setOn(value) {
+    if (this.plugin.config.pluginLoggingEnabled)
+      this.plugin.log(
+        `[Plug] Setting power for "${this.display_name} (${this.mac})" to ${value}`
+      );
+    this._switchState = value ? 1 : 0;
+    this.outletInUse = !!value;
+    this.getOutletService()
+      .getCharacteristic(Characteristic.OutletInUse)
+      .updateValue(this.outletInUse);
+    this.persistState({ outletInUse: this.outletInUse });
+    this.armCommandGrace(15000);
+    this.plugin.client.plugPower(this.mac, this.product_model, value ? "1" : "0").catch((e) => {
+      this.clearCommandGrace();
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(`[Plug] Command error for "${this.display_name}": ${e}`);
+    });
   }
 
   getOutletService() {
@@ -48,9 +73,18 @@ module.exports = class WyzePlug extends WyzeAccessory {
         );
       return;
     }
+    if (!device.device_params) return;
 
     // Wyze switch_state: 0 = off, 1 = on. Coerce explicitly.
-    const isOn = device.device_params.switch_state === 1;
+    // Skip while a just-issued command's grace period is active, or if
+    // the state hasn't actually changed — avoids reverting the optimistic
+    // UI update before Wyze's API has propagated the change, and avoids
+    // redundant pushes/log lines every poll.
+    const switchState = device.device_params.switch_state;
+    if (switchState === this._switchState || this.inCommandGrace()) return;
+    this._switchState = switchState;
+
+    const isOn = switchState === 1;
     this.outletInUse = isOn;
     this.getOnCharacteristic().updateValue(isOn);
     this.getOutletService()
@@ -62,25 +96,5 @@ module.exports = class WyzePlug extends WyzeAccessory {
       this.plugin.log(
         `[Plug] ${this.mac} (${this.display_name}): ${isOn ? "on" : "off"}`
       );
-  }
-
-  async set(value, callback) {
-    if (this.plugin.config.pluginLoggingEnabled)
-      this.plugin.log(
-        `[Plug] Setting power for "${this.display_name} (${this.mac})" to ${value ? "on" : "off"}`
-      );
-    try {
-      await this.plugin.client.plugPower(
-        this.mac,
-        this.product_model,
-        value ? "1" : "0"
-      );
-      callback();
-    } catch (e) {
-      this.plugin.log.error(
-        `[Plug] Set failed for "${this.display_name}": ${e.message || e}`
-      );
-      callback(e);
-    }
   }
 };

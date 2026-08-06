@@ -113,12 +113,18 @@ module.exports = class WyzeLock extends WyzeAccessory {
       this.trash_mode = lockProperties.trash_mode;
     }
 
+    // Skip hardlock (locked/unlocked) during grace period after a command —
+    // the Ford API lags a few seconds (unlock can take ~90s) before
+    // reflecting the new state, which would otherwise revert the optimistic
+    // update setLockTargetState already made. Push both Current AND Target
+    // state so a physical/keypad change doesn't leave HomeKit stuck showing
+    // "waiting" on the tile.
     const lockerStatus = lockProperties.locker_status || {};
-    if (lockerStatus.hardlock !== undefined) {
+    if (lockerStatus.hardlock !== undefined && !this.inCommandGrace()) {
       this.hardlock = lockerStatus.hardlock;
-      this.lockService
-        .getCharacteristic(Characteristic.LockCurrentState)
-        .updateValue(this.plugin.client.getLockState(this.hardlock));
+      const lockState = this.plugin.client.getLockState(this.hardlock);
+      this.lockService.getCharacteristic(Characteristic.LockCurrentState).updateValue(lockState);
+      this.lockService.getCharacteristic(Characteristic.LockTargetState).updateValue(lockState);
     }
 
     // Persist so the next reboot shows real state instead of undefined
@@ -170,27 +176,36 @@ module.exports = class WyzeLock extends WyzeAccessory {
       this.plugin.log(
         `[Lock] Set "${this.display_name}": ${isSecuring ? "lock" : "unlock"}`
       );
-    try {
-      await this.plugin.client.controlLock(
-        this.mac,
-        this.product_model,
-        isSecuring ? "remoteLock" : "remoteUnlock"
-      );
-    } catch (err) {
-      this.plugin.log.error(
-        `[Lock] Set failed for "${this.display_name}": ${err.message || err}`
-      );
-      throw err;
-    }
 
-    // The Ford API doesn't immediately reflect the new state in subsequent
-    // getLockInfo calls — there's a few-second lag. Optimistically update
-    // CurrentState so HomeKit shows the new state right away. The next
-    // refresh-cycle getLockInfo will overwrite if the lock didn't actually
-    // honor the command (e.g. battery dead, mechanical jam).
-    this.lockService.setCharacteristic(
-      Characteristic.LockCurrentState,
+    // Optimistically update HomeKit immediately so the tile clears "waiting".
+    // Grace period prevents the fast poll from reverting this before the API
+    // propagates. Locking propagates in ~15s; unlocking takes ~90s on the
+    // Wyze Ford API endpoint.
+    this.hardlock = isSecuring ? 1 : 2;
+    this.armCommandGrace(isSecuring ? 15000 : 90000);
+    this.lockService.getCharacteristic(Characteristic.LockCurrentState).updateValue(
       isSecuring ? Characteristic.LockCurrentState.SECURED : Characteristic.LockCurrentState.UNSECURED
     );
+    this.lockService.getCharacteristic(Characteristic.LockTargetState).updateValue(
+      isSecuring ? Characteristic.LockTargetState.SECURED : Characteristic.LockTargetState.UNSECURED
+    );
+
+    const cmdT0 = Date.now();
+    this.plugin.client.controlLock(
+      this.mac,
+      this.product_model,
+      isSecuring ? "remoteLock" : "remoteUnlock"
+    )
+      .then(() => {
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(`[Lock] Command ACK in ${Date.now() - cmdT0}ms for "${this.display_name}"`);
+      })
+      .catch((e) => {
+        // Command failed — don't leave the optimistic state stuck for the
+        // full grace window; let the next poll correct it.
+        this.clearCommandGrace();
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(`[Lock] Command error after ${Date.now() - cmdT0}ms for "${this.display_name}": ${e}`);
+      });
   }
 };

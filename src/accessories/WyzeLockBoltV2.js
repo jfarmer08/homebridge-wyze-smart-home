@@ -13,6 +13,8 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
     this.isLocked = persisted.isLocked ?? true;
     this.isDoorOpen = persisted.isDoorOpen ?? false;
     this.batteryLevel = persisted.batteryLevel ?? 100;
+    this.chargingState = persisted.chargingState ?? 0;
+    this.firmwareVersion = persisted.firmwareVersion ?? "";
 
     this.lockService = this._getOrAddService(Service.LockMechanism, "LockMechanism");
     this.contactService = this._getOrAddService(Service.ContactSensor, "Door Contact");
@@ -38,7 +40,7 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
       .onGet(this.getLowBatteryStatus.bind(this));
     this.batteryService
       .getCharacteristic(Characteristic.ChargingState)
-      .onGet(() => Characteristic.ChargingState.NOT_CHARGING);
+      .onGet(this.getChargingState.bind(this));
   }
 
   _getOrAddService(ServiceType, label) {
@@ -67,6 +69,10 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
 
     // NOTE: one extra IoT3 call per refresh (lockBoltV2GetProperties) on
     // top of the bulk getObjectList. Bulk list doesn't include lock state.
+    //
+    // Palm Lock (DX_PVLOC) intentionally uses lockBoltV2GetProperties too —
+    // it supports all 6 props, whereas palmLockGetProperties in wyze-api is
+    // missing door-status + power-source.
     let result;
     try {
       result = await this.plugin.client.lockBoltV2GetProperties(this.mac, this.product_model);
@@ -87,14 +93,29 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
 
     const props = result.data?.props || {};
 
+    // iot-device::iot-state reflects live connectivity — catches disconnects
+    // faster than device.conn_state which only updates on the slow poll.
+    if (props["iot-device::iot-state"] !== undefined && !props["iot-device::iot-state"]) {
+      markServiceOnline(this.lockService, false, "fault");
+      if (this.plugin.config.pluginLoggingEnabled)
+        this.plugin.log(
+          `[LockBoltV2] "${this.display_name} (${this.mac})" offline per IoT3 iot-state`
+        );
+      return;
+    }
+
     if (props["lock::lock-status"] !== undefined) {
-      this.isLocked = !!props["lock::lock-status"];
-      this.lockService
-        .getCharacteristic(Characteristic.LockCurrentState)
-        .updateValue(this.isLocked ? Characteristic.LockCurrentState.SECURED : Characteristic.LockCurrentState.UNSECURED);
-      this.lockService
-        .getCharacteristic(Characteristic.LockTargetState)
-        .updateValue(this.isLocked ? Characteristic.LockTargetState.SECURED : Characteristic.LockTargetState.UNSECURED);
+      // Skip during grace period after a command to avoid reverting an
+      // optimistic update before the API has propagated the change.
+      if (!this.inCommandGrace()) {
+        this.isLocked = !!props["lock::lock-status"];
+        this.lockService
+          .getCharacteristic(Characteristic.LockCurrentState)
+          .updateValue(this.isLocked ? Characteristic.LockCurrentState.SECURED : Characteristic.LockCurrentState.UNSECURED);
+        this.lockService
+          .getCharacteristic(Characteristic.LockTargetState)
+          .updateValue(this.isLocked ? Characteristic.LockTargetState.SECURED : Characteristic.LockTargetState.UNSECURED);
+      }
     }
 
     if (props["lock::door-status"] !== undefined) {
@@ -119,11 +140,28 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
         .updateValue(this.plugin.client.checkLowBattery(this.batteryLevel));
     }
 
+    if (props["battery::power-source"] !== undefined) {
+      // power-source: 1 = battery (not charging), 2 = USB/charging (inferred)
+      this.chargingState = props["battery::power-source"] === 2 ? 1 : 0;
+      this.batteryService
+        .getCharacteristic(Characteristic.ChargingState)
+        .updateValue(this.chargingState);
+    }
+
+    if (props["device-info::firmware-ver"] !== undefined) {
+      this.firmwareVersion = String(props["device-info::firmware-ver"]);
+      this.homeKitAccessory
+        .getService(Service.AccessoryInformation)
+        .setCharacteristic(Characteristic.FirmwareRevision, this.firmwareVersion);
+    }
+
     // Persist for next reboot.
     this.persistState({
       isLocked: this.isLocked,
       isDoorOpen: this.isDoorOpen,
       batteryLevel: this.batteryLevel,
+      chargingState: this.chargingState,
+      firmwareVersion: this.firmwareVersion,
     });
 
     if (this.plugin.config.pluginLoggingEnabled)
@@ -159,6 +197,10 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
     return this.plugin.client.checkLowBattery(this.batteryLevel);
   }
 
+  async getChargingState() {
+    return this.chargingState;
+  }
+
   async setLockTargetState(targetState) {
     const isSecuring = targetState === Characteristic.LockTargetState.SECURED;
     if (this.plugin.config.pluginLoggingEnabled)
@@ -166,27 +208,43 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
         `[LockBoltV2] Set "${this.display_name} (${this.mac})": ${isSecuring ? "lock" : "unlock"}`
       );
 
-    try {
-      const result = isSecuring
-        ? await this.plugin.client.lockBoltV2Lock(this.mac, this.product_model)
-        : await this.plugin.client.lockBoltV2Unlock(this.mac, this.product_model);
+    // Optimistically update HomeKit immediately so the tile clears "waiting".
+    // Grace period prevents the fast poll from reverting this before the API
+    // propagates. Locking propagates in ~15s; unlocking takes ~90s on the
+    // Wyze IoT3 endpoint.
+    this.isLocked = isSecuring;
+    this.armCommandGrace(isSecuring ? 15000 : 90000);
+    this.lockService.getCharacteristic(Characteristic.LockCurrentState).updateValue(
+      isSecuring ? Characteristic.LockCurrentState.SECURED : Characteristic.LockCurrentState.UNSECURED
+    );
+    this.lockService.getCharacteristic(Characteristic.LockTargetState).updateValue(
+      isSecuring ? Characteristic.LockTargetState.SECURED : Characteristic.LockTargetState.UNSECURED
+    );
 
-      if (result?.code !== "1") {
-        const msg = `IoT3 returned code ${result?.code}: ${result?.msg}`;
-        this.plugin.log.error(`[LockBoltV2] Set failed for "${this.display_name}": ${msg}`);
-        throw new Error(msg);
-      }
+    const cmdT0 = Date.now();
+    const call = isSecuring
+      ? this.plugin.client.lockBoltV2Lock(this.mac, this.product_model)
+      : this.plugin.client.lockBoltV2Unlock(this.mac, this.product_model);
 
-      this.isLocked = isSecuring;
-      this.lockService.setCharacteristic(
-        Characteristic.LockCurrentState,
-        isSecuring ? Characteristic.LockCurrentState.SECURED : Characteristic.LockCurrentState.UNSECURED
-      );
-    } catch (e) {
-      this.plugin.log.error(
-        `[LockBoltV2] Set failed for "${this.display_name}": ${e.message || e}`
-      );
-      throw e;
-    }
+    call
+      .then((result) => {
+        if (!result || result.code !== "1") {
+          // IoT3 resolved without throwing but reported a logical failure —
+          // don't leave HomeKit showing a command that never actually applied.
+          this.clearCommandGrace();
+          this.plugin.log.error(
+            `[LockBoltV2] Command failed for "${this.display_name}": ${result?.msg ?? "no response"}`
+          );
+          return;
+        }
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(`[LockBoltV2] Command ACK in ${Date.now() - cmdT0}ms for "${this.display_name}"`);
+      })
+      .catch((e) => {
+        this.clearCommandGrace();
+        this.plugin.log.error(
+          `[LockBoltV2] Command error after ${Date.now() - cmdT0}ms for "${this.display_name}": ${e.message || e}`
+        );
+      });
   }
 };

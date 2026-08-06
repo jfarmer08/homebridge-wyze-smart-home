@@ -1,0 +1,14 @@
+# Dev-only submodule — release uses the wyze-api npm package instead
+src/wyze-api/
+
+# CI/CD and editor config
+.github/
+.claude/
+.vscode/
+.gitmodules
+.gitattributes
+
+# Misc
+.DS_Store
+yarn.lock
+package-lock.json

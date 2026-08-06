@@ -48,14 +48,19 @@ module.exports = class WyzeHMS extends WyzeAccessory {
     try {
       await this.getHmsID();
       const response = await this.plugin.client.monitoringProfileStateStatus(this.hmsId);
-      this.hmsStatus = response.message;
-      this.securityService
-        .getCharacteristic(Characteristic.SecuritySystemCurrentState)
-        .updateValue(this.plugin.client.wyzeHmsStateToHomeKit(this.hmsStatus));
-      // Persist so HomeKit gets the right value immediately after a reboot.
-      this.persistState({ hmsStatus: this.hmsStatus, hmsId: this.hmsId });
-      if (this.plugin.config.pluginLoggingEnabled)
-        this.plugin.log(`[HMS] ${this.display_name}: ${this.hmsStatus}`);
+      // Skip during grace period after a command — the API can report a
+      // transient "changing" status while the real arm/disarm propagates,
+      // which would otherwise revert the optimistic update we just made.
+      if (!this.inCommandGrace()) {
+        this.hmsStatus = response.message;
+        this.securityService
+          .getCharacteristic(Characteristic.SecuritySystemCurrentState)
+          .updateValue(this.plugin.client.wyzeHmsStateToHomeKit(this.hmsStatus));
+        // Persist so HomeKit gets the right value immediately after a reboot.
+        this.persistState({ hmsStatus: this.hmsStatus, hmsId: this.hmsId });
+        if (this.plugin.config.pluginLoggingEnabled)
+          this.plugin.log(`[HMS] ${this.display_name}: ${this.hmsStatus}`);
+      }
     } catch (err) {
       this.plugin.log.error(
         `[HMS] Update failed for "${this.display_name}": ${err.message || err}`
@@ -76,14 +81,26 @@ module.exports = class WyzeHMS extends WyzeAccessory {
     const wyzeState = this.plugin.client.homeKitHmsStateToWyze(value);
     if (this.plugin.config.pluginLoggingEnabled)
       this.plugin.log(`[HMS] Set target "${this.display_name}": ${wyzeState}`);
-    try {
-      await this.plugin.client.setHMSState(this.hmsId, wyzeState);
-    } catch (err) {
-      this.plugin.log.error(
-        `[HMS] Set failed for "${this.display_name}": ${err.message || err}`
-      );
-      throw err;
-    }
+
+    // Optimistic update so the panel clears immediately. Grace period
+    // prevents the next full refresh from reverting this before the API
+    // propagates (or from re-showing a stale "changing" status).
+    this.hmsStatus = wyzeState === "off" ? "disarm" : wyzeState;
+    this.armCommandGrace(15000);
+    this.securityService
+      .getCharacteristic(Characteristic.SecuritySystemCurrentState)
+      .updateValue(this.plugin.client.wyzeHmsStateToHomeKit(this.hmsStatus));
+
+    this.getHmsID()
+      .then(() => this.plugin.client.setHMSState(this.hmsId, wyzeState))
+      .catch((err) => {
+        // Command never went through — let the next full refresh correct
+        // the optimistic state instead of holding it for the full grace window.
+        this.clearCommandGrace();
+        this.plugin.log.error(
+          `[HMS] Set failed for "${this.display_name}": ${err.message || err}`
+        );
+      });
   }
 
   async getHmsID() {

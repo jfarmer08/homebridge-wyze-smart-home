@@ -1,3 +1,5 @@
+const fs = require('fs')
+const path = require('path')
 const { homebridge, Accessory, UUIDGen, Categories } = require('./types')
 const enums = require('./enums')
 const { OutdoorPlugModels, PlugModels, CommonModels, CameraModels, LeakSensorModels,
@@ -35,6 +37,19 @@ const PLUGIN_NAME = 'homebridge-wyze-smart-home'
 const PLATFORM_NAME = 'WyzeSmartHome'
 
 const DEFAULT_REFRESH_INTERVAL = 30000
+const DEFAULT_SECURITY_REFRESH_INTERVAL = 10000
+
+// Fixed window (independent of user-configured refresh intervals) used to skip
+// a fast poll immediately after a full refresh — avoids a redundant back-to-back
+// API call. Deliberately NOT tied to securityRefreshInterval: that value is also
+// the fast poll's own tick cadence, so reusing it here could make the skip
+// window as long as (or longer than) the poll loop itself and silently disable
+// fast polling whenever refreshInterval <= securityRefreshInterval.
+const FULL_REFRESH_SKIP_WINDOW_MS = 10000
+
+// Accessories that make their own API call in updateCharacteristics and return
+// a boolean indicating whether state changed — safe to fast-poll independently.
+const FAST_POLL_CLASSES = new Set([WyzeLock, WyzeLockBoltV2])
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -109,6 +124,9 @@ module.exports = class WyzeSmartHome {
     this.client = this.getClient()
 
     this.accessories = []
+    this._fastPollStats = new Map()
+    this._knownUnsupported = new Set()
+    this._lastFullRefreshAt = 0
 
     process.on('unhandledRejection', (reason) => {
       this.log.error(`Unhandled promise rejection: ${reason?.stack ?? reason}`)
@@ -163,7 +181,12 @@ module.exports = class WyzeSmartHome {
   }
 
   didFinishLaunching() {
+    if (fs.existsSync(path.join(__dirname, '..', '.git'))) {
+      const { version } = require('../package.json')
+      this.log(`[Plugin] Local dev build v${version}`)
+    }
     this.runLoop()
+    this.runLockFastPollLoop()
   }
 
   async runLoop() {
@@ -172,14 +195,64 @@ module.exports = class WyzeSmartHome {
     while (true) {
       try {
         await this.refreshDevices()
-      } catch (e) { }
+      } catch (e) {
+        this.log.error(`[Plugin] Refresh failed: ${e}`)
+      }
 
       await delay(interval)
     }
   }
 
+  async runLockFastPollLoop() {
+    const interval = this.config.securityRefreshInterval || DEFAULT_SECURITY_REFRESH_INTERVAL
+    await delay(interval)
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      try {
+        await this.refreshLockDevices()
+      } catch (e) { }
+      await delay(interval)
+    }
+  }
+
+  async refreshLockDevices() {
+    if (Date.now() - this._lastFullRefreshAt < FULL_REFRESH_SKIP_WINDOW_MS) return
+
+    const targets = this.accessories.filter(a => FAST_POLL_CLASSES.has(a.constructor) && a.lastDevice)
+    if (targets.length === 0) return
+
+    let changedDevices = []
+    for (const accessory of targets) {
+      const mac = accessory.mac
+      if (!this._fastPollStats.has(mac)) {
+        this._fastPollStats.set(mac, { name: accessory.display_name, model: accessory.model_name, attempts: 0, successes: 0, since: new Date() })
+      }
+      const stats = this._fastPollStats.get(mac)
+      stats.attempts++
+      try {
+        const changed = await accessory.updateCharacteristics(accessory.lastDevice)
+        stats.successes++
+        if (changed) changedDevices.push(`${accessory.display_name} [${accessory.model_name}]`)
+      } catch (e) { }
+    }
+
+    if (changedDevices.length > 0) {
+      if (this.config.pluginLoggingEnabled)
+        this.log(`[LockFastPoll] State change detected for ${changedDevices.join(', ')}, triggering full refresh`)
+      await this.refreshDevices()
+    }
+  }
+
   async refreshDevices() {
-    if (this.config.pluginLoggingEnabled) this.log('Refreshing devices...')
+    let fastPollSummary = ''
+    if (this._fastPollStats.size > 0) {
+      const parts = []
+      for (const [, stats] of this._fastPollStats) {
+        parts.push(`${stats.name} [${stats.model}]: ${stats.successes}/${stats.attempts} fast polls`)
+      }
+      fastPollSummary = ` (${parts.join(', ')})`
+    }
+    this._fastPollStats = new Map()
 
     try {
       const objectList = await this.client.getObjectList()
@@ -205,6 +278,8 @@ module.exports = class WyzeSmartHome {
       }
 
       await this.loadDevices(devices, timestamp)
+      this._lastFullRefreshAt = Date.now()
+      if (this.config.pluginLoggingEnabled) this.log(`Refreshed ${this.accessories.length}/${devices.length} devices${fastPollSummary}`)
     } catch (e) {
       this.log.error(`Error getting devices: ${e}`)
       throw e
@@ -370,7 +445,10 @@ module.exports = class WyzeSmartHome {
   async loadDevice(device, timestamp) {
     const accessoryClass = this.getAccessoryClass(device.product_type, device.product_model, device.mac, device.nickname)
     if (!accessoryClass) {
-      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Unsupported device type: (Name: ${device.nickname}) (MAC: ${device.mac}) (Model: ${device.product_model})`)
+      if (this.config.pluginLoggingEnabled && !this._knownUnsupported.has(device.mac)) {
+        this._knownUnsupported.add(device.mac)
+        this.log(`[${device.product_type}] Unsupported device type: (Name: ${device.nickname}) (MAC: ${device.mac}) (Model: ${device.product_model})`)
+      }
       return
     }
     else if (this.config.filterByMacAddressList?.find(d => d === device.mac) || this.config.filterDeviceTypeList?.find(d => d === device.product_type)) {
@@ -400,8 +478,6 @@ module.exports = class WyzeSmartHome {
         this.api.publishExternalAccessories(PLUGIN_NAME, [homeKitAccessory])
       }
       this.accessories.push(accessory)
-    } else {
-      if (this.config.pluginLoggingEnabled) this.log(`[${device.product_type}] Loading accessory from cache ${device.nickname} (MAC: ${device.mac})`)
     }
     accessory.update(device, timestamp).catch((err) => {
       this.log.error(`[${device.product_type}] Unhandled error updating ${device.nickname}: ${err.message}\n${err.stack}`)
