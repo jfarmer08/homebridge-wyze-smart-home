@@ -64,7 +64,7 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
         this.plugin.log(
           `[LockBoltV2] "${this.display_name} (${this.mac})" is offline — keeping last known state, marked with fault`
         );
-      return;
+      return false;
     }
 
     // NOTE: one extra IoT3 call per refresh (lockBoltV2GetProperties) on
@@ -81,14 +81,14 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
         `[LockBoltV2] Update failed for "${this.display_name}": ${e.message || e}`
       );
       markServiceOnline(this.lockService, false, "fault");
-      return;
+      return false;
     }
 
     if (result?.code !== "1") {
       this.plugin.log.warn?.(
         `[LockBoltV2] IoT3 returned code ${result?.code} for "${this.display_name}": ${result?.msg}`
       );
-      return;
+      return false;
     }
 
     const props = result.data?.props || {};
@@ -101,14 +101,17 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
         this.plugin.log(
           `[LockBoltV2] "${this.display_name} (${this.mac})" offline per IoT3 iot-state`
         );
-      return;
+      return false;
     }
 
+    let changed = false;
     if (props["lock::lock-status"] !== undefined) {
       // Skip during grace period after a command to avoid reverting an
       // optimistic update before the API has propagated the change.
       if (!this.inCommandGrace()) {
-        this.isLocked = !!props["lock::lock-status"];
+        const newLocked = !!props["lock::lock-status"];
+        changed = this.isLocked !== newLocked;
+        this.isLocked = newLocked;
         this.lockService
           .getCharacteristic(Characteristic.LockCurrentState)
           .updateValue(this.isLocked ? Characteristic.LockCurrentState.SECURED : Characteristic.LockCurrentState.UNSECURED);
@@ -169,6 +172,8 @@ module.exports = class WyzeLockBoltV2 extends WyzeAccessory {
         `[LockBoltV2] ${this.display_name}: ${this.isLocked ? "locked" : "unlocked"}, ` +
           `door ${this.isDoorOpen ? "open" : "closed"}, battery ${this.batteryLevel}%`
       );
+
+    return changed;
   }
 
   async getLockCurrentState() {

@@ -84,18 +84,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
           this.switch_power = !!value;
           this.wallSwitch.getCharacteristic(Characteristic.On).updateValue(this.switch_power);
           break;
-        case "palm-state":
-          // Palm reports as boolean or 0/1 for power; default to false for safety.
-          this.switch_power = value == null ? false : !!value;
-          this.wallSwitch.getCharacteristic(Characteristic.On).updateValue(this.switch_power);
-          break;
       }
-    }
-
-    // Palm devices that haven't reported a switch_power yet — assume off.
-    if (this.product_model === CommonModels.Palm && this.switch_power === undefined) {
-      this.switch_power = false;
-      this.wallSwitch.getCharacteristic(Characteristic.On).updateValue(false);
     }
 
     // Persist so HomeKit gets the right value immediately after a reboot
@@ -132,13 +121,7 @@ module.exports = class WyzeSwitch extends WyzeAccessory {
     this.switch_power = !!value;
     this.wallSwitch.getCharacteristic(Characteristic.On).updateValue(this.switch_power);
 
-    // Palm devices need IoT vs Classic routing; LightSwitch always uses
-    // single_press_type to decide. Both branches converge on the same
-    // two backend calls.
-    const isPalm = this.product_model === CommonModels.Palm;
-    const prefersIot = isPalm
-      ? this.single_press_type == SinglePressType.IOT || this.switch_iot !== undefined
-      : this.single_press_type == SinglePressType.IOT;
+    const prefersIot = this.single_press_type == SinglePressType.IOT;
 
     const call = prefersIot
       ? this.plugin.client.wallSwitchIot(this.mac, this.product_model, !!value)

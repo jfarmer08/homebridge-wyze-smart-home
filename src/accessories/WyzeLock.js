@@ -65,7 +65,7 @@ module.exports = class WyzeLock extends WyzeAccessory {
         this.plugin.log(
           `[Lock] "${this.display_name} (${this.mac})" is offline — keeping last known state, marked with fault`
         );
-      return;
+      return false;
     }
 
     // NOTE: one extra Ford-API call per refresh (getLockInfo) on top of
@@ -78,13 +78,13 @@ module.exports = class WyzeLock extends WyzeAccessory {
         `[Lock] getLockInfo failed for "${this.display_name}": ${err.message || err}`
       );
       markServiceOnline(this.lockService, false, "fault");
-      return;
+      return false;
     }
 
     const lockProperties = propertyList?.device;
     if (!lockProperties) {
       this.plugin.log.error(`[Lock] getLockInfo returned no device data for ${this.display_name}`);
-      return;
+      return false;
     }
 
     if (lockProperties.onoff_line !== undefined) {
@@ -120,7 +120,9 @@ module.exports = class WyzeLock extends WyzeAccessory {
     // state so a physical/keypad change doesn't leave HomeKit stuck showing
     // "waiting" on the tile.
     const lockerStatus = lockProperties.locker_status || {};
+    let changed = false;
     if (lockerStatus.hardlock !== undefined && !this.inCommandGrace()) {
+      changed = this.hardlock !== lockerStatus.hardlock;
       this.hardlock = lockerStatus.hardlock;
       const lockState = this.plugin.client.getLockState(this.hardlock);
       this.lockService.getCharacteristic(Characteristic.LockCurrentState).updateValue(lockState);
@@ -142,6 +144,8 @@ module.exports = class WyzeLock extends WyzeAccessory {
         `[Lock] ${this.display_name}: ${this.hardlock === 2 ? "unlocked" : "locked"}, ` +
           `door ${this.door_open_status === 1 ? "open" : "closed"}, battery ${this.lockPower}%`
       );
+
+    return changed;
   }
 
   async getLockCurrentState() {
