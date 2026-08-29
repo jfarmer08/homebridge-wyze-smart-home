@@ -1,6 +1,6 @@
 {
   "name": "homebridge-wyze-smart-home",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "Wyze Smart Home plugin for Homebridge",
   "license": "MIT",
   "main": "src/index.js",
@@ -31,7 +31,7 @@
     "node": "^18.20.4 || ^20.15.1 || ^22.0.0 || ^24"
   },
   "dependencies": {
-    "axios": "^1.12.0",
+    "axios": "^1.15.0",
     "ffmpeg-static": "^5.3.0",
     "querystring": "0.2.1",
     "utf8": "^3.0.0",
@@ -41,11 +41,11 @@
   },
   "devDependencies": {
     "@fastify/multipart": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.27.1",
-    "@typescript-eslint/parser": "^5.27.1",
-    "eslint": "^8.17.0",
-    "eslint-config-standard": "^17.0.0",
-    "homebridge": "^1.11.4",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-standard": "^17.1.0",
+    "homebridge": "^2.0.0",
     "homebridge-config-ui-x": "^5.22.0"
   },
   "funding": [

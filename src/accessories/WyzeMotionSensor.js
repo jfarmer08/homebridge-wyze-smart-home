@@ -65,6 +65,7 @@ module.exports = class WyzeMotionSensor extends WyzeAccessory {
         );
       return;
     }
+    if (!device.device_params) return;
 
     // Wyze motion_state: 0 = no motion, 1 = motion detected.
     // HomeKit MotionDetected is a boolean — coerce explicitly.

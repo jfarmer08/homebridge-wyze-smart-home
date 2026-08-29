@@ -65,6 +65,7 @@ module.exports = class WyzeContactSensor extends WyzeAccessory {
         );
       return;
     }
+    if (!device.device_params) return;
 
     // Wyze open_close_state: 0 = closed, 1 = open. HomeKit's
     // ContactSensorState happens to use the same numbers but we map

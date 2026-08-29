@@ -87,6 +87,7 @@ module.exports = class WyzeTemperatureHumidity extends WyzeAccessory {
         );
       return;
     }
+    if (!device.device_params) return;
 
     const tempC = this.plugin.client.wyzeTemperatureToHomeKit(device.device_params.th_sensor_temperature);
     const humidityPct = device.device_params.th_sensor_humidity;

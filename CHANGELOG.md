@@ -8,6 +8,18 @@ After you have done that if you feel like my work has been valuable to you I wel
 
 ## Releases
 
+### v2.0.0-beta.2
+
+Merges `main`'s unreleased 0.5.x hardening work (24 commits since the branches last synced at `412b891`) into the 2.0.0 line. Manual reconciliation across 18 conflicting files, not a mechanical merge — `main` and `2.0.0` had independently built overlapping features (most notably two separate Lock Bolt V2/Palm Lock implementations and two separate Thermostat fan/emheat/hold/kidlock implementations) that needed combining rather than picking one side.
+
+- **Optimistic non-blocking setters + command grace periods** ported to `WyzePlug`, `WyzeLight`, `WyzeMeshLight`, `WyzeSwitch`, `WyzeHMS`, `WyzeLock`, and `WyzeLockBoltV2` — previously only locks had this on the 2.0.0 line. A Set now updates HomeKit immediately and fires the API call in the background, with a grace window (differentiated 15s lock / 90s unlock) so a poll landing before Wyze's API propagates the change doesn't revert the optimistic state.
+- `WyzeLockBoltV2` gained `main`'s `ChargingState`/firmware-version reporting and fast IoT3 `iot-device::iot-state` offline detection, layered onto 2.0.0's persistence/`StatusFault` architecture.
+- `WyzeThermostat` gained `main`'s fan mode / emergency heat / hold / keypad-lock / scenario switches, rewritten against 2.0.0's delegated `wyze-api` conversion helpers instead of `main`'s local `colorsys`-era ones.
+- `ModelNames` lookup table and standardized log prefixes across all accessories.
+- Log-noise reduction and an accessory-routing fix (2.0.0's dispatch logic was already immune to the specific bug `main` fixed, so no functional change needed there — just confirmed).
+- Several null-guard / bug fixes from `main`'s code-review passes.
+- Bumped to `v2.0.0-beta.2`.
+
 ### v2.0.0-beta.1
 
 First 2.0 beta. Available on npm via `npm install homebridge-wyze-smart-home@beta` (or homebridge-config-ui-x → "Install Beta Version"). Stable users on the default `latest` tag are unaffected. Pairs with `wyze-api@2.0.0-beta.1`.
@@ -138,6 +150,93 @@ Other:
 - 178/178 wyze-api tests pass.
 - Production npm audit: 13 → 4 issues. Both criticals cleared. Remaining 4 are the `werift` WebRTC chain.
 - Two GitHub Actions workflows: `npm-publish-stable.yml` and `npm-publish-beta.yml`. Beta workflow auto-pins the `wyze-api` dep to the submodule version and verifies alignment.
+
+### v0.5.61
+Fixes for regressions and gaps found in code review of the 0.5.59/0.5.60 optimistic-update work:
+- Fix WyzeLockBoltV2 lock/unlock commands treating a resolved-but-logically-failed IoT3 response (`result.code !== "1"`) as success — this check was dropped when the command path became fire-and-forget; it's now restored and clears the grace period on failure so HomeKit doesn't keep showing a command that never applied
+- Fix `refreshLockDevices` reusing `securityRefreshInterval` as both the fast-poll's own cadence and the "skip right after a full refresh" threshold — any config where `refreshInterval` <= `securityRefreshInterval` silently disabled lock fast-polling almost entirely; the skip window is now a fixed 10s constant, decoupled from user-configured intervals
+- Add the same optimistic-update grace period used by locks to WyzeHMS (security panel) and to the on/off setter in WyzePlug/WyzeLight/WyzeMeshLight — without it, a poll landing mid-command could revert the optimistic state back to a stale/transitional value, reproducing the exact flicker bug the grace period was built to fix for locks
+- Add a shared `armCommandGrace`/`clearCommandGrace`/`inCommandGrace` helper on the `WyzeAccessory` base class instead of copy-pasting the grace-period pattern into each accessory
+- On command failure (reject or logical failure), clear the grace period immediately across WyzeLock, WyzeLockBoltV2, WyzeHMS, WyzePlug, WyzeLight, and WyzeMeshLight so the next poll can correct the optimistic state right away instead of waiting out the full 15s/90s window
+- Fix WyzePlug/WyzeLight/WyzeMeshLight command errors being swallowed with `.catch(() => {})` and zero logging — errors are now logged when `pluginLoggingEnabled` is set, consistent with every other accessory
+- Known limitation (not changed): the grace period can still mask a genuine physical/keypad lock change or a third-party app change that happens to match the pre-command state, for the duration of the window — this is an inherent trade-off of optimistic updates and isn't fixable without the Wyze API surfacing a freshness/version signal
+- Reviewed but not changed: WyzeSwitch's `handleOnSetWallSwitch` has no grace period, so a failed command already self-corrects on the next full refresh (unlike the accessories above); the only gap is the removed `throw`, which is intentional per v0.5.59 (avoids putting the tile in a HAP error state)
+- Reviewed but not changed: `runLockFastPollLoop`'s pre-existing `securityRefreshInterval || DEFAULT_SECURITY_REFRESH_INTERVAL` treats an explicit `0` as unset; this predates this diff and is left as-is
+
+### v0.5.60
+- Differentiate command grace period by direction: locking still uses a 15s grace window, but unlocking now uses 90s to match how long the Wyze API actually takes to propagate an unlock, preventing the fast poll from reverting the optimistic "unlocked" tile back to "locked" for WyzeLock and WyzeLockBoltV2
+- Fix WyzeLock/WyzeLockBoltV2 `setLockTargetState` not updating `LockTargetState` alongside `LockCurrentState` on optimistic command updates
+- Gate new lock timing/command-ack debug logs behind `pluginLoggingEnabled`, consistent with the rest of the plugin
+
+### v0.5.59
+- Eliminate "waiting" tile state on lock/unlock commands: `setLockTargetState` now updates HomeKit optimistically and fires the API call in the background for both WyzeLockBoltV2 (Palm Lock, Lock Bolt V2) and WyzeLock (YD.LO1)
+- Add 15s command grace period on both lock types: fast poll skips updating lock state from the API during the grace window, preventing stale reads from reverting the optimistic HomeKit state before the Wyze API propagates
+- Skip fast poll when a full refresh ran within the last 10s — prevents redundant back-to-back API polls and double full refreshes after a fast-poll-detected change
+- Fix WyzeLock `updateCharacteristics` not pushing `LockTargetState` on physical lock/unlock — previously only `LockCurrentState` was updated, leaving HomeKit stuck in "waiting" after panel or physical state changes
+- Fix WyzeHMS security panel "waiting": `handleSecuritySystemTargetStateSet` now updates `SecuritySystemCurrentState` optimistically and fires `setHMSState` in the background
+- Optimistic on/off updates for WyzePlug, WyzeLight, WyzeMeshLight, and WyzeSwitch: setters update local state immediately and fire API calls in the background, eliminating HAP blocking
+- Add change detection to WyzePlug, WyzeLight, and WyzeMeshLight `updateCharacteristics`: on/off state is only pushed to HomeKit when it differs from local state, preventing 60s refresh from flickering tiles whose state was just set
+- WyzeSwitch: remove `throw` from `handleOnSetWallSwitch` error path — re-throwing caused HAP to put the tile in an error state; errors are now logged only
+- Add dev-only startup log line showing plugin version when running from a local git clone
+
+### v0.5.58
+- Fix original Wyze Lock (YD.LO1) failing with `PARAM_SIGN_INVALID` / `PARAM_TIMESTAMP_INVALID` — bumps `wyze-api` to `1.1.14`, which corrects Ford API payload signing: signature is now computed after `access_token`, `key`, and `timestamp` are injected, and `getLockInfo` now sends signed parameters on the GET request. Lock Bolt V2, Lock Bolt Pro, and Palm Lock (IoT3 path) are unaffected.
+- Closes #300
+
+### v0.5.57
+- Add `ModelNames` lookup table for cleaner device identification across all accessories
+- Standardize log prefixes across all accessories for consistent log formatting
+- Update README device list and add CONTRIBUTORS.md
+
+### v0.5.56
+- Remove `homebridge-config-ui-x` from plugin dependencies — it was never imported and caused install failures on Node.js 22/24 due to `node-pty` native bindings. Closes #286
+- Reduce log noise: apply change-detection to all accessories so HomeKit characteristics are only updated when values actually change, eliminating redundant `[Wyze]` log lines on every poll
+- Fix accessory routing regression — accessories were dispatching to the wrong handler after the 0.5.55 refactor
+- Normalize all `noResponse` log messages to a consistent format across all accessories
+- Fix four bugs identified in code review (null guards, incorrect characteristic references)
+- Homebridge 1.x and 2.x compatibility verified
+
+### v0.5.55
+- Fix continuous Homebridge restart loop introduced in 0.5.54 — closes #295
+- Add null guards for API responses across WyzeCamera, WyzeLight, WyzeMeshLight, WyzeLock, WyzeHMS, and WyzeThermostat to prevent `TypeError` crashes on transient Wyze API errors
+- Wrap all `updateCharacteristics()` calls with `Promise.resolve().catch()` to prevent unhandled rejections from terminating the Homebridge process on Node.js 15+
+- Add `default` branch to HMS state conversion to prevent undefined return
+
+### v0.5.54
+- Add Node.js 22 and 24 to supported engines — closes #281
+- Pin `eslint` to v8 to satisfy `eslint-config-standard@17` peer dependency
+- Bump `@typescript-eslint` to v8 for ESLint 9 compatibility
+
+### v0.5.53
+- First npm-published release via automated workflow
+- Add Wyze Lock Bolt v2 (`DX_LB2`) support via IoT3 API — closes #285
+- Add Palm Lock (`DX_PVLOC`) support via IoT3 API
+- Add security fast-poll loop (10s) for locks — lock state changes reflect in HomeKit within 10 seconds
+- Add `ChargingState` characteristic and firmware revision reporting to Lock Bolt V2
+- Add live connectivity detection via `iot-state` in Lock Bolt V2
+- Add humidity sensor, fan mode switch, emergency heat switch, hold mode switch, and keypad lock switch to thermostat
+- Fix thermostat sub-services resolving to the same cached service on restart
+- Fix WyzeHMS crash on offline
+- Update `wyze-api` to 1.1.12
+
+### v0.5.48
+- Add security fast-poll loop (10s) for locks — lock state changes now reflect in HomeKit within 10 seconds instead of 60
+- Add `lastDevice` caching to `WyzeAccessory` base class to support fast-poll without a full device list refresh
+- Fix `WyzeLock` first-poll spurious full refresh by initializing state vars to `null`
+- Refactor `WyzeLockBoltV2` to delegate IoT3 calls to `wyze-api` client (removes inline axios/crypto code)
+- Add `ChargingState` characteristic to `WyzeLockBoltV2` battery service (`battery::power-source` confirmed as integer: 1=battery, 2=USB)
+- Add firmware revision reporting to `WyzeLockBoltV2` via `device-info::firmware-ver`
+- Add live connectivity detection via `iot-device::iot-state` in `WyzeLockBoltV2` (faster offline detection than `conn_state`)
+- Add humidity sensor service to thermostat (surfaces `humidity` prop as `HumiditySensor`)
+- Add fan mode switch to thermostat (on = continuous fan, off = auto)
+- Add emergency heat switch to thermostat
+- Add hold mode switch to thermostat
+- Add keypad lock switch to thermostat
+- Add read-only current scenario indicator to thermostat (reflects active schedule, snaps back if toggled)
+- Fix thermostat Switch services to use `getServiceById` — prevents all sub-services resolving to the same cached service on restart
+- Fix WyzeHMS crash on offline — `this.getCharacteristic` corrected to `this.securityService.getCharacteristic`
+- Update wyze-api to 1.1.12 — includes bug fixes, lazy-load camera streaming, and removed moment dependency; if upgrading manually, run `npm install` or reinstall via the Homebridge UI to ensure the package is updated
+- Remove unused dependencies: `moment`, `inherits`, `md5`, `uuid`; revert `homebridge-config-ui-x` to `^4.56.4`
 
 ### v0.5.47
 - Add Wyze Lock Bolt v2 (DX_LB2) support via IoT3 API
